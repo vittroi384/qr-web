@@ -3,12 +3,13 @@ import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
 import { FaqList } from "@/components/FaqList";
 import { adConfig } from "@/components/ads/adConfig";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
-import { ArrowRightIcon, TypeIcon } from "@/components/icons";
 import { resolveAffiliate } from "@/components/affiliate";
 import { QrGenerator } from "@/components/qr/QrGenerator";
-import { getDict, localePath, typeToSlug, type Locale } from "@/lib/i18n";
-import { QR_TYPES } from "@/lib/qr/types";
+import { getDict, localePath, type Locale } from "@/lib/i18n";
 import { getSettings } from "@/lib/settings";
+
+/** FAQ entries shown before the in-article ad. */
+const FAQ_BEFORE_AD = 3;
 
 export async function HomePage({ locale }: { locale: Locale }) {
   const t = getDict(locale);
@@ -22,6 +23,21 @@ export async function HomePage({ locale }: { locale: Locale }) {
     inarticle: adConfig(s, s.ad_slot_inarticle),
   };
   const sideVisible = (c: AdSlotConfig) => (c.enabled && c.client && c.slotId) || c.showPlaceholder;
+  const faqItems = [
+    ...t.home.faq,
+    {
+      q: t.home.faqPrivacy.q,
+      a: (
+        <>
+          {t.home.faqPrivacy.before}
+          <Link href={localePath(locale, "/privacy")} className="link">
+            {t.home.faqPrivacy.link}
+          </Link>
+          {t.home.faqPrivacy.after}
+        </>
+      ),
+    },
+  ];
 
   return (
     <main className="mx-auto w-full max-w-[1400px] px-4 pt-4 pb-16 sm:px-6 sm:pt-5">
@@ -52,59 +68,21 @@ export async function HomePage({ locale }: { locale: Locale }) {
               {/* 3. 본문 중간 광고 */}
               <AdSlot config={ads.incontent} name="본문 중간" shape="rectangle" />
 
-              <section className="mt-16" aria-labelledby="types-heading">
-                <div className="max-w-2xl">
-                  <h2 id="types-heading" className="section-title">
-                    {t.home.typesTitle}
-                  </h2>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">{t.home.typesDesc}</p>
-                </div>
-                <ul className="mt-6 grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-2">
-                  {/* Each tile opens that type's landing page (generator preselected + guide). */}
-                  {QR_TYPES.map((type) => (
-                    <li key={type} className="flex bg-card md:last:odd:col-span-2">
-                      <Link
-                        href={localePath(locale, `/${typeToSlug(type)}`)}
-                        className="group flex w-full gap-3 p-5 transition-colors hover:bg-subtle focus-visible:-outline-offset-2"
-                      >
-                        <TypeIcon type={type} className="mt-0.5 size-5 shrink-0 text-muted transition-colors group-hover:text-accent" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-medium text-foreground">{t.types.labels[type]}</span>
-                          <span className="mt-1 block text-[13px] leading-relaxed text-muted">{t.types.descriptions[type]}</span>
-                        </span>
-                        <ArrowRightIcon className="mt-0.5 size-4 shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              {/* 6. 글 사이 광고 — between the type guide and the FAQ */}
-              <AdSlot config={ads.inarticle} name="글 사이" shape="inarticle" className="mt-16" />
 
               <section className="mt-16" aria-labelledby="faq-heading">
                 <h2 id="faq-heading" className="section-title">
                   {t.home.faqTitle}
                 </h2>
+                {/* The in-article unit sits between the first questions and the rest, like a break in a long article. */}
                 <div className="mt-4">
-                <FaqList
-                  items={[
-                    ...t.home.faq,
-                    {
-                      q: t.home.faqPrivacy.q,
-                      a: (
-                        <>
-                          {t.home.faqPrivacy.before}
-                          <Link href={localePath(locale, "/privacy")} className="link">
-                            {t.home.faqPrivacy.link}
-                          </Link>
-                          {t.home.faqPrivacy.after}
-                        </>
-                      ),
-                    },
-                  ]}
-                />
+                  <FaqList items={faqItems.slice(0, FAQ_BEFORE_AD)} />
                 </div>
+                <AdSlot config={ads.inarticle} name="글 사이" shape="inarticle" className="mt-8" />
+                {faqItems.length > FAQ_BEFORE_AD ? (
+                  <div className="mt-8">
+                    <FaqList items={faqItems.slice(FAQ_BEFORE_AD)} defaultOpen={-1} />
+                  </div>
+                ) : null}
               </section>
             </div>
 
