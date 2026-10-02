@@ -35,6 +35,12 @@ const TYPE_PATHS: Record<QrType, ReactNode> = {
       <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
     </>
   ),
+  whatsapp: (
+    <>
+      <path d="M3.5 20.5 5 16a8.5 8.5 0 1 1 3 3Z" />
+      <path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a3.5 3.5 0 0 1-1.8-1.8l.8-1-1-2Z" />
+    </>
+  ),
   text: (
     <>
       <path d="M4 6h16" />
@@ -80,6 +86,28 @@ const TYPE_PATHS: Record<QrType, ReactNode> = {
     <>
       <path d="M12 21.5s-7-6.1-7-11.5a7 7 0 0 1 14 0c0 5.4-7 11.5-7 11.5Z" />
       <circle cx="12" cy="10" r="2.5" />
+    </>
+  ),
+  payment: (
+    <>
+      <rect x="2.5" y="6" width="19" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6 9.5v.01M18 14.5v.01" />
+    </>
+  ),
+  crypto: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 7.5v9" />
+      <path d="M9.5 8h3.75a2 2 0 0 1 0 4H9.5h4.25a2 2 0 0 1 0 4H9.5" />
+      <path d="M11 6v1.5M13 6v1.5M11 16.5V18M13 16.5V18" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2.5V8h5.5" />
+      <path d="M8.5 13h7M8.5 17h5" />
     </>
   ),
   event: (

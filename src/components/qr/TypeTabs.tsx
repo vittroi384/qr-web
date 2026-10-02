@@ -12,7 +12,7 @@ export function TypeTabs({ value, onChange }: { value: QrType; onChange: (t: QrT
   const { t } = useI18n();
   return (
     <div className="@container">
-      <div role="group" aria-label={t.generator.typeGroupLabel} className="grid grid-cols-2 gap-2 @sm:grid-cols-3 @2xl:grid-cols-5">
+      <div role="group" aria-label={t.generator.typeGroupLabel} className="grid auto-rows-fr grid-cols-2 gap-2 @sm:grid-cols-3 @2xl:grid-cols-5">
         {QR_TYPES.map((type) => {
           const active = type === value;
           return (

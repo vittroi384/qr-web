@@ -1,8 +1,14 @@
 import { SignJWT, jwtVerify } from "jose";
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 
-export const SESSION_COOKIE = "qr_admin_session";
-const SESSION_TTL_SEC = 60 * 60 * 24 * 7;
+/**
+ * Admin session cookie. On HTTPS deployments (DOMAIN set) the cookie uses the __Host- prefix,
+ * which browsers only accept when it is Secure, Path=/ and has no Domain — i.e. it cannot be
+ * planted by a sibling subdomain. SameSite=Strict keeps it out of cross-site requests entirely.
+ */
+const HTTPS = process.env.NODE_ENV === "production" && Boolean(process.env.DOMAIN);
+export const SESSION_COOKIE = HTTPS ? "__Host-qr_admin_session" : "qr_admin_session";
+const SESSION_TTL_SEC = 60 * 60 * 24; // 24h, re-login daily
 
 function secretKey(): Uint8Array {
   const secret = process.env.SESSION_SECRET;
@@ -25,19 +31,27 @@ export function verifyPassword(input: string): boolean {
   return timingSafeEqual(a, b);
 }
 
-export async function createSessionToken(): Promise<string> {
-  return new SignJWT({ role: "admin" })
+/** Short fingerprint of the browser so a stolen cookie is useless from another client. */
+export function clientFingerprint(userAgent: string | null | undefined): string {
+  return createHash("sha256").update(userAgent ?? "").digest("base64url").slice(0, 16);
+}
+
+export async function createSessionToken(userAgent: string | null | undefined): Promise<string> {
+  return new SignJWT({ role: "admin", fp: clientFingerprint(userAgent) })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_TTL_SEC}s`)
     .sign(secretKey());
 }
 
-export async function verifySessionToken(token: string | undefined): Promise<boolean> {
+export async function verifySessionToken(token: string | undefined, userAgent?: string | null): Promise<boolean> {
   if (!token) return false;
   try {
     const { payload } = await jwtVerify(token, secretKey());
-    return payload.role === "admin";
+    if (payload.role !== "admin") return false;
+    // Fingerprint check is skipped only when the caller cannot supply a UA.
+    if (userAgent !== undefined && payload.fp !== clientFingerprint(userAgent)) return false;
+    return true;
   } catch {
     return false;
   }
@@ -45,10 +59,8 @@ export async function verifySessionToken(token: string | undefined): Promise<boo
 
 export const sessionCookieOptions = {
   httpOnly: true,
-  sameSite: "lax" as const,
-  // Secure cookies are rejected by browsers over plain HTTP, and the HTTP-only mode
-  // (DOMAIN unset → Caddy serves :80) must still allow the admin to log in.
-  secure: process.env.NODE_ENV === "production" && Boolean(process.env.DOMAIN),
+  sameSite: "strict" as const,
+  secure: HTTPS,
   path: "/",
   maxAge: SESSION_TTL_SEC,
 };

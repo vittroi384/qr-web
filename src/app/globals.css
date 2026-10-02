@@ -68,6 +68,9 @@
   --font-sans:
     "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic",
     "Noto Sans KR", "Segoe UI", Roboto, system-ui, sans-serif;
+  /* Headings: one tight value everywhere (Tailwind's default -0.025em is too tight for Hangul). */
+  --tracking-tight: -0.02em;
+
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
@@ -94,6 +97,11 @@
     /* break-word (not anywhere): long URLs still wrap, but short labels in flex rows are never split. */
     overflow-wrap: break-word;
     font-feature-settings: "tnum" 0;
+  }
+
+  /* Hangul body text reads better a touch tighter; Latin text keeps the font's own spacing. */
+  html:lang(ko) body {
+    letter-spacing: -0.01em;
   }
 
   ::selection {
@@ -143,10 +151,10 @@
   }
 
   .label {
-    @apply mb-2 block text-[13px] font-medium text-foreground;
+    @apply mb-1.5 block text-[13px] font-medium text-foreground;
   }
   .hint {
-    @apply mt-2 block text-xs leading-relaxed text-muted;
+    @apply mt-1.5 block text-xs leading-relaxed text-muted;
   }
 
   /* Default icon size; contextual rules below (.btn svg) take precedence by specificity. */

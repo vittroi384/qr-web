@@ -5,9 +5,9 @@ import { alternatesFor, getDict } from "@/lib/i18n";
 import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
-  title: getDict("en").batch.metaTitle,
-  description: getDict("en").batch.metaDescription,
-  alternates: alternatesFor("en", "/batch"),
+  title: getDict("ko").batch.metaTitle,
+  description: getDict("ko").batch.metaDescription,
+  alternates: alternatesFor("ko", "/batch"),
 };
 
 export default function Page() {
@@ -17,5 +17,5 @@ export default function Page() {
     right: adConfig(s.ad_slot_right),
     incontent: adConfig(s.ad_slot_incontent),
   };
-  return <BatchPage locale="en" ads={ads} />;
+  return <BatchPage locale="ko" ads={ads} />;
 }

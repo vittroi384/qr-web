@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { LOCALES, localePath } from "@/lib/i18n";
+import { DEFAULT_LOCALE, LOCALES, localePath } from "@/lib/i18n";
 import { getSettings } from "@/lib/settings";
 
 // site_url is editable at runtime, so this must not be prerendered.
@@ -21,9 +21,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: url(localePath(locale, p.path)),
       lastModified: now,
       changeFrequency: p.changeFrequency,
-      // The English pages are translations; keep the Korean originals slightly ahead.
-      priority: locale === "ko" ? p.priority : Math.round(p.priority * 0.8 * 10) / 10,
-      alternates: { languages: Object.fromEntries(LOCALES.map((l) => [l, url(localePath(l, p.path))])) },
+      // English is the primary edition; the Korean translation ranks slightly lower.
+      priority: locale === DEFAULT_LOCALE ? p.priority : Math.round(p.priority * 0.8 * 10) / 10,
+      alternates: {
+        languages: {
+          ...Object.fromEntries(LOCALES.map((l) => [l, url(localePath(l, p.path))])),
+          "x-default": url(localePath(DEFAULT_LOCALE, p.path)),
+        },
+      },
     })),
   );
 }

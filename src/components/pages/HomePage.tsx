@@ -58,7 +58,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                 </div>
                 <ul className="mt-6 grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-2">
                   {QR_TYPES.map((type) => (
-                    <li key={type} className="flex gap-3 bg-card p-5">
+                    <li key={type} className="flex gap-3 bg-card p-5 md:last:odd:col-span-2">
                       <TypeIcon type={type} className="mt-0.5 size-5 shrink-0 text-muted" />
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground">{t.types.labels[type]}</p>

@@ -9,7 +9,7 @@ import { deleteLogs } from "@/lib/logs";
 
 export async function deleteLogsAction(formData: FormData) {
   const cookieStore = await cookies();
-  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value))) {
+  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value, (await headers()).get("user-agent")))) {
     throw new Error("Unauthorized");
   }
   const ids = formData

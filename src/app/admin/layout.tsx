@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { LogoutIcon } from "@/components/icons";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 
@@ -14,7 +14,7 @@ const NAV = [
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
-  const authed = await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+  const authed = await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value, (await headers()).get("user-agent"));
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">

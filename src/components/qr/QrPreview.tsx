@@ -162,7 +162,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
           onSelect={(margin) => onStyleChange({ ...style, margin })}
         />
       </div>
-      <p className="mt-2 text-xs text-muted">
+      <p className="mt-2 text-xs text-muted tabular-nums">
         {p.summaryPrefix}{" "}
         <span className="font-mono text-foreground tabular-nums">
           {style.size} × {style.size}px
@@ -175,15 +175,16 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
           <DownloadIcon />
           {p.downloadPng}
         </button>
-        <button type="button" className="btn" onClick={downloadSvg} disabled={disabled}>
+        {/* Two-up buttons may wrap to two lines rather than overflow (long labels, narrow column). */}
+        <button type="button" className="btn min-w-0 text-center leading-tight whitespace-normal" onClick={downloadSvg} disabled={disabled}>
           <DownloadIcon />
           {p.svg}
         </button>
-        <button type="button" className="btn" onClick={copyPng} disabled={disabled}>
+        <button type="button" className="btn min-w-0 text-center leading-tight whitespace-normal" onClick={copyPng} disabled={disabled}>
           <CopyIcon />
           {p.copy}
         </button>
-        <button type="button" className="btn col-span-2" onClick={() => setSheetOpen(true)} disabled={disabled} aria-haspopup="dialog">
+        <button type="button" className="btn col-span-2 min-w-0 text-center leading-tight whitespace-normal" onClick={() => setSheetOpen(true)} disabled={disabled} aria-haspopup="dialog">
           <PrinterIcon />
           {p.printSheet}
         </button>

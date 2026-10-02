@@ -102,12 +102,28 @@ SQLite 파일 하나(`./data/qr.db`)가 전부입니다.
 3. 게시자 ID(`ca-pub-…`) 입력, **광고 표시** 체크, 저장. `/ads.txt`는 자동으로 채워집니다.
 4. 슬롯 ID가 비어 있는 자리는 렌더되지 않습니다. 레이아웃만 확인하려면 **광고 자리 점선 표시**를 켜세요.
 
+## 관리자 보안 (3중 잠금)
+
+| 계층 | 동작 | 설정 |
+| --- | --- | --- |
+| 비밀 입구 URL | `/admin`은 누구에게나 **404**. `https://<도메인>/<ADMIN_PATH>`를 먼저 열면 30일짜리 게이트 쿠키가 생기고 그 브라우저에서만 `/admin`이 열림 | `ADMIN_PATH` (영숫자 8~64자, `openssl rand -hex 8`) |
+| 비밀번호 + OTP | 비밀번호와 인증 앱(Google Authenticator 등) 6자리 코드. 5회 실패 시 10분 잠금, 실패마다 지연 | `ADMIN_PASSWORD`, `ADMIN_TOTP_SECRET` (`npm run totp-setup`으로 QR 발급) |
+| IP 허용 목록(선택) | 지정한 IP/CIDR 외에는 입구 URL조차 404 | `ADMIN_ALLOWED_IPS=1.2.3.4, 10.0.0.0/8` |
+
+그 외: 세션 쿠키는 HTTPS에서 `__Host-` 접두 + `SameSite=Strict` + 브라우저 지문 바인딩, 24시간 만료. 관리자 응답은 `noindex`/`no-store`, robots.txt에 관리자 경로를 노출하지 않음. Caddy가 HSTS·Permissions-Policy 헤더를 추가.
+게이트 쿠키를 지웠거나 다른 기기에서 접속하려면 입구 URL을 다시 열면 됩니다.
+
+> Caddy의 HSTS 헤더에 `includeSubDomains`가 포함되어 있습니다. 같은 도메인의 다른 서브도메인을 HTTP로만 운영한다면 Caddyfile에서 그 옵션을 빼세요. OTP 기기를 잃어버리면 서버 `.env`의 `ADMIN_TOTP_SECRET`을 지우고 재시작한 뒤 다시 발급하세요.
+
 ## 환경변수
 
 | 이름 | 설명 |
 | --- | --- |
 | `DOMAIN` | Caddy용 도메인. 비우면 `:80` 평문 HTTP |
+| `ADMIN_PATH` | 관리자 비밀 입구 경로 (없으면 게이트 비활성 — 개발용) |
 | `ADMIN_PASSWORD` | `/admin` 로그인 비밀번호 |
+| `ADMIN_TOTP_SECRET` | OTP 비밀키 (없으면 OTP 생략 — 운영에서는 설정 권장) |
+| `ADMIN_ALLOWED_IPS` | 관리자 접근 허용 IP/CIDR 목록 (선택) |
 | `SESSION_SECRET` | 세션 쿠키 서명 키 (`openssl rand -hex 32`) |
 | `DATABASE_PATH` | SQLite 경로. Docker에서는 `/app/data/qr.db` 고정 |
 

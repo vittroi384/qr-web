@@ -1,15 +1,28 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { LockIcon } from "@/components/icons";
 
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [totpRequired, setTotpRequired] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/login", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { totp: false }))
+      .then((d) => !cancelled && setTotpRequired(Boolean(d.totp)))
+      .catch(() => !cancelled && setTotpRequired(false));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +32,7 @@ function LoginForm() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password, code }),
       });
       if (res.ok) {
         const next = params.get("next");
@@ -28,7 +41,13 @@ function LoginForm() {
         return;
       }
       const data = await res.json().catch(() => ({}));
-      setError(data.error === "locked" ? "로그인 시도가 너무 많습니다. 10분 후 다시 시도하세요." : "비밀번호가 올바르지 않습니다.");
+      setError(
+        data.error === "locked"
+          ? "로그인 시도가 너무 많습니다. 10분 후 다시 시도하세요."
+          : totpRequired
+            ? "비밀번호 또는 인증 코드가 올바르지 않습니다."
+            : "비밀번호가 올바르지 않습니다.",
+      );
     } catch {
       setError("서버에 연결할 수 없습니다.");
     } finally {
@@ -42,28 +61,44 @@ function LoginForm() {
         <LockIcon />
       </span>
       <h1 className="mt-5 text-xl font-semibold tracking-tight">관리자 로그인</h1>
-      <p className="mt-1.5 text-sm text-muted">관리자 비밀번호를 입력하세요.</p>
+      <p className="mt-1.5 text-sm text-muted">{totpRequired ? "비밀번호와 인증 앱의 6자리 코드를 입력하세요." : "관리자 비밀번호를 입력하세요."}</p>
       <div className="mt-6 space-y-4">
-      <label className="block">
-        <span className="label">비밀번호</span>
-        <input
-          className="input"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoFocus
-          required
-        />
-      </label>
-      {error ? (
-        <p role="alert" className="rounded-lg border border-red-200 bg-danger-soft px-3 py-2.5 text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-      <button type="submit" className="btn btn-primary w-full" disabled={busy}>
-        {busy ? "확인 중…" : "로그인"}
-      </button>
+        <label className="block">
+          <span className="label">비밀번호</span>
+          <input
+            className="input"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoFocus
+            required
+          />
+        </label>
+        {totpRequired ? (
+          <label className="block">
+            <span className="label">인증 코드 (OTP)</span>
+            <input
+              className="input font-mono tracking-[0.3em]"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              placeholder="000000"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              required
+            />
+          </label>
+        ) : null}
+        {error ? (
+          <p role="alert" className="rounded-lg border border-red-200 bg-danger-soft px-3 py-2.5 text-sm text-danger">
+            {error}
+          </p>
+        ) : null}
+        <button type="submit" className="btn btn-primary w-full" disabled={busy || totpRequired === null}>
+          {busy ? "확인 중…" : "로그인"}
+        </button>
       </div>
     </form>
   );

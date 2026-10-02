@@ -21,10 +21,10 @@ export type SettingKey = (typeof SETTING_KEYS)[number];
 export type Settings = Record<SettingKey, string>;
 
 export const DEFAULT_SETTINGS: Settings = {
-  site_name: "QR 메이커",
+  site_name: "QR Maker",
   site_url: "http://localhost:3000",
-  site_description: "URL, 텍스트, Wi-Fi, 연락처, 이메일, 위치, 일정 등 무엇이든 QR 코드로 바꿔주는 무료 QR 코드 생성기.",
-  footer_notice: "입력하신 내용은 서비스 품질 개선을 위해 서버에 저장될 수 있습니다.",
+  site_description: "Free QR code generator for links, Wi-Fi, vCards, WhatsApp, social profiles, crypto payments, files and more. No sign-up, codes never expire.",
+  footer_notice: "What you enter may be stored on our server to improve the service.",
   adsense_client: "",
   ads_enabled: "0",
   ad_placeholders: "0",

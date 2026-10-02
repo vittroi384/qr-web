@@ -4,13 +4,16 @@ import "./globals.css";
 import { AdSenseScript } from "@/components/ads/AdSenseScript";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getDict, isLocale, type Locale } from "@/lib/i18n";
+import { DEFAULT_LOCALE, getDict, isLocale, type Locale } from "@/lib/i18n";
 import { DEFAULT_SETTINGS, getSettings, isOn } from "@/lib/settings";
 
 // Settings live in SQLite and can change at runtime, so never bake pages at build time.
 export const dynamic = "force-dynamic";
 
-/** The proxy tags every request with its UI locale ("/en/..." → en). Admin and fallbacks are ko. */
+/**
+ * The proxy tags every public request with its UI locale ("/ko/..." → ko, everything else → en).
+ * /admin is not tagged and stays Korean.
+ */
 async function requestLocale(): Promise<Locale> {
   const value = (await headers()).get("x-locale");
   return isLocale(value) ? value : "ko";
@@ -20,8 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const s = getSettings();
   const locale = await requestLocale();
   const t = getDict(locale).meta;
-  // The site description is admin-edited Korean copy; English pages use the dictionary.
-  const description = locale === "ko" ? s.site_description : t.description;
+  // The site description is admin-edited copy in the primary language (English); other
+  // locales use the dictionary.
+  const description = locale === DEFAULT_LOCALE ? s.site_description : t.description;
   let base: URL | undefined;
   try {
     base = new URL(s.site_url);
@@ -49,9 +53,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const s = getSettings();
   const locale = await requestLocale();
-  // The footer notice is admin-edited Korean copy. Translate it only while it is the stock text.
-  const notice =
-    locale !== "ko" && s.footer_notice === DEFAULT_SETTINGS.footer_notice ? getDict(locale).footer.defaultNotice : s.footer_notice;
+  // The footer notice is admin-edited copy. Translate it only while it is the stock text.
+  const notice = s.footer_notice === DEFAULT_SETTINGS.footer_notice ? getDict(locale).footer.defaultNotice : s.footer_notice;
   const adsenseClient = isOn(s.ads_enabled) ? s.adsense_client : "";
   return (
     <html lang={locale} className="h-full antialiased">

@@ -12,7 +12,7 @@ const AD_SLOT_KEYS = ["ad_slot_top", "ad_slot_left", "ad_slot_right", "ad_slot_b
 
 export async function saveSettingsAction(formData: FormData) {
   const cookieStore = await cookies();
-  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value))) {
+  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value, (await headers()).get("user-agent")))) {
     throw new Error("Unauthorized");
   }
 

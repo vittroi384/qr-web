@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test \"src/**/*.test.ts\""
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "totp-setup": "node scripts/totp-setup.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

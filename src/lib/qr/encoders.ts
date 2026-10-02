@@ -1,4 +1,14 @@
-import type { QrPayloadMap, QrType, WifiPayload, VCardPayload, EventPayload, SocialPayload } from "./types";
+import type {
+  CryptoPayload,
+  EventPayload,
+  PaymentPayload,
+  QrPayloadMap,
+  QrType,
+  SocialPayload,
+  VCardPayload,
+  WhatsAppPayload,
+  WifiPayload,
+} from "./types";
 
 /** Escape characters that are structural in WIFI: strings. */
 function escapeWifi(value: string): string {
@@ -51,6 +61,20 @@ export const SOCIAL_PLATFORMS: readonly SocialPlatform[] = [
   { id: "github", label: "GitHub", template: "https://github.com/{handle}", placeholder: "username", stripAt: true },
   { id: "telegram", label: "Telegram", template: "https://t.me/{handle}", placeholder: "@username", stripAt: true },
   { id: "line", label: "LINE", template: "https://line.me/R/ti/p/{handle}", placeholder: "@line-id", stripAt: false },
+  { id: "spotify", label: "Spotify", template: "https://open.spotify.com/artist/{handle}", placeholder: "artist ID", stripAt: true },
+  { id: "pinterest", label: "Pinterest", template: "https://www.pinterest.com/{handle}/", placeholder: "username", stripAt: true },
+  { id: "snapchat", label: "Snapchat", template: "https://www.snapchat.com/add/{handle}", placeholder: "username", stripAt: true },
+  { id: "twitch", label: "Twitch", template: "https://www.twitch.tv/{handle}", placeholder: "channel", stripAt: true },
+  { id: "discord", label: "Discord", template: "https://discord.gg/{handle}", placeholder: "invite code", stripAt: false },
+  { id: "reddit", label: "Reddit", template: "https://www.reddit.com/user/{handle}/", placeholder: "username", stripAt: true },
+  { id: "linktree", label: "Linktree", template: "https://linktr.ee/{handle}", placeholder: "username", stripAt: true },
+  { id: "calendly", label: "Calendly", template: "https://calendly.com/{handle}", placeholder: "username", stripAt: true },
+  { id: "google_review", label: "Google Review", template: "https://search.google.com/local/writereview?placeid={handle}", placeholder: "Place ID (ChIJ...)", stripAt: false },
+  { id: "yelp", label: "Yelp", template: "https://www.yelp.com/biz/{handle}", placeholder: "business-slug", stripAt: false },
+  { id: "whatsapp_channel", label: "WhatsApp Channel", template: "https://whatsapp.com/channel/{handle}", placeholder: "channel code", stripAt: false },
+  { id: "signal", label: "Signal", template: "https://signal.me/#p/{handle}", placeholder: "+14155552671", stripAt: false },
+  { id: "medium", label: "Medium", template: "https://medium.com/@{handle}", placeholder: "@username", stripAt: true },
+  { id: "substack", label: "Substack", template: "https://{handle}.substack.com", placeholder: "publication", stripAt: true },
 ];
 
 export function encodeSocial(p: SocialPayload): string {
@@ -64,6 +88,73 @@ export function encodeSocial(p: SocialPayload): string {
   handle = handle.replace(/[\s/]+/g, "");
   if (!handle) return "";
   return platform.template.replace("{handle}", encodeURIComponent(handle));
+}
+
+/** Payment-link presets. `{handle}` is the username; `{amount}` (optional) is a plain decimal. */
+export type PaymentProvider = {
+  id: string;
+  label: string;
+  template: string;
+  /** Template used when an amount is given; omitted → amount unsupported. */
+  amountTemplate?: string;
+  placeholder: string;
+};
+
+export const PAYMENT_PROVIDERS: readonly PaymentProvider[] = [
+  { id: "paypal", label: "PayPal.Me", template: "https://paypal.me/{handle}", amountTemplate: "https://paypal.me/{handle}/{amount}", placeholder: "username" },
+  { id: "venmo", label: "Venmo", template: "https://venmo.com/u/{handle}", amountTemplate: "https://venmo.com/u/{handle}?txn=pay&amount={amount}", placeholder: "username" },
+  { id: "cashapp", label: "Cash App", template: "https://cash.app/${handle}", amountTemplate: "https://cash.app/${handle}/{amount}", placeholder: "cashtag" },
+  { id: "buymeacoffee", label: "Buy Me a Coffee", template: "https://buymeacoffee.com/{handle}", placeholder: "username" },
+  { id: "kofi", label: "Ko-fi", template: "https://ko-fi.com/{handle}", placeholder: "username" },
+  { id: "patreon", label: "Patreon", template: "https://www.patreon.com/{handle}", placeholder: "creator" },
+  { id: "revolut", label: "Revolut.Me", template: "https://revolut.me/{handle}", placeholder: "username" },
+  { id: "wise", label: "Wise", template: "https://wise.com/pay/me/{handle}", placeholder: "username" },
+];
+
+export function encodePayment(p: PaymentPayload): string {
+  const provider = PAYMENT_PROVIDERS.find((x) => x.id === p.provider);
+  let handle = p.handle.trim();
+  if (!provider || !handle) return "";
+  if (/^https?:\/\//i.test(handle)) return encodeUrl(handle);
+  handle = handle.replace(/^[@$]+/, "").replace(/[\s/]+/g, "");
+  if (!handle) return "";
+  const amount = p.amount.trim();
+  const amountOk = /^\d+(\.\d{1,2})?$/.test(amount) && Number(amount) > 0;
+  const template = provider.amountTemplate && amountOk ? provider.amountTemplate : provider.template;
+  return template.replace("{handle}", encodeURIComponent(handle)).replace("{amount}", amount);
+}
+
+/** Crypto payment URIs. Bitcoin-style coins follow BIP-21; Ethereum uses the EIP-681 address form. */
+export type CryptoCoin = { id: string; label: string; scheme: string; supportsAmount: boolean; placeholder: string };
+
+export const CRYPTO_COINS: readonly CryptoCoin[] = [
+  { id: "bitcoin", label: "Bitcoin (BTC)", scheme: "bitcoin", supportsAmount: true, placeholder: "bc1q..." },
+  { id: "ethereum", label: "Ethereum (ETH)", scheme: "ethereum", supportsAmount: false, placeholder: "0x..." },
+  { id: "litecoin", label: "Litecoin (LTC)", scheme: "litecoin", supportsAmount: true, placeholder: "ltc1q..." },
+  { id: "dogecoin", label: "Dogecoin (DOGE)", scheme: "dogecoin", supportsAmount: true, placeholder: "D..." },
+  { id: "bitcoincash", label: "Bitcoin Cash (BCH)", scheme: "bitcoincash", supportsAmount: true, placeholder: "q..." },
+  { id: "solana", label: "Solana (SOL)", scheme: "solana", supportsAmount: true, placeholder: "address" },
+];
+
+export function encodeCrypto(p: CryptoPayload): string {
+  const coin = CRYPTO_COINS.find((c) => c.id === p.coin);
+  const address = p.address.trim();
+  // Wallet addresses are base58/bech32/hex: refuse anything that could smuggle URI syntax.
+  if (!coin || !address || !/^[A-Za-z0-9]{20,128}$/.test(address)) return "";
+  const params = new URLSearchParams();
+  const amount = p.amount.trim();
+  if (coin.supportsAmount && amount && /^\d+(\.\d{1,8})?$/.test(amount) && Number(amount) > 0) params.set("amount", amount);
+  if (p.label.trim()) params.set("label", p.label.trim().slice(0, 60));
+  const query = params.toString().replace(/\+/g, "%20");
+  return `${coin.scheme}:${address}${query ? `?${query}` : ""}`;
+}
+
+export function encodeWhatsApp(p: WhatsAppPayload): string {
+  // wa.me wants the international number with digits only (no +, spaces or dashes).
+  const digits = p.phone.replace(/\D/g, "").replace(/^0+/, "");
+  if (digits.length < 7 || digits.length > 15) return "";
+  const message = p.message.trim();
+  return `https://wa.me/${digits}${message ? `?text=${encodeURIComponent(message)}` : ""}`;
 }
 
 export function encodeWifi(p: WifiPayload): string {
@@ -173,6 +264,14 @@ export function encodePayload<T extends QrType>(type: T, payload: QrPayloadMap[T
       return encodeUrl((payload as QrPayloadMap["url"]).url);
     case "social":
       return encodeSocial(payload as SocialPayload);
+    case "whatsapp":
+      return encodeWhatsApp(payload as WhatsAppPayload);
+    case "payment":
+      return encodePayment(payload as PaymentPayload);
+    case "crypto":
+      return encodeCrypto(payload as CryptoPayload);
+    case "file":
+      return encodeUrl((payload as QrPayloadMap["file"]).url);
     case "text":
       return (payload as QrPayloadMap["text"]).text;
     case "wifi":

@@ -287,7 +287,7 @@ export function BatchTool() {
 
       <div className="rounded-xl border border-border bg-card shadow-panel">
         {/* 목록 */}
-        <div className="p-4 sm:px-6 sm:py-5">
+        <div className="p-4 sm:px-6 sm:py-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-[15px] font-semibold text-foreground">{b.listTitle}</h2>
             <button
@@ -449,7 +449,7 @@ export function BatchTool() {
         </div>
 
         {/* 고급 설정 — defaults are fine for almost everyone. */}
-        <div className="border-t border-border p-4 sm:px-6 sm:py-4">
+        <div className="border-t border-border p-4 sm:px-6 sm:py-6">
           <details className="group">
             <summary className="-m-2 flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors select-none hover:bg-subtle">
               <span className="min-w-0 flex-1">
@@ -491,7 +491,7 @@ export function BatchTool() {
         </div>
 
         {/* 내려받기 */}
-        <div className="rounded-b-xl border-t border-border bg-subtle p-4 sm:px-6 sm:py-5">
+        <div className="rounded-b-xl border-t border-border bg-subtle p-4 sm:px-6 sm:py-6">
           <button type="button" className="btn btn-primary min-h-12 w-full text-[15px]" onClick={run} disabled={running || validCount === 0}>
             <ArchiveIcon />
             {progress ? b.working(progress.done, progress.total) : b.download(validCount)}

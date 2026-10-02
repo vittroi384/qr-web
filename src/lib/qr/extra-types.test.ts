@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { encodeCrypto, encodePayload, encodeWhatsApp } from "./encoders";
+import { encodeCrypto, encodePayload, encodePayment, encodeWhatsApp } from "./encoders";
 
 describe("encodeWhatsApp", () => {
   it("builds a wa.me link with digits only and an encoded message", () => {
@@ -35,5 +35,18 @@ describe("encodeCrypto", () => {
 describe("file type", () => {
   it("is a plain link", () => {
     assert.equal(encodePayload("file", { url: "drive.google.com/file/d/abc/view" }), "https://drive.google.com/file/d/abc/view");
+  });
+});
+
+describe("encodePayment", () => {
+  it("builds provider links with and without amount", () => {
+    assert.equal(encodePayment({ provider: "paypal", handle: "@shop", amount: "" }), "https://paypal.me/shop");
+    assert.equal(encodePayment({ provider: "paypal", handle: "shop", amount: "12.50" }), "https://paypal.me/shop/12.50");
+    assert.equal(encodePayment({ provider: "cashapp", handle: "$jane", amount: "5" }), "https://cash.app/$jane/5");
+    assert.equal(encodePayment({ provider: "kofi", handle: "jane", amount: "5" }), "https://ko-fi.com/jane");
+  });
+  it("ignores malformed amounts and rejects unknown providers", () => {
+    assert.equal(encodePayment({ provider: "venmo", handle: "jane", amount: "1.234" }), "https://venmo.com/u/jane");
+    assert.equal(encodePayment({ provider: "nope", handle: "jane", amount: "" }), "");
   });
 });

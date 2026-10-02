@@ -32,7 +32,11 @@ export const ko = {
     done: "완료",
     current: "현재 단계",
     label: "사용 순서",
-    generator: ["종류 고르기", "내용 입력", "저장"],
+    generator: [
+      { title: "종류 고르기", body: "링크, Wi-Fi, 연락처 등" },
+      { title: "내용 입력", body: "입력하면 미리보기가 바로 바뀝니다" },
+      { title: "저장", body: "PNG, SVG, 인쇄용 안내판" },
+    ],
   },
 
   generator: {
@@ -58,11 +62,16 @@ export const ko = {
       phone: "전화 걸기",
       geo: "지도 열기",
       event: "일정 추가",
-    } as Record<QrType, string>,
+      whatsapp: "대화 열기",
+      payment: "PayPal·Venmo 등",
+      crypto: "지갑 주소 + 금액",
+      file: "파일 열기",
+    } satisfies Record<QrType, string>,
   },
 
   forms: {
     required: "필수",
+    optional: "선택",
     url: {
       label: "웹사이트 주소",
       hint: "https:// 를 생략하면 자동으로 붙습니다.",
@@ -77,6 +86,41 @@ export const ko = {
       platformNames: {} as Record<string, string>,
       /** Placeholders that differ from SOCIAL_PLATFORMS (which are written in Korean). */
       platformPlaceholders: {} as Record<string, string>,
+    },
+    whatsapp: {
+      phone: "WhatsApp 번호",
+      phoneHint: "국가 번호를 포함해 입력하세요.",
+      phonePlaceholder: "+82 10-1234-5678",
+      message: "메시지",
+      messagePlaceholder: "예: 안녕하세요, 예약 문의드립니다.",
+      result: "열리는 주소",
+    },
+    payment: {
+      provider: "서비스",
+      handle: "사용자 이름",
+      handleHint: "@나 $는 빼고 입력해도 됩니다.",
+      amount: "금액",
+      amountPlaceholder: "예: 25.00",
+      amountHint: "비워 두면 보내는 사람이 금액을 정합니다.",
+      amountInvalid: "숫자로 입력하세요. 소수점 아래 2자리까지 가능합니다.",
+      result: "열리는 주소",
+    },
+    crypto: {
+      coin: "코인",
+      address: "지갑 주소",
+      addressInvalid: "주소를 확인하세요. 공백 없이 영문과 숫자 20자 이상이어야 합니다.",
+      amount: "금액",
+      amountPlaceholder: "예: 0.001",
+      amountHint: "비워 두면 보내는 사람이 금액을 정합니다.",
+      amountInvalid: "숫자로 입력하세요. 소수점 아래 8자리까지 가능합니다.",
+      warning: "주소를 꼭 다시 확인하세요. 암호화폐 송금은 되돌릴 수 없습니다.",
+    },
+    file: {
+      label: "공유 링크",
+      placeholder: "https://drive.google.com/file/d/…",
+      guide:
+        "먼저 파일을 Google Drive, Dropbox 또는 내 웹사이트에 올린 뒤 공유 링크를 여기에 붙여 넣으세요. 링크 공유 범위가 ‘링크가 있는 모든 사용자’로 되어 있는지 확인하세요.",
+      result: "열리는 주소",
     },
     text: {
       label: "텍스트",
@@ -174,8 +218,8 @@ export const ko = {
     summaryPrefix: "저장 크기",
     summaryMargin: (n: number) => `여백 ${n}칸`,
     downloadPng: "이미지로 저장 (PNG)",
-    svg: "인쇄용 파일 (SVG)",
-    copy: "복사해서 붙여넣기",
+    svg: "SVG 저장",
+    copy: "이미지 복사",
     printSheet: "안내판 인쇄 / PDF",
     savedToast: "저장됨 · 휴대폰 카메라로 스캔해 보세요",
     copiedToast: "복사됨 · 붙여 넣은 뒤 휴대폰 카메라로 스캔해 보세요",
@@ -235,6 +279,10 @@ export const ko = {
         a: "네. 입력한 내용이 QR 이미지 자체에 담기는 정적 QR이기 때문에 만료되지 않으며, 이 사이트가 없어도 계속 동작합니다.",
       },
       {
+        q: "PDF 파일도 QR 코드로 만들 수 있나요?",
+        a: "네. 파일을 Google Drive, Dropbox 또는 내 웹사이트에 올리고 누구나 열 수 있게 공유한 뒤, ‘PDF / 파일 링크’ 형식에 공유 링크를 넣으면 됩니다.",
+      },
+      {
         q: "인쇄용으로는 어떤 형식이 좋나요?",
         a: "SVG는 벡터 형식이라 아무 크기로 확대해도 선명합니다. 웹·메신저용은 PNG를 권장합니다.",
       },
@@ -266,6 +314,10 @@ export const ko = {
       url: "스캔하여 열기",
       vcard: "연락처 저장",
       social: "팔로우하기",
+      whatsapp: "WhatsApp으로 문의하세요",
+      payment: "스캔해서 결제",
+      crypto: "스캔해서 송금",
+      file: "스캔하여 파일 열기",
       default: "QR 코드를 스캔하세요",
     },
     ssid: (ssid: string) => `SSID: ${ssid}`,
@@ -286,7 +338,7 @@ export const ko = {
       { title: "무료", body: "회원가입이나 결제가 필요 없습니다. 운영 비용은 광고로 충당합니다." },
     ],
     p1: (site: string) =>
-      `${site}는 URL, 텍스트, Wi-Fi 접속 정보, 연락처, 이메일, 문자, 전화번호, 위치, 일정 등 일상에서 자주 쓰는 정보를 누구나 쉽게 QR 코드로 바꿀 수 있도록 만든 무료 도구입니다.`,
+      `${site}는 URL, SNS 프로필, WhatsApp 대화, 텍스트, Wi-Fi 접속 정보, 연락처, 이메일, 문자, 전화번호, 위치, 일정, 결제 링크, 암호화폐 지갑 주소, 파일 링크 등 일상에서 자주 쓰는 정보를 누구나 쉽게 QR 코드로 바꿀 수 있도록 만든 무료 도구입니다.`,
     p2: "QR 이미지는 서버가 아닌 사용자의 브라우저 안에서 바로 생성되므로 빠르고, 만들어진 QR은 만료 없이 영구적으로 동작합니다. 회원가입이나 결제는 필요하지 않으며, 운영 비용은 페이지에 표시되는 광고로 충당합니다.",
     p3Before: "서비스 품질 개선과 악용 방지를 위해 입력 내용과 접속 정보가 서버에 기록될 수 있습니다. 자세한 내용은 ",
     p3Link: "개인정보처리방침",
@@ -302,7 +354,7 @@ export const ko = {
     s1Title: "1. 수집하는 정보",
     s1Intro: (site: string) => `${site}(이하 "서비스")는 회원가입을 요구하지 않으며, 다음 정보를 수집할 수 있습니다.`,
     s1InputTerm: "QR 코드 입력 내용",
-    s1Input: "사용자가 QR로 변환하기 위해 입력한 내용(URL, 텍스트, Wi-Fi 이름, 연락처 정보 등)과 선택한 디자인 옵션.",
+    s1Input: "사용자가 QR로 변환하기 위해 입력한 내용(URL, 텍스트, Wi-Fi 이름, 연락처 정보, 결제 사용자 이름, 지갑 주소 등)과 선택한 디자인 옵션.",
     s1LoggingOn: " 현재 이 기록 기능은 사용 중입니다.",
     s1LoggingOff: " 현재 이 기록 기능은 꺼져 있습니다.",
     s1WifiMask: " Wi-Fi 비밀번호는 저장 전에 항상 마스킹 처리되어 원문이 기록되지 않습니다.",

@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { cookies } from "next/headers";
+import { GATE_COOKIE, gateSatisfied, ipAllowedForAdmin } from "@/lib/adminAccess";
 import { writeAudit } from "@/lib/audit";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getRequestMeta } from "@/lib/ip";
@@ -36,8 +37,12 @@ function csvCell(value: unknown): string {
 }
 
 export async function GET(req: NextRequest) {
+  // Same visibility rules as the admin pages: allowlisted IP + gate, then a bound session.
+  const meta = getRequestMeta(req);
+  if (!ipAllowedForAdmin(meta.ip)) return new Response(null, { status: 404 });
+  if (!(await gateSatisfied(req.cookies.get(GATE_COOKIE)?.value))) return new Response(null, { status: 404 });
   const cookieStore = await cookies();
-  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value))) {
+  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value, req.headers.get("user-agent")))) {
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -50,7 +55,6 @@ export async function GET(req: NextRequest) {
     to: sp.get("to") ?? undefined,
   };
 
-  const meta = getRequestMeta(req);
   writeAudit({ action: "logs_export", newValue: JSON.stringify(filter), ip: meta.ip, userAgent: meta.userAgent });
 
   const encoder = new TextEncoder();

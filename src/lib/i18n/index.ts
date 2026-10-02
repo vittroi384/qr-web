@@ -4,8 +4,9 @@ import { ko, type Dict } from "./ko";
 
 export type { Dict };
 export type Locale = "ko" | "en";
-export const LOCALES: readonly Locale[] = ["ko", "en"];
-export const DEFAULT_LOCALE: Locale = "ko";
+/** English is the primary language and lives at the root; Korean is served under "/ko". */
+export const LOCALES: readonly Locale[] = ["en", "ko"];
+export const DEFAULT_LOCALE: Locale = "en";
 
 const DICTS: Record<Locale, Dict> = { ko, en };
 
@@ -17,14 +18,14 @@ export function getDict(locale: Locale): Dict {
   return DICTS[locale];
 }
 
-/** "/about" → "/about" (ko) or "/en/about" (en). "/" → "/" or "/en". */
+/** "/about" → "/about" (en) or "/ko/about" (ko). "/" → "/" or "/ko". */
 export function localePath(locale: Locale, path: string): string {
   const clean = path.startsWith("/") ? path : `/${path}`;
   if (locale === DEFAULT_LOCALE) return clean;
   return clean === "/" ? `/${locale}` : `/${locale}${clean}`;
 }
 
-/** "/en/about" → "/about", "/en" → "/", "/about" → "/about". */
+/** "/ko/about" → "/about", "/ko" → "/", "/about" → "/about". */
 export function stripLocale(pathname: string): string {
   for (const l of LOCALES) {
     if (l === DEFAULT_LOCALE) continue;
@@ -34,14 +35,14 @@ export function stripLocale(pathname: string): string {
   return pathname || "/";
 }
 
-/** Canonical + hreflang links for a public page. `path` is the Korean (unprefixed) path. */
+/** Canonical + hreflang links for a public page. `path` is the unprefixed (English) path. */
 export function alternatesFor(locale: Locale, path: string): NonNullable<Metadata["alternates"]> {
   return {
     canonical: localePath(locale, path),
     languages: {
-      ko: localePath("ko", path),
       en: localePath("en", path),
-      "x-default": localePath("ko", path),
+      ko: localePath("ko", path),
+      "x-default": localePath(DEFAULT_LOCALE, path),
     },
   };
 }
