@@ -9,10 +9,8 @@ export type BatchAds = { left: AdSlotConfig; right: AdSlotConfig; incontent: AdS
 const sideVisible = (c: AdSlotConfig) => Boolean((c.enabled && c.client && c.slotId) || c.showPlaceholder);
 
 /**
- * Same ad structure as the home page: a sticky left sidebar beside the tool (lg+), and below the
- * tool a top-aligned row of the in-content rectangle plus the right vertical unit (xl+). The
- * download button sits at the card's lower right, so the left unit is never near it; the row
- * below starts 96px under the card. Phones show only the in-content unit.
+ * Two sticky sidebars (left lg+, right xl+) beside the tool, mirroring each other, plus the
+ * in-content rectangle and FAQ below the tool. Phones show only the in-content unit.
  */
 export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
   const t = getDict(locale).batch;
@@ -41,33 +39,28 @@ export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
             </I18nProvider>
           </div>
 
-          {/* Lower band: in-content rectangle + FAQ on the left, right vertical unit (xl+) beside them —
-              the FAQ gives the column real height so the vertical unit never stands alone. */}
-          <div
-            className={`mt-12 grid items-start gap-8 border-t border-border pt-12 ${
-              showRight ? "xl:grid-cols-[minmax(0,1fr)_300px]" : ""
-            }`}
-          >
-            <div className="min-w-0">
-              <AdSlot config={ads.incontent} name="본문 중간" shape="rectangle" />
-              <section className="mt-12" aria-labelledby="batch-faq-heading">
-                <h2 id="batch-faq-heading" className="section-title">
-                  {t.faqTitle}
-                </h2>
-                <div className="mt-4">
-                  <FaqList items={t.faq} />
-                </div>
-              </section>
-            </div>
-            {showRight ? (
-              <aside className="hidden xl:block">
-                <div className="sticky top-20">
-                  <AdSlot config={ads.right} name="오른쪽" shape="vertical" />
-                </div>
-              </aside>
-            ) : null}
+          {/* Below the tool: in-content rectangle, then the FAQ. Same width as the tool card. */}
+          <div className="mx-auto mt-12 max-w-4xl border-t border-border pt-12">
+            <AdSlot config={ads.incontent} name="본문 중간" shape="rectangle" />
+            <section className="mt-12" aria-labelledby="batch-faq-heading">
+              <h2 id="batch-faq-heading" className="section-title">
+                {t.faqTitle}
+              </h2>
+              <div className="mt-4">
+                <FaqList items={t.faq} />
+              </div>
+            </section>
           </div>
         </div>
+
+        {/* 오른쪽 세로 광고 (xl 이상) — mirrors the left sidebar */}
+        {showRight ? (
+          <aside className="hidden w-[300px] shrink-0 xl:block">
+            <div className="sticky top-20">
+              <AdSlot config={ads.right} name="오른쪽" shape="vertical" />
+            </div>
+          </aside>
+        ) : null}
       </div>
     </main>
   );

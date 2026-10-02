@@ -70,12 +70,11 @@ export function HomePage({ locale }: { locale: Locale }) {
                 </ul>
               </section>
 
-              <section className="mt-16 grid gap-6 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] lg:gap-12" aria-labelledby="faq-heading">
-                <div>
-                  <h2 id="faq-heading" className="section-title">
-                    {t.home.faqTitle}
-                  </h2>
-                </div>
+              <section className="mt-16" aria-labelledby="faq-heading">
+                <h2 id="faq-heading" className="section-title">
+                  {t.home.faqTitle}
+                </h2>
+                <div className="mt-4">
                 <FaqList
                   items={[
                     ...t.home.faq,
@@ -93,6 +92,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                     },
                   ]}
                 />
+                </div>
               </section>
             </div>
 
