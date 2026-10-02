@@ -62,7 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="flex min-h-full flex-col">
         <SiteHeader siteName={s.site_name} locale={locale} />
         <div className="flex-1">{children}</div>
-        <SiteFooter siteName={s.site_name} notice={notice} locale={locale} />
+        <SiteFooter siteName={s.site_name} notice={notice} locale={locale} donateUrl={s.donate_url} />
       </body>
     </html>
   );

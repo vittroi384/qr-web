@@ -30,7 +30,7 @@ export function TypeTabs({ value, onChange }: { value: QrType; onChange: (t: QrT
               <TypeIcon type={type} className={`size-[18px] shrink-0 ${active ? "text-white" : ""}`} />
               <span className="min-w-0">
                 <span className="block text-[13px] leading-tight font-medium">{t.types.labels[type]}</span>
-                <span className={`mt-0.5 block text-[11px] leading-tight ${active ? "text-white/80" : "text-muted/90"}`}>{t.types.hints[type]}</span>
+                <span className={`mt-0.5 block text-[11px] leading-tight ${active ? "text-white/90" : "text-muted/90"}`}>{t.types.hints[type]}</span>
               </span>
             </button>
           );

@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
 import { adConfig } from "@/components/ads/adConfig";
+import { AffiliateCard } from "@/components/AffiliateCard";
+import { resolveAffiliate } from "@/components/affiliate";
 import { FaqList } from "@/components/FaqList";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { QrGenerator } from "@/components/qr/QrGenerator";
-import { alternatesFor, getDict, getLanding, localePath, slugToType, typeToSlug, type Locale } from "@/lib/i18n";
+import { alternatesFor, getDict, localePath, resolveLanding, type LandingTarget, type Locale } from "@/lib/i18n";
 import type { QrType } from "@/lib/qr/types";
 import { getSettings } from "@/lib/settings";
 
@@ -32,17 +34,21 @@ function jsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
-export function landingType(slug: string): QrType {
-  const type = slugToType(slug);
-  if (!type) notFound();
-  return type;
+/** Types where a printed sign is the usual outcome, so the print partner slot is relevant. */
+const PRINT_TYPES: readonly QrType[] = ["url", "social", "whatsapp", "text", "wifi", "vcard", "email", "phone", "geo", "event", "payment"];
+
+/** Type or use-case landing for this slug, or the 404 page. */
+export function landingTarget(locale: Locale, slug: string): LandingTarget {
+  const target = resolveLanding(locale, slug);
+  if (!target) notFound();
+  return target;
 }
 
 export function landingMetadata(locale: Locale, slug: string): Metadata {
-  const type = slugToType(slug);
-  if (!type) return {};
-  const c = getLanding(locale)[type];
-  const path = `/${typeToSlug(type)}`;
+  const target = resolveLanding(locale, slug);
+  if (!target) return {};
+  const c = target.copy;
+  const path = `/${target.slug}`;
   return {
     title: c.metaTitle,
     description: c.metaDescription,
@@ -62,10 +68,11 @@ export function landingMetadata(locale: Locale, slug: string): Metadata {
  * preselected, then type-specific long-form copy, FAQ (also as FAQPage JSON-LD) and links to the
  * other generators. Ads use the home page's five-slot layout and the same distance rules.
  */
-export async function LandingPage({ locale, type }: { locale: Locale; type: QrType }) {
+export async function LandingPage({ locale, target }: { locale: Locale; target: LandingTarget }) {
   const t = getDict(locale);
-  const c = getLanding(locale)[type];
+  const { type, copy: c } = target;
   const s = await getSettings();
+  const affiliate = resolveAffiliate(s, locale);
   const ads = {
     top: adConfig(s, s.ad_slot_top),
     left: adConfig(s, s.ad_slot_left),
@@ -76,7 +83,7 @@ export async function LandingPage({ locale, type }: { locale: Locale; type: QrTy
   const sideVisible = (cfg: AdSlotConfig) => (cfg.enabled && cfg.client && cfg.slotId) || cfg.showPlaceholder;
 
   const base = s.site_url.replace(/\/$/, "");
-  const pageUrl = `${base}${localePath(locale, `/${typeToSlug(type)}`)}`;
+  const pageUrl = `${base}${localePath(locale, `/${target.slug}`)}`;
   const structured = [
     {
       "@context": "https://schema.org",
@@ -124,7 +131,12 @@ export async function LandingPage({ locale, type }: { locale: Locale; type: QrTy
 
         <div className="min-w-0 flex-1">
           <I18nProvider locale={locale}>
-            <QrGenerator initialType={type} heading={{ title: c.title, subtitle: c.subtitle }} />
+            <QrGenerator
+              initialType={type}
+              initialPayload={target.initialPayload}
+              heading={{ title: c.title, subtitle: c.subtitle }}
+              affiliate={affiliate}
+            />
           </I18nProvider>
 
           {/* Ads start below the generator — never beside it (same rule as the home page). */}
@@ -177,6 +189,9 @@ export async function LandingPage({ locale, type }: { locale: Locale; type: QrTy
                     ))}
                   </ol>
                 </section>
+
+                {/* Print partner: after the tips, far from the ad slots and the generator's buttons. */}
+                {affiliate && PRINT_TYPES.includes(type) ? <AffiliateCard info={affiliate} className="mt-10" /> : null}
               </article>
 
               <section className="mt-16" aria-labelledby="faq-heading">

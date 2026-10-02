@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { QrStyleOptions } from "@/lib/qr/types";
 import { CloseIcon, PrinterIcon } from "../icons";
+import { AffiliateCard, type AffiliateInfo } from "../AffiliateCard";
 import { useI18n } from "../i18n/I18nProvider";
 import { drawQrToCanvas } from "./render";
 
@@ -69,6 +70,7 @@ export function PrintSheetDialog({
   encoded,
   style,
   defaults,
+  affiliate,
   onClose,
   onPrint,
 }: {
@@ -77,6 +79,7 @@ export function PrintSheetDialog({
   defaults: SheetText;
   onClose: () => void;
   onPrint: () => void;
+  affiliate: AffiliateInfo | null;
 }) {
   const { t } = useI18n();
   const p = t.print;
@@ -170,6 +173,8 @@ export function PrintSheetDialog({
                   {p.print}
                 </button>
                 <p className="hint">{p.pdfHint}</p>
+                {/* Partner slot: 32px below the print button, labelled "Sponsored". */}
+                {affiliate ? <AffiliateCard info={affiliate} className="mt-8" /> : null}
               </div>
             </div>
           </div>

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { en } from "./en";
 import { ko, type Dict } from "./ko";
-import { landingEn } from "./landing.en";
-import { landingKo } from "./landing.ko";
-import type { QrType } from "@/lib/qr/types";
+import { landingEn, useCasesEn } from "./landing.en";
+import { landingKo, useCasesKo } from "./landing.ko";
+import type { QrPayloadMap, QrType } from "@/lib/qr/types";
 
 export type { Dict };
 export type Locale = "ko" | "en";
@@ -104,4 +104,43 @@ const LANDINGS: Record<Locale, Record<QrType, LandingCopy>> = { en: landingEn, k
 
 export function getLanding(locale: Locale): Record<QrType, LandingCopy> {
   return LANDINGS[locale];
+}
+
+/* ---------- Use-case landing pages (/restaurant-menu-qr-code, …) ---------- */
+
+export type UseCaseId = "restaurant_menu" | "wedding" | "business_card" | "google_review" | "wifi_cafe";
+
+/** Same page template as a type landing, but the copy is about the situation, not the format. */
+export const USE_CASES: readonly {
+  id: UseCaseId;
+  slug: string;
+  type: QrType;
+  /** Payload fields to preselect, e.g. the Google Review platform. */
+  initialPayload?: Partial<QrPayloadMap>;
+}[] = [
+  { id: "restaurant_menu", slug: "restaurant-menu-qr-code", type: "url" },
+  { id: "wedding", slug: "wedding-qr-code", type: "url" },
+  { id: "business_card", slug: "business-card-qr-code", type: "vcard" },
+  { id: "google_review", slug: "google-review-qr-code", type: "social", initialPayload: { social: { platform: "google_review", handle: "" } } },
+  { id: "wifi_cafe", slug: "wifi-qr-code-for-cafe", type: "wifi" },
+];
+
+const USE_CASE_COPY: Record<Locale, Record<UseCaseId, LandingCopy>> = { en: useCasesEn, ko: useCasesKo };
+
+export type LandingTarget =
+  | { kind: "type"; slug: string; type: QrType; copy: LandingCopy; initialPayload?: undefined }
+  | { kind: "useCase"; slug: string; type: QrType; copy: LandingCopy; id: UseCaseId; initialPayload?: Partial<QrPayloadMap> };
+
+/** Resolves any landing slug (type or use case) to its copy; null for unknown slugs. */
+export function resolveLanding(locale: Locale, slug: string): LandingTarget | null {
+  const type = slugToType(slug);
+  if (type) return { kind: "type", slug, type, copy: LANDINGS[locale][type] };
+  const uc = USE_CASES.find((u) => u.slug === slug);
+  if (uc) return { kind: "useCase", slug, type: uc.type, copy: USE_CASE_COPY[locale][uc.id], id: uc.id, initialPayload: uc.initialPayload };
+  return null;
+}
+
+/** All landing paths (types + use cases), unprefixed — for the sitemap. */
+export function allLandingSlugs(): string[] {
+  return [...Object.values(LANDING_SLUGS), ...USE_CASES.map((u) => u.slug)];
 }

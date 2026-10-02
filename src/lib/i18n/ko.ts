@@ -1,4 +1,5 @@
 import { QR_TYPE_DESCRIPTIONS, QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
+import type { UseCaseId } from "./index";
 
 /**
  * Korean UI copy — the source dictionary. Its shape defines `Dict`; every other locale must
@@ -25,6 +26,15 @@ export const ko = {
     about: "소개",
     privacy: "개인정보처리방침",
     generators: "QR 코드 종류",
+    useCases: "활용 사례",
+    useCaseLabels: {
+      restaurant_menu: "식당 메뉴판",
+      wedding: "청첩장·결혼식",
+      business_card: "명함",
+      google_review: "구글 리뷰",
+      wifi_cafe: "카페·숙소 Wi-Fi",
+    } satisfies Record<UseCaseId, string>,
+    donate: "커피 한 잔 후원하기",
     /** Shown on English pages only while the admin footer notice is still the default text. */
     defaultNotice: "입력하신 내용은 서비스 품질 개선을 위해 서버에 저장될 수 있습니다.",
   },
@@ -38,6 +48,13 @@ export const ko = {
       { title: "내용 입력", body: "입력하면 미리보기가 바로 바뀝니다" },
       { title: "저장", body: "PNG, SVG, 인쇄용 안내판" },
     ],
+  },
+
+  affiliate: {
+    sponsored: "제휴",
+    heading: "이 QR을 스티커·테이블텐트로 인쇄",
+    defaultLabel: "스티커·테이블텐트 인쇄하기",
+    defaultNote: "제휴 링크입니다. 구매하셔도 추가 비용은 없으며, 운영자가 수수료를 받을 수 있습니다.",
   },
 
   landing: {

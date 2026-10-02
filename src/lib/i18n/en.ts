@@ -23,6 +23,15 @@ export const en: Dict = {
     about: "About",
     privacy: "Privacy Policy",
     generators: "Generators",
+    useCases: "Use cases",
+    useCaseLabels: {
+      restaurant_menu: "Restaurant menu",
+      wedding: "Wedding",
+      business_card: "Business card",
+      google_review: "Google reviews",
+      wifi_cafe: "Café & rental Wi-Fi",
+    },
+    donate: "Buy me a coffee",
     defaultNotice: "What you enter may be stored on our server to improve the service.",
   },
 
@@ -35,6 +44,13 @@ export const en: Dict = {
       { title: "Add content", body: "The preview updates as you type" },
       { title: "Save", body: "PNG, SVG or a print sheet" },
     ],
+  },
+
+  affiliate: {
+    sponsored: "Sponsored",
+    heading: "Print this QR code as stickers or table tents",
+    defaultLabel: "Print stickers & table tents",
+    defaultNote: "Affiliate link — we may earn a commission at no extra cost to you.",
   },
 
   landing: {

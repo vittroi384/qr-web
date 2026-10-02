@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { QrStyleOptions } from "@/lib/qr/types";
 import { CheckIcon, CodeIcon, CopyIcon, DownloadIcon, PrinterIcon, QrMarkIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
+import type { AffiliateInfo } from "../AffiliateCard";
 import { PrintSheetDialog, type SheetText } from "./PrintSheet";
 import { buildSvg, drawQrToCanvas, exactWidth, isCapacityError, triggerDownload } from "./render";
 import { Segmented } from "./Segmented";
@@ -15,10 +16,11 @@ type Props = {
   fileBase: string;
   /** Starting text for the print sheet (depends on the QR type and its content). */
   sheetDefaults: SheetText;
+  affiliate: AffiliateInfo | null;
   onAction: (event: "download_png" | "download_svg" | "copy" | "print") => void;
 };
 
-export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaults, onAction }: Props) {
+export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaults, affiliate, onAction }: Props) {
   const { t } = useI18n();
   const p = t.preview;
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -227,6 +229,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
           encoded={encoded}
           style={style}
           defaults={sheetDefaults}
+          affiliate={affiliate}
           onClose={() => setSheetOpen(false)}
           onPrint={() => onAction("print")}
         />

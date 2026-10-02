@@ -10,7 +10,7 @@
 :root {
   /*
    * Sky palette. Neutrals lean toward the sky hue so the page reads as a bright, airy blue
-   * rather than flat white; the accent is sky-600 (#0284c7, 4.6:1 on white) for actions.
+   * rather than flat white; the accent is sky-700 (#0369a1, 5.9:1 on white — sky-600 fails AA at 4.2:1) for actions.
    */
   --background: #e9f3fb;
   --foreground: #0f2237;
@@ -23,8 +23,8 @@
   --wash-a: rgba(14, 165, 233, 0.26);
   --wash-b: rgba(56, 189, 248, 0.22);
   --wash-c: rgba(251, 191, 36, 0.14);
-  --accent: #0284c7;
-  --accent-hover: #0369a1;
+  --accent: #0369a1;
+  --accent-hover: #075985;
   --accent-soft: #e0f2fe;
   --accent-foreground: #ffffff;
   /* Secondary warm tone for small highlights (badges, dots) so the page isn't monochrome. */

@@ -6,6 +6,7 @@ import type { Dict } from "@/lib/i18n";
 import { DEFAULT_PAYLOADS, DEFAULT_STYLE, type QrPayloadMap, type QrStyleOptions, type QrType } from "@/lib/qr/types";
 import { StepGuide } from "../StepGuide";
 import { DownloadIcon, GridIcon, PencilIcon, ResetIcon } from "../icons";
+import type { AffiliateInfo } from "../AffiliateCard";
 import { useI18n } from "../i18n/I18nProvider";
 import { PayloadForm } from "./PayloadForm";
 import { SectionHeading } from "./SectionHeading";
@@ -34,16 +35,22 @@ function sheetDefaults(type: QrType, payloads: QrPayloadMap, encoded: string, t:
 
 export function QrGenerator({
   initialType = "url",
+  initialPayload,
   heading,
+  affiliate,
 }: {
   /** Type selected on first render (landing pages); visitors can still switch. */
   initialType?: QrType;
+  /** Payload fields to preselect (e.g. the Google Review platform on its landing page). */
+  initialPayload?: Partial<QrPayloadMap>;
   /** Replaces the default H1 and tagline (landing pages use their own). */
   heading?: { title: string; subtitle: string };
+  /** Print-partner slot shown inside the print-sheet dialog; omitted when not configured. */
+  affiliate?: AffiliateInfo | null;
 } = {}) {
   const { t } = useI18n();
   const [type, setType] = useState<QrType>(initialType);
-  const [payloads, setPayloads] = useState<QrPayloadMap>(DEFAULT_PAYLOADS);
+  const [payloads, setPayloads] = useState<QrPayloadMap>(() => ({ ...DEFAULT_PAYLOADS, ...initialPayload }));
   const [style, setStyle] = useState<QrStyleOptions>(DEFAULT_STYLE);
 
   const payload = payloads[type];
@@ -118,6 +125,7 @@ export function QrGenerator({
         <div className="min-w-0 border-t border-border bg-subtle p-4 sm:px-6 sm:py-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-r-xl lg:border-t-0 lg:border-l">
           <div className="lg:sticky lg:top-20">
             <QrPreview
+              affiliate={affiliate ?? null}
               encoded={encoded}
               style={style}
               onStyleChange={setStyle}

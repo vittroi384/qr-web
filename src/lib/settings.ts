@@ -17,6 +17,10 @@ export const SETTING_KEYS = [
   "ad_slot_incontent",
   "logging_enabled",
   "log_retention_days",
+  "affiliate_print_url",
+  "affiliate_print_label",
+  "affiliate_print_note",
+  "donate_url",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -37,6 +41,11 @@ export const DEFAULT_SETTINGS: Settings = {
   ad_slot_incontent: "",
   logging_enabled: "1",
   log_retention_days: "90",
+  // Monetisation slots: an empty URL hides the slot entirely.
+  affiliate_print_url: "",
+  affiliate_print_label: "Print stickers & table tents",
+  affiliate_print_note: "Affiliate link — we may earn a commission at no extra cost to you.",
+  donate_url: "",
 };
 
 export const SETTING_LABELS: Record<SettingKey, string> = {
@@ -54,6 +63,10 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   ad_slot_incontent: "광고 슬롯 ID — 본문 중간",
   logging_enabled: "방문자 입력 기록 저장",
   log_retention_days: "기록 보관 일수 (0 = 무제한)",
+  affiliate_print_url: "인쇄 제휴 링크 URL (비우면 숨김)",
+  affiliate_print_label: "인쇄 제휴 링크 문구",
+  affiliate_print_note: "인쇄 제휴 고지 문구",
+  donate_url: "후원 링크 URL (Buy Me a Coffee 등, 비우면 숨김)",
 };
 
 export const BOOLEAN_SETTINGS: SettingKey[] = ["ads_enabled", "ad_placeholders", "logging_enabled"];

@@ -16,6 +16,12 @@ const GROUPS: { title: string; description?: string; keys: SettingKey[] }[] = [
     keys: ["adsense_client", "ads_enabled", "ad_placeholders", "ad_slot_top", "ad_slot_left", "ad_slot_right", "ad_slot_bottom", "ad_slot_incontent"],
   },
   {
+    title: "수익화",
+    description:
+      "인쇄 제휴 링크는 인쇄용 안내판 창과 랜딩 페이지 팁 아래에 '제휴' 표시와 함께 작은 카드로 나옵니다. 후원 링크는 푸터에 표시됩니다. URL을 비우면 해당 항목은 아무것도 표시되지 않습니다. 문구가 기본값이면 한국어 페이지에서는 한국어 기본 문구로 바뀌어 보입니다.",
+    keys: ["affiliate_print_url", "donate_url", "affiliate_print_label", "affiliate_print_note"],
+  },
+  {
     title: "방문자 입력 기록",
     description: "방문자가 QR로 만든 내용과 접속 정보를 서버 DB에 저장할지 결정합니다. Wi-Fi 비밀번호는 설정과 무관하게 항상 마스킹(****)되어 저장됩니다. 보관 일수가 지난 기록은 자동 삭제됩니다.",
     keys: ["logging_enabled", "log_retention_days"],
@@ -27,6 +33,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   adsense_client: "AdSense 게시자 ID 형식이 올바르지 않습니다. 예: ca-pub-1234567890123456",
   ad_slot: "광고 슬롯 ID는 숫자 5~20자리여야 합니다. 비워 두면 해당 자리는 표시되지 않습니다. (다른 변경도 함께 저장되지 않았습니다)",
   log_retention_days: "기록 보관 일수는 0 이상의 정수여야 합니다. (다른 변경도 함께 저장되지 않았습니다)",
+  monetize_url: "제휴·후원 링크는 http:// 또는 https:// 로 시작하는 주소여야 합니다. (다른 변경도 함께 저장되지 않았습니다)",
 };
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -72,7 +79,10 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   {SETTING_LABELS[key]}
                 </label>
               ) : (
-                <label key={key} className={`block ${key === "site_description" || key === "footer_notice" ? "sm:col-span-2" : ""}`}>
+                <label
+                  key={key}
+                  className={`block ${key === "site_description" || key === "footer_notice" || key === "affiliate_print_note" ? "sm:col-span-2" : ""}`}
+                >
                   <span className="label">{SETTING_LABELS[key]}</span>
                   {key === "site_description" || key === "footer_notice" ? (
                     <textarea name={key} className="input min-h-16" defaultValue={s[key]} />
@@ -81,7 +91,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                       name={key}
                       className="input"
                       defaultValue={s[key]}
-                      type={key === "log_retention_days" ? "number" : "text"}
+                      type={key === "log_retention_days" ? "number" : key.endsWith("_url") && key !== "site_url" ? "url" : "text"}
+                      placeholder={key.endsWith("_url") && key !== "site_url" ? "https://" : undefined}
                       min={key === "log_retention_days" ? 0 : undefined}
                       autoComplete="off"
                     />

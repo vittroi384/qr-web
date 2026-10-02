@@ -3,6 +3,15 @@
 {$DOMAIN} {
 	encode zstd gzip
 
+	# JSON access log, rotated (5 × 10 MB). Read with: docker compose exec caddy cat /data/access.log
+	log {
+		output file /data/access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+		format json
+	}
+
 	header {
 		X-Content-Type-Options nosniff
 		X-Frame-Options SAMEORIGIN

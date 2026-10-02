@@ -52,6 +52,21 @@ export async function saveSettingsAction(formData: FormData) {
     if (!/^\d{1,5}$/.test(patch.log_retention_days)) redirect("/admin/settings?error=log_retention_days");
     patch.log_retention_days = String(Number.parseInt(patch.log_retention_days, 10));
   }
+  // Monetisation links open in a new tab from public pages: only http(s), or empty to hide.
+  for (const key of ["affiliate_print_url", "donate_url"] as const) {
+    const v = patch[key];
+    if (!v) continue;
+    try {
+      const u = new URL(v);
+      if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("scheme");
+      patch[key] = u.toString();
+    } catch {
+      redirect("/admin/settings?error=monetize_url");
+    }
+  }
+  for (const key of ["affiliate_print_label", "affiliate_print_note"] as const) {
+    if (patch[key] !== undefined) patch[key] = patch[key]!.slice(0, 200);
+  }
   for (const key of ["site_name", "site_description", "footer_notice"] as const) {
     if (patch[key] !== undefined) patch[key] = patch[key]!.slice(0, 500);
   }

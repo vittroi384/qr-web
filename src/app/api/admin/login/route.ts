@@ -12,6 +12,7 @@ import {
   verifyPassword,
 } from "@/lib/auth";
 import { getRequestMeta, isSameOrigin } from "@/lib/ip";
+import { logEvent } from "@/lib/log";
 import { verifyTotp } from "@/lib/totp";
 
 export const runtime = "nodejs";
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
   if (!isSameOrigin(req)) return NextResponse.json({ ok: false, error: "bad_origin" }, { status: 403 });
 
   if (isLockedOut(meta.ip)) {
+    logEvent("warn", "admin.login_locked", { ip: meta.ip });
     return NextResponse.json(
       { ok: false, error: "locked" },
       { status: 429, headers: { "Retry-After": String(LOCK_WINDOW_SEC) } },
@@ -57,12 +59,14 @@ export async function POST(req: NextRequest) {
   if (!passwordOk || !totpOk) {
     recordLoginFailure(meta.ip);
     await writeAudit({ action: "login_failed", key: !passwordOk ? "password" : "totp", ip: meta.ip, userAgent: meta.userAgent });
+    logEvent("warn", "admin.login_failed", { ip: meta.ip, reason: !passwordOk ? "password" : "totp" });
     await sleep(FAILURE_DELAY_MS);
     return NextResponse.json({ ok: false, error: "invalid" }, { status: 401 });
   }
 
   clearLoginFailures(meta.ip);
   await writeAudit({ action: "login", ip: meta.ip, userAgent: meta.userAgent });
+  logEvent("info", "admin.login", { ip: meta.ip });
   const token = await createSessionToken(meta.userAgent);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions);

@@ -4,6 +4,7 @@ import { FaqList } from "@/components/FaqList";
 import { adConfig } from "@/components/ads/adConfig";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { ArrowRightIcon, TypeIcon } from "@/components/icons";
+import { resolveAffiliate } from "@/components/affiliate";
 import { QrGenerator } from "@/components/qr/QrGenerator";
 import { getDict, localePath, typeToSlug, type Locale } from "@/lib/i18n";
 import { QR_TYPES } from "@/lib/qr/types";
@@ -38,7 +39,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
 
         <div className="min-w-0 flex-1">
           <I18nProvider locale={locale}>
-            <QrGenerator />
+            <QrGenerator affiliate={resolveAffiliate(s, locale)} />
           </I18nProvider>
 
           {/*

@@ -1,10 +1,21 @@
 import Link from "next/link";
-import { getDict, localePath, typeToSlug, type Locale } from "@/lib/i18n";
+import { USE_CASES, getDict, localePath, typeToSlug, type Locale } from "@/lib/i18n";
 import { QR_TYPES } from "@/lib/qr/types";
 import { BrandMark } from "./BrandMark";
-import { ChevronDownIcon } from "./icons";
+import { ChevronDownIcon, CoffeeIcon } from "./icons";
 
-export function SiteFooter({ siteName, notice, locale }: { siteName: string; notice: string; locale: Locale }) {
+export function SiteFooter({
+  siteName,
+  notice,
+  locale,
+  donateUrl,
+}: {
+  siteName: string;
+  notice: string;
+  locale: Locale;
+  /** Optional support link (admin setting); hidden when empty. */
+  donateUrl?: string;
+}) {
   const d = getDict(locale);
   const t = d.footer;
   const generatorLinks = (
@@ -17,6 +28,20 @@ export function SiteFooter({ siteName, notice, locale }: { siteName: string; not
         </li>
       ))}
     </ul>
+  );
+  const useCaseLinks = (
+    <>
+      <p className="mt-5 mb-2 text-xs font-medium text-muted">{t.useCases}</p>
+      <ul className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
+        {USE_CASES.map((u) => (
+          <li key={u.id} className="min-w-0">
+            <Link href={localePath(locale, `/${u.slug}`)} className="text-muted transition-colors hover:text-foreground">
+              {t.useCaseLabels[u.id]}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
   );
   return (
     <footer className="border-t border-border bg-card">
@@ -38,11 +63,15 @@ export function SiteFooter({ siteName, notice, locale }: { siteName: string; not
               {t.generators}
               <ChevronDownIcon className="size-4 text-muted transition-transform group-open:rotate-180" />
             </summary>
-            <div className="pt-2 pb-1">{generatorLinks}</div>
+            <div className="pt-2 pb-1">
+              {generatorLinks}
+              {useCaseLinks}
+            </div>
           </details>
           <div className="hidden sm:block">
             <p className="mb-3 text-[13px] font-medium text-foreground">{t.generators}</p>
             {generatorLinks}
+            {useCaseLinks}
           </div>
         </nav>
 
@@ -53,6 +82,17 @@ export function SiteFooter({ siteName, notice, locale }: { siteName: string; not
           <Link href={localePath(locale, "/privacy")} className="font-medium text-foreground/80 transition-colors hover:text-foreground">
             {t.privacy}
           </Link>
+          {donateUrl ? (
+            <a
+              href={donateUrl}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-1.5 text-muted transition-colors hover:text-foreground"
+            >
+              <CoffeeIcon className="size-4" />
+              {t.donate}
+            </a>
+          ) : null}
         </nav>
       </div>
     </footer>

@@ -27,7 +27,7 @@ export function LocaleSwitch({ locale, label }: { locale: Locale; label: string 
             hrefLang={l}
             lang={l}
             aria-current={active ? "true" : undefined}
-            aria-label={NAMES[l].full}
+            aria-label={`${NAMES[l].short} · ${NAMES[l].full}`}
             className={`grid min-h-7 min-w-8 place-items-center rounded px-1.5 transition-colors ${
               active ? "bg-surface text-foreground" : "text-muted hover:text-foreground"
             }`}

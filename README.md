@@ -79,6 +79,40 @@ OCI A1 · Docker Compose (db → app → caddy, db healthcheck 후 app 기동)
 - **설정은 DB, 비밀은 .env**: 사이트명·URL·광고 ID는 관리자 화면, 비밀번호·키·입구 경로·DB 비밀번호는 환경변수
 - **QR 인코더는 순수 함수**: `src/lib/qr/encoders.ts` — Wi-Fi 이스케이프, vCard, VEVENT(UTC/종일 DTEND 미포함), wa.me, BIP-21 등 `node:test` 34건(KST 시간 헬퍼 포함)으로 고정
 
+## 흐름도
+
+**방문자가 QR을 만드는 흐름** — 입력은 브라우저 안에서만 처리되고, 저장할 때만 서버에 1건 기록됩니다.
+
+```mermaid
+sequenceDiagram
+  participant U as 방문자
+  participant P as 페이지(브라우저)
+  participant S as 서버 /api/log
+  participant DB as PostgreSQL
+  U->>P: 종류 선택 → 내용 입력
+  P->>P: 즉시 QR 렌더 (서버 호출 없음)
+  U->>P: PNG 저장 / SVG / 복사 / 인쇄 / ZIP 클릭
+  P->>P: Wi-Fi 비밀번호를 **** 로 바꿈
+  P->>S: 종류·내용·이벤트 1건 전송
+  S->>S: 요청 제한 · 크기 검사 · 비밀번호 다시 마스킹
+  S->>DB: 기록 저장 (IP · 브라우저 · 시간)
+```
+
+**운영자가 관리자에 들어가는 흐름 (3중 잠금)**
+
+```mermaid
+flowchart TD
+  X["누군가 /admin 접속"] --> G{"비밀 입구 URL을 먼저 열었나?"}
+  G -- 아니오 --> N["404 — 일반 404와 동일한 응답"]
+  G -- 예 --> I{"허용된 IP? (설정했을 때만)"}
+  I -- 아니오 --> N
+  I -- 예 --> L["로그인 화면"] --> PW{"비밀번호 + 인증 앱 OTP"}
+  PW -- 5회 실패 --> LOCK["10분 잠금"]
+  PW -- 성공 --> SES["세션 쿠키 (브라우저 지문 바인딩, 24h)"] --> ADM["대시보드 · 기록 · 설정 · 감사 로그"]
+```
+
+비전공자용 전체 설명(개발 과정·코드 리뷰·면접 포인트·인수인계)은 [`docs/HANDOVER.docx`](docs/HANDOVER.docx) (같은 내용의 [Markdown](docs/HANDOVER.md))에 있습니다.
+
 ## 구조
 
 ```
@@ -131,6 +165,33 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 2. 관리자 → 설정 → 게시자 ID 입력 + **광고 표시** 체크 → `/ads.txt`와 스크립트가 자동 활성화 → 사이트 확인·심사
 3. 승인 후 디스플레이 광고 단위 5개 생성 → 각 `data-ad-slot`을 설정의 슬롯 ID 칸에 입력. 비어 있는 자리는 렌더되지 않음. 자동 광고는 끄기(배치 규칙이 깨짐)
 
+## 품질 · 운영
+
+**테스트 (CI에서 모두 실행)**
+- 단위 34건 — QR 인코더(Wi-Fi 이스케이프, vCard, VEVENT, wa.me, BIP-21), TOTP(RFC 6238 벡터), KST 시간 헬퍼 (`npm test`)
+- E2E 17건 — Playwright: 입력→PNG 저장→`/api/log` 기록·마스킹 검증, 일괄 ZIP 구조 파싱, 관리자 게이트/OTP/CSV, SEO(hreflang·JSON-LD·sitemap·robots), 모바일 가로 넘침 0, axe 접근성 (`npm run test:e2e`)
+- CI: lint → 타입 → 단위 → DB 없는 빌드 → E2E(Postgres 서비스) → Docker 이미지 빌드
+
+**Lighthouse (운영 이미지, 2026-10)**
+
+| 페이지 | 성능 (모바일/데스크톱) | 접근성 | 모범 사례 | SEO |
+| --- | --- | --- | --- | --- |
+| `/` | 98 / 100 | 100 | 100 | 100 |
+| `/wifi-qr-code` | 98 / 100 | 100 | 100 | 100 |
+| `/batch` | 98 / 100 | 100 | 100 | 100 |
+
+**관측성**
+- `GET /api/health` — DB 핑 포함 (200 / 503). compose 헬스체크와 외부 업타임 모니터(UptimeRobot 등 무료, 5분 간격)에 이 주소를 등록
+- 앱 로그는 한 줄 JSON (`docker compose logs -f app`): `admin.login`, `admin.login_failed`, `admin.login_locked`, `log.rate_limited`, `log.insert_failed`, `health.db_down`
+- Caddy 접근 로그 JSON, 10MB × 5 롤링 (`docker compose exec caddy cat /data/access.log`)
+- 백업 실패/성공 알림 — `.env`에 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`를 넣으면 `scripts/backup.sh`가 텔레그램으로 보고
+
+**수익화 (관리자 → 설정 → 수익화)**
+- AdSense 게시자 ID·슬롯 5개
+- 인쇄 제휴 링크 — 인쇄 안내판 다이얼로그와 Wi-Fi·명함·메뉴판 등 인쇄 수요가 있는 랜딩 페이지에 "Sponsored" 카드로 노출(`rel="sponsored"`), 비우면 미표시
+- 후원 링크(Buy Me a Coffee 등) — 푸터에 작은 링크, 비우면 미표시
+- 사용 사례 랜딩 — `/restaurant-menu-qr-code`, `/wedding-qr-code`, `/business-card-qr-code`, `/google-review-qr-code`, `/wifi-qr-code-for-cafe` (+ `/ko/…`)
+
 ## 환경변수
 
 | 이름 | 설명 |
@@ -142,6 +203,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 | `ADMIN_ALLOWED_IPS` | 관리자 접근 허용 IP/CIDR 목록 (선택) |
 | `SESSION_SECRET` | 세션·게이트 쿠키 서명 키 (`openssl rand -hex 32`) |
 | `POSTGRES_PASSWORD` | DB 사용자 `qr`의 비밀번호. compose가 DB 생성과 앱의 `DATABASE_URL`에 사용 (server-setup.sh가 생성) |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | 선택. 백업 결과 텔레그램 알림 |
 | `DATABASE_URL` | 로컬 개발용 접속 문자열 (`postgres://qr:qrlocal@localhost:5432/qr`). Docker에서는 compose가 `db` 서비스로 덮어씀 |
 
 ## 설계 결정

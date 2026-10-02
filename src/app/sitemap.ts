@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { DEFAULT_LOCALE, LANDING_SLUGS, LOCALES, localePath } from "@/lib/i18n";
+import { DEFAULT_LOCALE, LOCALES, allLandingSlugs, localePath } from "@/lib/i18n";
 import { getSettings } from "@/lib/settings";
 
 // site_url is editable at runtime, so this must not be prerendered.
@@ -9,8 +9,8 @@ type Page = { path: string; changeFrequency: "weekly" | "monthly" | "yearly"; pr
 
 const PAGES: Page[] = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
-  // Per-type landing pages are the main search entry points.
-  ...Object.values(LANDING_SLUGS).map((slug): Page => ({ path: `/${slug}`, changeFrequency: "monthly", priority: 0.8, flat: true })),
+  // Type and use-case landing pages are the main search entry points.
+  ...allLandingSlugs().map((slug): Page => ({ path: `/${slug}`, changeFrequency: "monthly", priority: 0.8, flat: true })),
   { path: "/batch", changeFrequency: "monthly", priority: 0.6 },
   { path: "/about", changeFrequency: "yearly", priority: 0.4 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },

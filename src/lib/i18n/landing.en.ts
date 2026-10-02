@@ -1,5 +1,5 @@
 import type { QrType } from "@/lib/qr/types";
-import type { LandingCopy } from "./index";
+import type { LandingCopy, UseCaseId } from "./index";
 
 /** English long-form copy for the per-type landing pages (/wifi-qr-code, …). */
 export const landingEn: Record<QrType, LandingCopy> = {
@@ -679,6 +679,252 @@ export const landingEn: Record<QrType, LandingCopy> = {
       {
         q: "Does it work for files other than PDFs?",
         a: "Yes. Any file with a shareable link works, including images, presentations and audio. Whether it previews on the phone depends on the file type.",
+      },
+    ],
+  },
+};
+
+/** English copy for the use-case landing pages (/restaurant-menu-qr-code, …). */
+export const useCasesEn: Record<UseCaseId, LandingCopy> = {
+  restaurant_menu: {
+    title: "Restaurant Menu QR Code Generator",
+    subtitle: "Print one code for every table that opens your current menu on a guest's phone.",
+    metaTitle: "Restaurant Menu QR Code Generator — Free, No Sign-up",
+    metaDescription:
+      "Make a QR code for your restaurant menu that opens your menu page or PDF. Static, never expires, ready for table tents and window stickers. Free, no sign-up.",
+    sections: {
+      howTitle: "How a menu QR code works",
+      how: [
+        "A menu QR code does not contain the menu. It contains a link, such as `https://yourrestaurant.com/menu`, and the phone opens whatever that address shows. So the first step is deciding where the menu lives: a page on your own website, a PDF shared from Google Drive or Dropbox, or the page a menu or ordering service gives you. This site makes the code only; it does not host menus or files.",
+        "Because the code is static, the link inside it is fixed the moment you print. What you can change is the content behind the link. If the menu sits at one stable address and you update that page or replace the PDF in place, every table card keeps working through price changes and new seasons. If the address itself changes, for example after switching menu services, the printed codes have to be replaced.",
+        "Guests scan with the phone camera, see the address and tap to open it, with no app to install. A short link on your own domain also looks more trustworthy than a long third-party one.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "Table tents or stickers on each table, so guests can browse while they wait instead of sharing one laminated menu.",
+        "A window sticker by the door that lets people passing by check dishes and prices before they come in, even after closing time.",
+        "A takeaway bag insert or receipt that links to the menu for the next order from home.",
+        "A separate code at the counter for the allergen and ingredient page, so staff can point to it when guests ask.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "Use an address you control, such as yourdomain.com/menu, and redirect it to wherever the menu currently lives. Then a change of menu service does not mean reprinting every table card.",
+        "Open the menu on a phone over mobile data, not the restaurant Wi-Fi. A large PDF of scanned pages loads slowly and is hard to read on a small screen; a simple web page works better.",
+        "Keep printed menus available. Some guests have no smartphone, a flat battery or poor eyesight, and a QR code should be a convenience, not the only way to order.",
+        "Show allergen information online as clearly as on paper, and update it whenever a dish changes.",
+        "Print the code at least 2 to 3 cm (about 1 in) wide on table cards. For the window, Print sheet / PDF makes an A4 poster with a headline you can edit, such as “Scan for our menu”.",
+      ],
+    },
+    faq: [
+      {
+        q: "Can I upload my menu here?",
+        a: "No. This site makes the code only. Put the menu on your website, share a PDF from Google Drive or Dropbox with “anyone with the link”, or use the link from your menu service, then paste that address here.",
+      },
+      {
+        q: "Do I need a new code when the menu changes?",
+        a: "Not if the address stays the same. Update the page or replace the PDF at the same link, and the printed codes keep showing the latest version.",
+      },
+      {
+        q: "Will the code stop working after a while?",
+        a: "No. It is a static code with the link stored in the image, so there is no subscription to lapse. It works as long as the menu page itself is online.",
+      },
+      {
+        q: "Should I use one code for all tables or one per table?",
+        a: "One code is enough when every table sees the same menu. Separate codes only help if your ordering system gives each table its own link; you can turn that list into codes on the Batch page, up to 200 at a time in one ZIP.",
+      },
+    ],
+  },
+
+  wedding: {
+    title: "Wedding QR Code Generator",
+    subtitle: "Link invitations to your wedding website or RSVP form, and gather reception photos in one shared album.",
+    metaTitle: "Wedding QR Code Generator — Free, No Sign-up",
+    metaDescription:
+      "Make a wedding QR code for invitations, RSVP forms, directions and a shared photo album. Static codes that never expire, ready to print. Free, no sign-up.",
+    sections: {
+      howTitle: "How a wedding QR code works",
+      how: [
+        "A wedding QR code holds a link, and the link decides what guests see. On an invitation, that is usually your wedding website or the RSVP form itself, whether you built it with a wedding website service, Google Forms or something else. The guest scans, the page opens, and they reply without typing a long address from the card.",
+        "The same approach works for the rest of the day. A code with a Google Maps or Apple Maps share link takes guests to the venue, and a code at the reception that opens a Google Photos or iCloud shared album lets everyone add the pictures they took. Each purpose needs its own code, because one code opens one address.",
+        "Codes made here are static: the link is stored in the image and never expires, so it will still open years from now if the page is still online. The other side of that is that the link cannot be swapped after printing. Settle the addresses of your website, form and album before the invitations go to the printer.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "The back of the invitation or an insert card links to the RSVP form, so replies arrive in one place instead of by text, email and phone.",
+        "A save-the-date or details card opens the wedding website with travel, accommodation and dress code information.",
+        "A directions card or welcome sign opens a map link for a venue that is hard to find, such as a barn down a private road.",
+        "Table cards at the reception open a shared photo album, so guests upload their pictures before they forget.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "On an invitation, about 2 to 2.5 cm (0.8 to 1 in) is comfortable for a phone held in the hand. A shorter link gives a coarser pattern that prints more reliably at that size.",
+        "Dark ink on cream, ivory or kraft paper usually scans well; gold foil, pastel ink and light gray often do not. Choose a dark color under Style and test a printed proof on the actual paper.",
+        "Keep the quiet zone, the empty margin around the code, free of flourishes, borders and illustrations. Scanners need it to find the code.",
+        "Check sharing settings: the album link must let guests add photos, and the form must be open to anyone with the link, not only to your account.",
+        "Before ordering the full run, scan one proof with an iPhone and an Android phone, submit a test RSVP and ask a friend to upload a photo to the album.",
+      ],
+    },
+    faq: [
+      {
+        q: "Can I change where the code goes after the invitations are printed?",
+        a: "Not the code itself, because it is static. You can still edit what the page shows, so update the website or form rather than replacing the link.",
+      },
+      {
+        q: "Will the code still work after the wedding?",
+        a: "The code has no expiry date. It keeps working as long as the website, form or album at the link is online, so guests can revisit the photos later if you keep the album shared.",
+      },
+      {
+        q: "Can each guest get a personal RSVP code?",
+        a: "If your RSVP service gives each guest a separate link, you can turn the list into codes on the Batch page, up to 200 at a time, as a ZIP of PNG files.",
+      },
+      {
+        q: "Should I send PNG or SVG to the printer?",
+        a: "Send the SVG file to a printer or designer. It is a vector file, so it stays sharp at any size. The PNG is fine for a wedding website or a message to guests.",
+      },
+    ],
+  },
+
+  business_card: {
+    title: "Business Card QR Code Generator",
+    subtitle: "Put a contact card on your business card that saves your details to a phone in one scan.",
+    metaTitle: "Business Card QR Code Generator — Free, No Sign-up",
+    metaDescription:
+      "Make a business card QR code that saves your name, number, email and website to a phone's contacts. vCard 3.0, static and never expires. Free, no sign-up.",
+    sections: {
+      howTitle: "How a business card QR code works",
+      how: [
+        "A business card code made here holds a vCard 3.0 contact card, the format phone address books read. When someone scans it, the phone shows your name, company, number and email in a contact preview, and one tap adds it. Nothing has to load, so it works in a conference hall with poor reception, and your name is saved exactly as you spell it.",
+        "The alternative is a code that links to a profile, such as your website or LinkedIn page. A link can show more and its page can be updated without reprinting, but the person still has to save your number themselves. A contact code does the saving for them. Some people use both: the contact code on the back, and a short website address printed as text.",
+        "Every field you fill in is stored in the image, so the code grows with the information. A card with name, company, mobile, email and website stays compact; adding a full street address and a note makes the pattern denser and harder to read at business card size.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "Networking events and trade fairs, where you hand out dozens of cards and want each one to end up in a phone rather than a drawer.",
+        "Freelancers and consultants who meet clients in person and want the right email and number saved, not guessed from a photo of the card.",
+        "A sales team's cards, where each person gets a code with their own direct line.",
+        "A reception card that saves the general office contact for visitors.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "On a standard 85 × 55 mm (3.5 × 2 in) card, print the code at least 2 cm (0.8 in) wide, with a clear margin around it. If it has the back to itself, 2.5 to 3 cm is more comfortable.",
+        "Keep to the fields people need: name, company, mobile, email and website. Leave the address and note empty unless they matter.",
+        "Write numbers with the country code, such as +1 415 555 2671, so they work for contacts abroad.",
+        "The Batch page makes link and text codes, not contact cards. For a team, make each person's code on this page and save the SVG file for each card design.",
+        "Scan a printed proof with an iPhone and an Android phone and check that name, number and email land in the right fields.",
+      ],
+    },
+    faq: [
+      {
+        q: "What happens when my number or job title changes?",
+        a: "The details are fixed inside the code. Make a new code and reprint the cards, as you would for the printed text.",
+      },
+      {
+        q: "Should I use a contact code or a link to my website?",
+        a: "A contact code saves your details directly and works offline. A link can lead to a page you update later. If your details rarely change, the contact code is the more useful choice on a card.",
+      },
+      {
+        q: "Can I add my logo?",
+        a: "Not to the contact itself, but you can place a small logo in the middle of the code under Style. Error correction is then raised to the maximum automatically, so the code still scans.",
+      },
+      {
+        q: "Can people edit the contact before saving it?",
+        a: "Yes. The phone shows a preview, and the person can review and change the details before adding them.",
+      },
+    ],
+  },
+
+  google_review: {
+    title: "Google Review QR Code Generator",
+    subtitle: "Make a code that opens the Google review form for your business, ready for counters and receipts.",
+    metaTitle: "Google Review QR Code Generator — Free, No Sign-up",
+    metaDescription:
+      "Create a QR code that opens your Google review form from your Place ID or review link. For counter cards, receipts and follow-up cards. Free, no sign-up.",
+    sections: {
+      howTitle: "How a Google review QR code works",
+      how: [
+        "The code opens Google's review form for your business directly, so customers do not have to search for you, pick the right listing and look for the review button. With the Google Review platform selected, you enter your Place ID, and the code contains `https://search.google.com/local/writereview?placeid=ChIJ…` with your ID in place of the dots.",
+        "There are two ways to fill the field. The first is the Place ID: search for your business in Google's Place ID Finder, part of the Google Maps Platform documentation, and copy the ID, which usually starts with ChIJ. The second is the review link from your Google Business Profile: open your profile, choose the option to ask for reviews and copy the short link it shows. A full link that starts with https:// is accepted as it is.",
+        "On scan, the phone opens the form in Google Maps or the browser. The customer needs to be signed in to a Google account to post, and they choose the stars and write the review themselves. The code is static and contains only a public link, so it keeps working as long as your listing does.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "A small card by the register, where customers have a moment while paying.",
+        "The bottom of a printed receipt, which goes home with the customer.",
+        "A thank-you card left after a delivery, a hotel stay or a service visit, once the job is done.",
+        "An A4 poster near the exit made with Print sheet / PDF, with a short headline you can edit.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "Scan the code yourself and check that the form shows your business name. Businesses with similar names in the same city are easy to mix up in the Place ID Finder.",
+        "Ask in plain words, such as “Tell us how we did on Google”, and place the code where people have a free moment, not where they rush out.",
+        "Google's policies do not allow discounts, gifts or other incentives in exchange for reviews, so keep the card to a simple request.",
+        "Ask every customer the same way. Google also prohibits review gating: inviting only satisfied customers, or sending unhappy ones somewhere else first.",
+      ],
+    },
+    faq: [
+      {
+        q: "Where do I find my Place ID?",
+        a: "Use the Place ID Finder in Google's Maps documentation: search for your business and copy the ID shown. Alternatively, paste the review link from your Google Business Profile into the field.",
+      },
+      {
+        q: "Does the customer need a Google account?",
+        a: "Yes. Posting a Google review requires signing in to a Google account. People without one can still read your listing.",
+      },
+      {
+        q: "Can I offer a discount for a review?",
+        a: "No. Google's policies prohibit incentives for reviews, including discounts and free items. A polite request on a card is fine.",
+      },
+      {
+        q: "Will the code break if I change my business name?",
+        a: "Usually not, because the Place ID refers to the listing, not its name. Google notes that Place IDs can change in some cases, such as when listings are merged, so scan the code again after major changes to your profile.",
+      },
+    ],
+  },
+
+  wifi_cafe: {
+    title: "Wi-Fi QR Code for Cafés, Hotels & Rentals",
+    subtitle: "Let guests join your guest network with one scan, from table tents, room cards or the rental door.",
+    metaTitle: "Wi-Fi QR Code for Cafés, Hotels & Rentals — Free, No Sign-up",
+    metaDescription:
+      "Make a Wi-Fi QR code for your café, hotel or vacation rental. Guests join with one scan on iPhone or Android. Print table tents or room cards. Free, no sign-up.",
+    sections: {
+      howTitle: "How a guest Wi-Fi QR code works",
+      how: [
+        "In many cafés, the most repeated question at the counter is the Wi-Fi password. A Wi-Fi code answers it on paper: it holds the network name, password and security type in a short format, such as `WIFI:T:WPA;S:Cafe-Guest;P:espresso-2026;;`, and the phone camera turns that into a “Join network” prompt. Guests type nothing, so there are no mistakes with capital letters or a zero that looks like an O.",
+        "Set up a separate guest network before making the code, if your router or access points support one. The password sits in the code in readable form, and anyone who photographs a table tent can read it. A guest network keeps the card terminal, the office computer and the security cameras on a network guests cannot reach.",
+        "The code is static, so the password is fixed in it. If you change the guest password every month or after each rental stay, print new codes at the same time. Hotel networks with a sign-in or terms page, called a captive portal, still show that page after the phone connects; the code joins the network but does not complete the sign-in.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "Table tents in a café or restaurant, so guests connect while they wait for their order.",
+        "A card in each hotel room or in the key card sleeve, next to checkout time and breakfast hours.",
+        "A framed code inside the front door of a vacation rental or in the welcome folder, for guests who arrive late when the host is not around.",
+        "A coworking desk, waiting room or salon chair, where visitors stay long enough to want a connection.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "Print sheet / PDF makes an A4 sign with a “Connect to Wi-Fi” headline and the network name, so people who cannot scan still know which network to pick. You can add a subline such as “Ask staff for help”.",
+        "Type the network name exactly as it is broadcast, including capital letters and suffixes such as _5G.",
+        "When you rotate the password, replace every printed code the same day. A stale code still shows the join prompt but fails to connect, which looks like a broken network to guests.",
+        "Test the printed code on an iPhone and an Android phone from where guests actually sit, under your real lighting.",
+      ],
+    },
+    faq: [
+      {
+        q: "Is it safe to put the Wi-Fi password on a table?",
+        a: "Anyone who scans or photographs the code can read the password, so use a guest network that is separate from the one your business systems use.",
+      },
+      {
+        q: "Do I need to reprint when I change the password?",
+        a: "Yes. The password is stored in the code itself, so every password change needs a new code and new prints.",
+      },
+      {
+        q: "Does it work with a hotel login page?",
+        a: "The code connects the phone to the network. If the network then shows a sign-in or terms page, guests still complete it by hand.",
+      },
+      {
+        q: "Can I make a code for each room with its own password?",
+        a: "Yes, one at a time on this page. The Batch page is built for lists of links and text and has no Wi-Fi fields.",
       },
     ],
   },

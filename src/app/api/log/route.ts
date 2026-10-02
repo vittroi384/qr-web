@@ -9,6 +9,7 @@ import {
   sanitizeOptionsForStorage,
   sanitizePayloadForStorage,
 } from "@/lib/qr/sanitize";
+import { errorFields, logEvent } from "@/lib/log";
 import { rateLimit } from "@/lib/rateLimit";
 import { getSettings, isOn } from "@/lib/settings";
 
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
   const meta = getRequestMeta(req);
   const limit = rateLimit(`log:${meta.ip}`, RATE_LIMIT, RATE_WINDOW_MS);
   if (!limit.ok) {
+    logEvent("warn", "log.rate_limited", { ip: meta.ip });
     return NextResponse.json(
       { ok: false, error: "rate_limited" },
       { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } },
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest) {
   const encodedPreview =
     typeof body.encoded === "string" ? maskEncodedSecrets(body.type, body.encoded).slice(0, 200) : null;
 
+  try {
   await insertLog({
     qrType: body.type,
     event: body.event,
@@ -70,6 +73,10 @@ export async function POST(req: NextRequest) {
     options,
     ...meta,
   });
+  } catch (err) {
+    logEvent("error", "log.insert_failed", { ip: meta.ip, type: body.type, ...errorFields(err) });
+    return NextResponse.json({ ok: false, error: "storage" }, { status: 500 });
+  }
 
   // Opportunistic retention cleanup instead of a cron job.
   if (Math.random() < 0.01) {
