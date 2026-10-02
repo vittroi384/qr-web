@@ -43,6 +43,10 @@ async function drawToCanvas(canvas: HTMLCanvasElement, encoded: string, style: Q
     errorCorrectionLevel: style.errorCorrectionLevel,
     color: { dark: style.darkColor, light: style.lightColor },
   });
+  // qrcode sets inline width/height in px (e.g. 512px). Inside the 280px frame that pins the
+  // height while max-width squeezes the width, distorting the code. Let CSS size it instead.
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
   if (style.logoDataUrl) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -178,8 +182,8 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, onAction }:
           ref={canvasRef}
           role="img"
           aria-label="생성된 QR 코드 미리보기"
-          className={`block h-full w-full max-w-full ${encoded && !shownError ? "" : "opacity-0"}`}
-          style={{ imageRendering: "pixelated" }}
+          className={`block h-full w-full ${encoded && !shownError ? "" : "opacity-0"}`}
+          style={{ width: "100%", height: "100%", imageRendering: "auto" }}
         />
         {!encoded ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center">
