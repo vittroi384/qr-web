@@ -2,6 +2,7 @@
 
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { GATE_COOKIE, gateSatisfied, ipAllowedForAdmin } from "@/lib/adminAccess";
 import { writeAudit } from "@/lib/audit";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getRequestMetaFromHeaders } from "@/lib/ip";
@@ -9,13 +10,19 @@ import { deleteLogs } from "@/lib/logs";
 
 export async function deleteLogsAction(formData: FormData) {
   const cookieStore = await cookies();
-  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value, (await headers()).get("user-agent")))) {
+  const h = await headers();
+  // Same three layers as the pages: allowlisted IP, signed gate cookie, bound session.
+  if (!ipAllowedForAdmin(getRequestMetaFromHeaders(h).ip) || !(await gateSatisfied(cookieStore.get(GATE_COOKIE)?.value))) {
+    throw new Error("Not found");
+  }
+  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value, h.get("user-agent")))) {
     throw new Error("Unauthorized");
   }
   const ids = formData
     .getAll("ids")
     .map((v) => Number.parseInt(String(v), 10))
-    .filter((n) => Number.isInteger(n) && n > 0);
+    .filter((n) => Number.isInteger(n) && n > 0 && n <= 2_147_483_647)
+    .slice(0, 500); // int4 range, and one page of rows at most
   if (ids.length === 0) return;
   const deleted = await deleteLogs(ids);
   const meta = getRequestMetaFromHeaders(await headers());

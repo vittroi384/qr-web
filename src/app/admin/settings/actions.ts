@@ -3,6 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { GATE_COOKIE, gateSatisfied, ipAllowedForAdmin } from "@/lib/adminAccess";
 import { writeAudit } from "@/lib/audit";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getRequestMetaFromHeaders } from "@/lib/ip";
@@ -12,7 +13,12 @@ const AD_SLOT_KEYS = ["ad_slot_top", "ad_slot_left", "ad_slot_right", "ad_slot_b
 
 export async function saveSettingsAction(formData: FormData) {
   const cookieStore = await cookies();
-  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value, (await headers()).get("user-agent")))) {
+  const h = await headers();
+  // Same three layers as the pages: allowlisted IP, signed gate cookie, bound session.
+  if (!ipAllowedForAdmin(getRequestMetaFromHeaders(h).ip) || !(await gateSatisfied(cookieStore.get(GATE_COOKIE)?.value))) {
+    throw new Error("Not found");
+  }
+  if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value, h.get("user-agent")))) {
     throw new Error("Unauthorized");
   }
 

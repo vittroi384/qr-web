@@ -3,6 +3,8 @@
 # Run from cron on the server, e.g.  30 4 * * * /home/ubuntu/qr-web/scripts/backup.sh
 # Restore:  gunzip -c backups/qr-2026-10-02.sql.gz | docker compose exec -T db psql -U qr -d qr
 set -euo pipefail
+# Dumps contain visitor IPs and inputs: readable by the owner account only.
+umask 077
 cd "$(dirname "$0")/.."
 
 KEEP_DAYS="${KEEP_DAYS:-30}"
