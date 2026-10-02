@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { EVENT_LABELS, EventBadge, TypeBadge, formatDate } from "@/components/admin/ui";
+import { EventBadge, TypeBadge, formatDate } from "@/components/admin/ui";
 import { DownloadIcon } from "@/components/icons";
 import { listLogs, type LogFilter } from "@/lib/logs";
-import { LOG_EVENTS, QR_TYPES, QR_TYPE_LABELS } from "@/lib/qr/types";
+import { QR_TYPES, QR_TYPE_LABELS } from "@/lib/qr/types";
 import { deleteLogsAction } from "./actions";
 
 const PAGE_SIZE = 50;
@@ -51,7 +51,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
         </a>
       </div>
 
-      <form method="get" className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-6">
+      <form method="get" className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-5">
         <label className="block">
           <span className="label">종류</span>
           <select name="type" className="input" defaultValue={filter.type ?? ""}>
@@ -59,17 +59,6 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
             {QR_TYPES.map((t) => (
               <option key={t} value={t}>
                 {QR_TYPE_LABELS[t]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block">
-          <span className="label">이벤트</span>
-          <select name="event" className="input" defaultValue={filter.event ?? ""}>
-            <option value="">전체</option>
-            {LOG_EVENTS.map((e) => (
-              <option key={e} value={e}>
-                {EVENT_LABELS[e]}
               </option>
             ))}
           </select>
@@ -106,7 +95,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
               </th>
               <th>시간 (KST)</th>
               <th>종류</th>
-              <th>이벤트</th>
+              <th>저장 방식</th>
               <th>내용</th>
               <th>IP</th>
               <th>브라우저</th>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EVENT_LABELS, EventBadge, PayloadSummary, StatCard, TypeBadge, formatDate } from "@/components/admin/ui";
+import { EventBadge, PayloadSummary, StatCard, TypeBadge, formatDate } from "@/components/admin/ui";
 import { getDashboardStats } from "@/lib/logs";
 import { getSettings } from "@/lib/settings";
 import { QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
@@ -12,19 +12,11 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">대시보드</h1>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="오늘" value={stats.today.toLocaleString()} />
         <StatCard label="최근 7일" value={stats.last7.toLocaleString()} />
         <StatCard label="최근 30일" value={stats.last30.toLocaleString()} hint={`고유 IP ${stats.uniqueIps30.toLocaleString()}`} />
         <StatCard label="전체 기록" value={stats.total.toLocaleString()} />
-        <StatCard
-          label="이벤트"
-          value={
-            <span className="block text-sm leading-relaxed font-normal tracking-normal">
-              {stats.byEvent.map((e) => `${EVENT_LABELS[e.event] ?? e.event} ${e.c}`).join(" · ") || "-"}
-            </span>
-          }
-        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -71,7 +63,7 @@ export default function AdminDashboard() {
             <tr>
               <th>시간</th>
               <th>종류</th>
-              <th>이벤트</th>
+              <th>저장 방식</th>
               <th>내용</th>
               <th>IP</th>
             </tr>
