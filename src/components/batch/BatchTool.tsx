@@ -340,24 +340,14 @@ export function BatchTool() {
           ) : null}
 
           {/* Column titles (wide screens). Phones rely on the placeholders. */}
-          <div className="hidden items-end gap-3 px-2 pb-1.5 text-xs font-medium text-muted sm:flex" aria-hidden="true">
+          <div className="hidden items-start gap-3 px-1.5 pb-1 text-xs font-medium text-muted sm:flex" aria-hidden="true">
             <span className="w-6 shrink-0" />
             <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,12rem)_minmax(0,1fr)] gap-2">
-              <span>{b.colName}</span>
-              <span>{b.colContent}</span>
+              <span className="px-3.5">{b.colName}</span>
+              <span className="px-3.5">{b.colContent}</span>
             </span>
             <span className="w-[100px] shrink-0" />
           </div>
-
-          {filledCount === 0 ? (
-            <p className="mb-2 px-1 text-xs text-muted sm:px-2">
-              {b.exampleLabel} <span className="text-foreground/70">{b.exampleName}</span>
-              <span className="mx-1.5 text-border-strong" aria-hidden="true">
-                /
-              </span>
-              <span className="font-mono text-foreground/70">{b.exampleUrl}</span>
-            </p>
-          ) : null}
 
           <ol className="space-y-1.5 sm:space-y-1">
             {rows.map((row, index) => {
@@ -380,7 +370,7 @@ export function BatchTool() {
                       id={fieldId(row, "name")}
                       className="input"
                       aria-label={b.rowName(n)}
-                      placeholder={b.colName}
+                      placeholder={index === 0 && filledCount === 0 ? `${b.exampleLabel} ${b.exampleName}` : b.colName}
                       maxLength={80}
                       value={row.name}
                       onChange={(e) => update(row.id, { name: e.target.value })}
@@ -394,7 +384,7 @@ export function BatchTool() {
                         aria-label={b.rowContent(n)}
                         aria-invalid={invalid || undefined}
                         aria-describedby={invalid ? errorId : undefined}
-                        placeholder={b.contentPlaceholder}
+                        placeholder={index === 0 && filledCount === 0 ? b.exampleUrl : b.contentPlaceholder}
                         autoCapitalize="none"
                         autoCorrect="off"
                         spellCheck={false}
