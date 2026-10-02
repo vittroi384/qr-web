@@ -91,7 +91,8 @@
     background-repeat: no-repeat;
     font-family: var(--font-sans);
     word-break: keep-all;
-    overflow-wrap: anywhere;
+    /* break-word (not anywhere): long URLs still wrap, but short labels in flex rows are never split. */
+    overflow-wrap: break-word;
     font-feature-settings: "tnum" 0;
   }
 

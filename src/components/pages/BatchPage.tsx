@@ -17,7 +17,7 @@ export function BatchPage({ locale, ad }: { locale: Locale; ad: AdSlotConfig }) 
       <ol aria-label={t.stepsLabel} className="mt-5 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
         {t.steps.map((step, i) => (
           <li key={step.title} className="flex gap-3 bg-card px-4 py-3">
-            <span className="pt-px font-mono text-xs font-medium text-muted tabular-nums" aria-hidden="true">
+            <span className="shrink-0 pt-px font-mono text-xs font-medium whitespace-nowrap text-muted tabular-nums" aria-hidden="true">
               {String(i + 1).padStart(2, "0")}
             </span>
             <span className="min-w-0">
