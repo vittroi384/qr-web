@@ -1,4 +1,6 @@
-export const QR_TYPES = ["url", "social", "whatsapp", "text", "wifi", "vcard", "email", "sms", "phone", "geo", "event", "payment", "crypto", "file"] as const;
+// Order = display order. The first six are the everyday ones (phones show only these until
+// "More types"): website, Wi-Fi sign, WhatsApp chat, business card, social profile, menu/PDF.
+export const QR_TYPES = ["url", "wifi", "whatsapp", "vcard", "social", "file", "text", "email", "sms", "phone", "geo", "event", "payment", "crypto"] as const;
 export type QrType = (typeof QR_TYPES)[number];
 
 export const QR_TYPE_LABELS: Record<QrType, string> = {
