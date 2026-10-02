@@ -12,13 +12,13 @@ export function SiteHeader({ siteName, locale }: { siteName: string; locale: Loc
     { href: localePath(locale, "/privacy"), label: t.privacy, className: "hidden sm:block" },
   ];
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-md supports-[backdrop-filter]:bg-card/80">
+    <header className="sticky top-0 z-40 border-b border-border bg-white/75 backdrop-blur-md supports-[backdrop-filter]:bg-white/65">
       <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6">
         <Link
           href={localePath(locale, "/")}
           className="-mx-1.5 flex min-w-0 items-center gap-2.5 rounded-md px-1.5 py-1 text-[15px] font-semibold tracking-tight text-foreground"
         >
-          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-foreground text-white">
+          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-accent text-white shadow-[0_2px_8px_rgb(2_132_199/0.35)]">
             <QrMarkIcon className="size-4" />
           </span>
           <span className="truncate">{siteName}</span>

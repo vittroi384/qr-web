@@ -8,29 +8,35 @@
  * Spacing follows a 4/8/12/16/24/32/48 scale; radius 8px for controls, 12px for containers.
  */
 :root {
-  /* Neutrals are tinted toward the accent hue so the page reads as "cool light", not flat white. */
-  --background: #eef2f9;
-  --foreground: #16213a;
+  /*
+   * Sky palette. Neutrals lean toward the sky hue so the page reads as a bright, airy blue
+   * rather than flat white; the accent is sky-600 (#0284c7, 4.6:1 on white) for actions.
+   */
+  --background: #e9f3fb;
+  --foreground: #0f2237;
   --card: #ffffff;
-  --surface: #eaf0fa;
-  --subtle: #f4f7fc;
-  --muted: #55607a;
-  --border: #d9e1f0;
-  --border-strong: #c3cee3;
-  --wash-a: rgba(36, 87, 214, 0.14);
-  --wash-b: rgba(20, 184, 166, 0.12);
-  --wash-c: rgba(244, 114, 182, 0.08);
-  --accent: #2457d6;
-  --accent-hover: #1d47b8;
-  --accent-soft: #eef3fd;
+  --surface: #e3f0fa;
+  --subtle: #f2f8fd;
+  --muted: #4f6578;
+  --border: #cfe2f1;
+  --border-strong: #b3d0e6;
+  --wash-a: rgba(14, 165, 233, 0.26);
+  --wash-b: rgba(56, 189, 248, 0.22);
+  --wash-c: rgba(251, 191, 36, 0.14);
+  --accent: #0284c7;
+  --accent-hover: #0369a1;
+  --accent-soft: #e0f2fe;
   --accent-foreground: #ffffff;
+  /* Secondary warm tone for small highlights (badges, dots) so the page isn't monochrome. */
+  --amber: #d97706;
+  --amber-soft: #fef3c7;
   --success: #15803d;
   --success-soft: #f0fdf4;
   --warning: #92400e;
   --warning-soft: #fffbeb;
   --danger: #c81e1e;
   --danger-soft: #fef2f2;
-  --ad-placeholder: #d4d4d8;
+  --ad-placeholder: #a9c9e0;
 }
 
 @theme inline {
@@ -46,6 +52,8 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-foreground: var(--accent-foreground);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -54,8 +62,8 @@
   --color-danger-soft: var(--danger-soft);
   --color-ad-placeholder: var(--ad-placeholder);
 
-  --shadow-xs: 0 1px 2px rgb(24 24 27 / 0.05);
-  --shadow-panel: 0 1px 2px rgb(24 24 27 / 0.04), 0 8px 24px -12px rgb(24 24 27 / 0.08);
+  --shadow-xs: 0 1px 2px rgb(2 132 199 / 0.08);
+  --shadow-panel: 0 1px 2px rgb(2 132 199 / 0.06), 0 10px 28px -12px rgb(2 132 199 / 0.22);
 
   --font-sans:
     "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic",
@@ -75,9 +83,10 @@
     background-color: var(--background);
     /* Fixed colour washes: indigo top-left, teal top-right, a faint rose low-left. */
     background-image:
-      radial-gradient(900px 520px at -8% -10%, var(--wash-a), transparent 70%),
-      radial-gradient(760px 480px at 108% -6%, var(--wash-b), transparent 70%),
-      radial-gradient(700px 500px at 10% 110%, var(--wash-c), transparent 70%);
+      linear-gradient(180deg, rgba(186, 230, 253, 0.55) 0%, rgba(233, 243, 251, 0) 420px),
+      radial-gradient(1000px 560px at -6% -12%, var(--wash-a), transparent 70%),
+      radial-gradient(820px 520px at 106% -4%, var(--wash-b), transparent 70%),
+      radial-gradient(760px 540px at 12% 112%, var(--wash-c), transparent 70%);
     background-attachment: fixed;
     background-repeat: no-repeat;
     font-family: var(--font-sans);
@@ -123,7 +132,7 @@
   }
   select.input {
     @apply cursor-pointer appearance-none pr-9;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c5f66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f6578' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 1rem;

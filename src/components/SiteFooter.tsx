@@ -9,7 +9,7 @@ export function SiteFooter({ siteName, notice, locale }: { siteName: string; not
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 py-8 sm:flex-row sm:items-start sm:justify-between sm:px-6">
         <div className="min-w-0 space-y-2">
           <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <span className="grid size-5 place-items-center rounded bg-foreground text-white">
+            <span className="grid size-5 place-items-center rounded bg-accent text-white">
               <QrMarkIcon className="size-3" />
             </span>
             {siteName}

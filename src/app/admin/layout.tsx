@@ -21,7 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {authed ? (
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
           <nav aria-label="관리자 메뉴" className="-mx-2.5 flex flex-wrap items-center gap-0.5 text-sm">
-            <span className="mr-2 ml-2.5 rounded bg-foreground px-1.5 py-0.5 text-[11px] font-semibold text-white">관리자</span>
+            <span className="mr-2 ml-2.5 rounded bg-accent px-1.5 py-0.5 text-[11px] font-semibold text-white">관리자</span>
             {NAV.map((n) => (
               <Link
                 key={n.href}
