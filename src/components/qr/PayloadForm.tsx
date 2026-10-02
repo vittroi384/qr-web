@@ -12,7 +12,8 @@ import {
   encodeWhatsApp,
 } from "@/lib/qr/encoders";
 import type { QrPayloadMap, QrType } from "@/lib/qr/types";
-import { LocateIcon, WarningIcon } from "../icons";
+import { CheckIcon, LocateIcon, WarningIcon } from "../icons";
+import { PlatformPicker, detectPlatform, withScheme } from "./PlatformPicker";
 import { useI18n } from "../i18n/I18nProvider";
 
 type FormProps<T extends QrType> = {
@@ -65,34 +66,58 @@ function UrlForm({ value, onChange }: FormProps<"url">) {
   );
 }
 
+/** Shown first; the rest sit behind "More". */
+const POPULAR_SOCIAL = ["instagram", "youtube", "tiktok", "x", "facebook", "linkedin", "kakao_openchat", "telegram"] as const;
+
+/** "Recognized as an Instagram link" under the field after a pasted link picked the platform. */
+function Recognized({ text }: { text: string }) {
+  return (
+    <span className="mt-1.5 flex items-center gap-1.5 font-medium text-success">
+      <CheckIcon className="size-3.5 shrink-0" />
+      {text}
+    </span>
+  );
+}
+
 function SocialForm({ value, onChange }: FormProps<"social">) {
-  const t = useI18n().t.forms.social;
+  const { t: all } = useI18n();
+  const t = all.forms.social;
+  const picker = all.forms.picker;
   const resultId = useId();
   const platform = SOCIAL_PLATFORMS.find((p) => p.id === value.platform) ?? SOCIAL_PLATFORMS[0];
   const url = encodeSocial(value);
+  const fullName = (id: string, label: string) => t.platformNames[id] ?? label;
+  const options = SOCIAL_PLATFORMS.map((p) => ({ id: p.id, fullName: fullName(p.id, p.label), name: picker.shortNames[p.id] ?? fullName(p.id, p.label) }));
+  const recognized = detectPlatform(value.handle, SOCIAL_PLATFORMS) === platform.id;
+
+  // A pasted profile link selects its platform; the link itself is kept (with https:// added).
+  const onHandle = (text: string) => {
+    const detected = detectPlatform(text, SOCIAL_PLATFORMS);
+    onChange(detected ? { platform: detected, handle: withScheme(text) } : { ...value, handle: text });
+  };
+
   return (
-    <div className="grid gap-4 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
-      <Field label={t.platform}>
-        <select className="input" value={platform.id} onChange={(e) => onChange({ ...value, platform: e.target.value })}>
-          {SOCIAL_PLATFORMS.map((p) => (
-            <option key={p.id} value={p.id}>
-              {t.platformNames[p.id] ?? p.label}
-            </option>
-          ))}
-        </select>
-      </Field>
+    <div className="grid gap-5">
+      <div className="min-w-0">
+        <p className="label">{t.platform}</p>
+        <PlatformPicker
+          label={t.platform}
+          options={options}
+          value={platform.id}
+          onChange={(id) => onChange({ ...value, platform: id })}
+          popular={POPULAR_SOCIAL}
+          moreLabel={picker.more}
+          lessLabel={picker.less}
+        />
+      </div>
       <Field
-        label={t.handle}
+        label={`${t.handle} · ${fullName(platform.id, platform.label)}`}
         required
         hint={
           <>
-            {t.hint}
-            {url ? (
-              <span id={resultId} className="mt-1.5 flex min-w-0 items-baseline gap-2">
-                <span className="shrink-0">{t.result}</span>
-                <span className="min-w-0 font-mono text-[12px] break-all text-foreground">{url}</span>
-              </span>
-            ) : null}
+            {picker.pasteHint}
+            {recognized ? <Recognized text={picker.recognized(fullName(platform.id, platform.label))} /> : null}
+            {url ? <ResultLine id={resultId} label={t.result} url={url} /> : null}
           </>
         }
       >
@@ -104,7 +129,7 @@ function SocialForm({ value, onChange }: FormProps<"social">) {
           placeholder={t.platformPlaceholders[platform.id] ?? platform.placeholder}
           aria-describedby={url ? resultId : undefined}
           value={value.handle}
-          onChange={(e) => onChange({ ...value, handle: e.target.value })}
+          onChange={(e) => onHandle(e.target.value)}
         />
       </Field>
     </div>
@@ -164,29 +189,33 @@ function WhatsAppForm({ value, onChange }: FormProps<"whatsapp">) {
 const MONEY = /^\d+(\.\d{1,2})?$/;
 
 function PaymentForm({ value, onChange }: FormProps<"payment">) {
-  const t = useI18n().t.forms.payment;
+  const { t: all } = useI18n();
+  const t = all.forms.payment;
+  const picker = all.forms.picker;
   const resultId = useId();
   const provider = PAYMENT_PROVIDERS.find((p) => p.id === value.provider) ?? PAYMENT_PROVIDERS[0];
   const url = encodePayment(value);
   const amountBad = Boolean(provider.amountTemplate) && value.amount.trim() !== "" && !MONEY.test(value.amount.trim());
   const set = <K extends keyof QrPayloadMap["payment"]>(k: K, v: QrPayloadMap["payment"][K]) => onChange({ ...value, [k]: v });
+  const options = PAYMENT_PROVIDERS.map((p) => ({ id: p.id, fullName: p.label, name: picker.shortNames[p.id] ?? p.label }));
+  const recognized = detectPlatform(value.handle, PAYMENT_PROVIDERS) === provider.id;
+  const onHandle = (text: string) => {
+    const detected = detectPlatform(text, PAYMENT_PROVIDERS);
+    onChange(detected ? { ...value, provider: detected, handle: withScheme(text) } : { ...value, handle: text });
+  };
   return (
-    <div className="grid gap-4 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
-      <Field label={t.provider}>
-        <select className="input" value={provider.id} onChange={(e) => set("provider", e.target.value)}>
-          {PAYMENT_PROVIDERS.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-      </Field>
+    <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,200px)]">
+      <div className="min-w-0 sm:col-span-2">
+        <p className="label">{t.provider}</p>
+        <PlatformPicker label={t.provider} options={options} value={provider.id} onChange={(id) => set("provider", id)} />
+      </div>
       <Field
-        label={t.handle}
+        label={`${t.handle} · ${provider.label}`}
         required
         hint={
           <>
-            {t.handleHint}
+            {t.handleHint} {picker.pasteHintShort}
+            {recognized ? <Recognized text={picker.recognized(provider.label)} /> : null}
             {url ? <ResultLine id={resultId} label={t.result} url={url} /> : null}
           </>
         }
@@ -199,7 +228,7 @@ function PaymentForm({ value, onChange }: FormProps<"payment">) {
           placeholder={provider.placeholder}
           aria-describedby={url ? resultId : undefined}
           value={value.handle}
-          onChange={(e) => set("handle", e.target.value)}
+          onChange={(e) => onHandle(e.target.value)}
         />
       </Field>
       {/* Only PayPal, Venmo and Cash App accept an amount in the link. */}

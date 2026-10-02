@@ -98,6 +98,24 @@ export const en: Dict = {
   forms: {
     required: "Required",
     optional: "Optional",
+    picker: {
+      more: (n: number) => `More (${n})`,
+      less: "Show less",
+      pasteHint: "You can paste a link instead — we'll work out the platform.",
+      pasteHintShort: "You can also paste a link.",
+      recognized: (name: string) => `Recognized as ${/^[aeiou]/i.test(name) ? "an" : "a"} ${name} link`,
+      shortNames: {
+        x: "X",
+        kakao_openchat: "Kakao Open Chat",
+        kakao_channel: "Kakao Channel",
+        naver_blog: "Naver Blog",
+        naver_smartstore: "SmartStore",
+        google_review: "Google Review",
+        whatsapp_channel: "WA Channel",
+        paypal: "PayPal",
+        revolut: "Revolut",
+      },
+    },
     url: {
       label: "Website address",
       hint: "We add https:// if you leave it out.",

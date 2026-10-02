@@ -72,6 +72,25 @@ export const ko = {
   forms: {
     required: "필수",
     optional: "선택",
+    picker: {
+      more: (n: number) => `더 보기 (${n})`,
+      less: "접기",
+      pasteHint: "링크를 붙여 넣어도 됩니다 — 플랫폼을 자동으로 알아냅니다.",
+      pasteHintShort: "링크를 붙여 넣어도 됩니다.",
+      recognized: (name: string) => `${name} 링크로 인식했습니다`,
+      /** Short tile names; the full name stays in the tooltip and the field label. */
+      shortNames: {
+        x: "X",
+        kakao_openchat: "오픈채팅",
+        kakao_channel: "카카오 채널",
+        naver_blog: "네이버 블로그",
+        naver_smartstore: "네이버 스토어",
+        google_review: "Google 리뷰",
+        whatsapp_channel: "WhatsApp 채널",
+        paypal: "PayPal",
+        revolut: "Revolut",
+      } as Record<string, string>,
+    },
     url: {
       label: "웹사이트 주소",
       hint: "https:// 를 생략하면 자동으로 붙습니다.",
