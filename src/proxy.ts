@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { GATE_COOKIE, GATE_TTL_SEC, adminEntryPath, createGateToken, gateSatisfied, ipAllowedForAdmin } from "@/lib/adminAccess";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { localeFromPath } from "@/lib/i18n/locales";
 import { getClientIpFromHeaders } from "@/lib/ip";
 
 const HTTPS = process.env.NODE_ENV === "production" && Boolean(process.env.DOMAIN);
@@ -20,7 +21,7 @@ function withAdminHeaders(res: NextResponse): NextResponse {
 }
 
 /**
- * 1) Public pages: tag the request with its UI locale ("/ko/..." → ko, else en); "/en/*" → "/*" (301).
+ * 1) Public pages: tag the request with its UI locale ("/<code>/..." → code, else en); "/en/*" → "/*" (301).
  * 2) Secret admin entry path (ADMIN_PATH): set the gate cookie and send the owner to the login page.
  * 3) /admin/*: invisible (404) unless gate cookie + allowed IP; then session check or login redirect.
  */
@@ -50,7 +51,7 @@ export async function proxy(req: NextRequest) {
       url.pathname = pathname.slice(3) || "/";
       return NextResponse.redirect(url, 301);
     }
-    const locale = pathname === "/ko" || pathname.startsWith("/ko/") ? "ko" : "en";
+    const locale = localeFromPath(pathname);
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set("x-locale", locale);
     return NextResponse.next({ request: { headers: requestHeaders } });

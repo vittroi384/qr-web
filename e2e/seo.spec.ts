@@ -14,6 +14,7 @@ test.describe("SEO surface", () => {
     const map = Object.fromEntries(hreflangs);
     expect(map.en).toBe("/wifi-qr-code");
     expect(map.ko).toBe("/ko/wifi-qr-code");
+    for (const l of ["es", "pt", "de", "fr", "ja", "hi", "id"]) expect(map[l]).toBe(`/${l}/wifi-qr-code`);
     expect(map["x-default"]).toBe("/wifi-qr-code");
 
     const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
@@ -26,11 +27,13 @@ test.describe("SEO surface", () => {
     expect(types).toContain("SoftwareApplication");
   });
 
-  test("Korean landing page is lang=ko", async ({ page }) => {
-    const res = await page.goto("/ko/wifi-qr-code");
-    expect(res?.status()).toBe(200);
-    await expect(page.locator("html")).toHaveAttribute("lang", "ko");
-  });
+  for (const l of ["ko", "es", "pt", "de", "fr", "ja", "hi", "id"]) {
+    test(`/${l} landing page is lang=${l}`, async ({ page }) => {
+      const res = await page.goto(`/${l}/wifi-qr-code`);
+      expect(res?.status()).toBe(200);
+      await expect(page.locator("html")).toHaveAttribute("lang", l);
+    });
+  }
 
   test("/en/* permanently redirects to the root edition", async ({ request }) => {
     const res = await request.get("/en/wifi-qr-code", { maxRedirects: 0 });

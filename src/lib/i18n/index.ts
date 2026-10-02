@@ -3,19 +3,29 @@ import { en } from "./en";
 import { ko, type Dict } from "./ko";
 import { landingEn, useCasesEn } from "./landing.en";
 import { landingKo, useCasesKo } from "./landing.ko";
+import { es } from "./es";
+import { pt } from "./pt";
+import { de } from "./de";
+import { fr } from "./fr";
+import { ja } from "./ja";
+import { hi } from "./hi";
+import { id } from "./id";
+import { landingEs, useCasesEs } from "./landing.es";
+import { landingPt, useCasesPt } from "./landing.pt";
+import { landingDe, useCasesDe } from "./landing.de";
+import { landingFr, useCasesFr } from "./landing.fr";
+import { landingJa, useCasesJa } from "./landing.ja";
+import { landingHi, useCasesHi } from "./landing.hi";
+import { landingId, useCasesId } from "./landing.id";
+import { DEFAULT_LOCALE, LOCALE_CODES, LOCALE_NAMES, isLocale, localeFromPath, type Locale } from "./locales";
 import type { QrPayloadMap, QrType } from "@/lib/qr/types";
 
-export type { Dict };
-export type Locale = "ko" | "en";
-/** English is the primary language and lives at the root; Korean is served under "/ko". */
-export const LOCALES: readonly Locale[] = ["en", "ko"];
-export const DEFAULT_LOCALE: Locale = "en";
+export type { Dict, Locale };
+export { DEFAULT_LOCALE, LOCALE_NAMES, isLocale, localeFromPath };
+/** English is the primary language and lives at the root; every other locale is served under "/<code>". */
+export const LOCALES: readonly Locale[] = LOCALE_CODES;
 
-const DICTS: Record<Locale, Dict> = { ko, en };
-
-export function isLocale(value: unknown): value is Locale {
-  return value === "ko" || value === "en";
-}
+const DICTS: Record<Locale, Dict> = { en, ko, es, pt, de, fr, ja, hi, id };
 
 export function getDict(locale: Locale): Dict {
   return DICTS[locale];
@@ -43,8 +53,7 @@ export function alternatesFor(locale: Locale, path: string): NonNullable<Metadat
   return {
     canonical: localePath(locale, path),
     languages: {
-      en: localePath("en", path),
-      ko: localePath("ko", path),
+      ...Object.fromEntries(LOCALES.map((l) => [l, localePath(l, path)])),
       "x-default": localePath(DEFAULT_LOCALE, path),
     },
   };
@@ -100,7 +109,17 @@ export function slugToType(slug: string): QrType | null {
   return hit ? hit[0] : null;
 }
 
-const LANDINGS: Record<Locale, Record<QrType, LandingCopy>> = { en: landingEn, ko: landingKo };
+const LANDINGS: Record<Locale, Record<QrType, LandingCopy>> = {
+  en: landingEn,
+  ko: landingKo,
+  es: landingEs,
+  pt: landingPt,
+  de: landingDe,
+  fr: landingFr,
+  ja: landingJa,
+  hi: landingHi,
+  id: landingId,
+};
 
 export function getLanding(locale: Locale): Record<QrType, LandingCopy> {
   return LANDINGS[locale];
@@ -125,7 +144,17 @@ export const USE_CASES: readonly {
   { id: "wifi_cafe", slug: "wifi-qr-code-for-cafe", type: "wifi" },
 ];
 
-const USE_CASE_COPY: Record<Locale, Record<UseCaseId, LandingCopy>> = { en: useCasesEn, ko: useCasesKo };
+const USE_CASE_COPY: Record<Locale, Record<UseCaseId, LandingCopy>> = {
+  en: useCasesEn,
+  ko: useCasesKo,
+  es: useCasesEs,
+  pt: useCasesPt,
+  de: useCasesDe,
+  fr: useCasesFr,
+  ja: useCasesJa,
+  hi: useCasesHi,
+  id: useCasesId,
+};
 
 export type LandingTarget =
   | { kind: "type"; slug: string; type: QrType; copy: LandingCopy; initialPayload?: undefined }
