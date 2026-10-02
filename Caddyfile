@@ -1,0 +1,20 @@
+# DOMAIN comes from .env via docker-compose. With a real domain Caddy issues a
+# Let's Encrypt certificate automatically; with ":80" it serves plain HTTP.
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	# Long cache for Next.js hashed assets.
+	@static path /_next/static/*
+	header @static Cache-Control "public, max-age=31536000, immutable"
+
+	reverse_proxy app:3000 {
+		header_up X-Real-IP {remote_host}
+	}
+}
