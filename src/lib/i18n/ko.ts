@@ -70,6 +70,9 @@ export const ko = {
     stepType: "종류",
     reset: "초기화",
     typeGroupLabel: "QR 종류",
+    // Phones show the first six type tiles; these toggle the rest.
+    typeMore: (n: number) => `종류 더 보기 (${n})`,
+    typeLess: "종류 접기",
   },
 
   types: {

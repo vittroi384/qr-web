@@ -66,6 +66,9 @@ export const hi: Dict = {
     stepType: "टाइप",
     reset: "रीसेट",
     typeGroupLabel: "QR कोड का टाइप",
+    // Phones show the first six type tiles; these toggle the rest.
+    typeMore: (n: number) => `और टाइप (${n})`,
+    typeLess: "कम टाइप दिखाएँ",
   },
 
   types: {

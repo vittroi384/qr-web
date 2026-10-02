@@ -66,6 +66,9 @@ export const ja: Dict = {
     stepType: "種類",
     reset: "リセット",
     typeGroupLabel: "QRコードの種類",
+    // Phones show the first six type tiles; these toggle the rest.
+    typeMore: (n: number) => `ほかの種類 (${n})`,
+    typeLess: "種類を閉じる",
   },
 
   types: {

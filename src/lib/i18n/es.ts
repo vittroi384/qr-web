@@ -66,6 +66,9 @@ export const es: Dict = {
     stepType: "Tipo",
     reset: "Restablecer",
     typeGroupLabel: "Tipo de código QR",
+    // Phones show the first six type tiles; these toggle the rest.
+    typeMore: (n: number) => `Más tipos (${n})`,
+    typeLess: "Menos tipos",
   },
 
   types: {

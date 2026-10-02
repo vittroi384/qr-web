@@ -1,27 +1,38 @@
 "use client";
 
+import { useState } from "react";
 import { QR_TYPES, type QrType } from "@/lib/qr/types";
-import { TypeIcon } from "../icons";
+import { ChevronDownIcon, TypeIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
 
+/** On a phone-width column only the first six tiles show until "More types" is pressed. */
+const PHONE_VISIBLE = 6;
+
 /**
- * Ten type toggles. Columns follow the width of the column the grid sits in (container query),
+ * Type toggles. Columns follow the width of the column the grid sits in (container query),
  * not the viewport — at lg the side ad and preview column make it much narrower than the screen.
+ * The collapse is CSS-only (hidden below @sm), so wide layouts always show every tile and the
+ * server-rendered markup matches on every device.
  */
 export function TypeTabs({ value, onChange }: { value: QrType; onChange: (t: QrType) => void }) {
   const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  // Keep the grid open while the selection lives in the extra group: collapsing would hide it.
+  const expanded = open || QR_TYPES.indexOf(value) >= PHONE_VISIBLE;
+  const hiddenCount = QR_TYPES.length - PHONE_VISIBLE;
   return (
     <div className="@container">
       <div role="group" aria-label={t.generator.typeGroupLabel} className="grid auto-rows-fr grid-cols-2 gap-2 @sm:grid-cols-3 @2xl:grid-cols-5">
-        {QR_TYPES.map((type) => {
+        {QR_TYPES.map((type, i) => {
           const active = type === value;
+          const collapsed = !expanded && i >= PHONE_VISIBLE;
           return (
             <button
               key={type}
               type="button"
               aria-pressed={active}
               onClick={() => onChange(type)}
-              className={`flex min-h-14 min-w-0 items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors ${
+              className={`${collapsed ? "hidden @sm:flex" : "flex"} min-h-14 min-w-0 items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors ${
                 active
                   ? "border-accent bg-accent text-white shadow-[0_2px_10px_rgb(2_132_199/0.35)]"
                   : "border-border bg-card text-muted hover:border-border-strong hover:bg-subtle hover:text-foreground"
@@ -36,6 +47,17 @@ export function TypeTabs({ value, onChange }: { value: QrType; onChange: (t: QrT
           );
         })}
       </div>
+      {QR_TYPES.indexOf(value) < PHONE_VISIBLE ? (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setOpen(!expanded)}
+          className="btn btn-ghost btn-sm mt-2 -ml-1 @sm:hidden"
+        >
+          <ChevronDownIcon className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
+          {expanded ? t.generator.typeLess : t.generator.typeMore(hiddenCount)}
+        </button>
+      ) : null}
     </div>
   );
 }
