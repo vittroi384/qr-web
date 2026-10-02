@@ -79,7 +79,7 @@ describe("encodeEvent", () => {
   it("all-day event uses DATE values", () => {
     const v = encodeEvent({ title: "휴가", location: "", description: "", start: "2026-10-03", end: "2026-10-05", allDay: true });
     assert.ok(v.includes("DTSTART;VALUE=DATE:20261003"));
-    assert.ok(v.includes("DTEND;VALUE=DATE:20261005"));
+    assert.ok(v.includes("DTEND;VALUE=DATE:20261006")); // exclusive end: last day 10-05 → DTEND 10-06
   });
   it("timed event converts to UTC stamp", () => {
     const v = encodeEvent({ title: "회의", location: "3층", description: "", start: "2026-10-03T10:00", end: "", allDay: false });

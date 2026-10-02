@@ -242,7 +242,9 @@ export function encodeEvent(p: EventPayload): string {
     lines.push(`DTSTART;VALUE=DATE:${start}`);
     // DTEND for all-day events is exclusive (RFC 5545). With no end given, the event is one
     // day long, so DTEND must be the day after DTSTART.
-    const end = p.end ? toIcalDate(p.end) : nextDay(start);
+    // RFC 5545: DTEND for all-day events is exclusive, so "ends on the 5th" → DTEND = 6th.
+    const endDate = p.end ? toIcalDate(p.end) : null;
+    const end = endDate ? nextDay(endDate) : nextDay(start);
     if (end) lines.push(`DTEND;VALUE=DATE:${end}`);
   } else {
     const start = toIcalUtc(p.start);
