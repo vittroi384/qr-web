@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
+import { FaqList } from "@/components/FaqList";
 import { adConfig } from "@/components/ads/adConfig";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { TypeIcon } from "@/components/icons";
@@ -75,24 +76,23 @@ export function HomePage({ locale }: { locale: Locale }) {
                     {t.home.faqTitle}
                   </h2>
                 </div>
-                <dl className="divide-y divide-border border-y border-border">
-                  {t.home.faq.map((item) => (
-                    <div key={item.q} className="py-5">
-                      <dt className="text-[15px] font-medium text-foreground">{item.q}</dt>
-                      <dd className="mt-2 text-sm leading-relaxed text-muted">{item.a}</dd>
-                    </div>
-                  ))}
-                  <div className="py-5">
-                    <dt className="text-[15px] font-medium text-foreground">{t.home.faqPrivacy.q}</dt>
-                    <dd className="mt-2 text-sm leading-relaxed text-muted">
-                      {t.home.faqPrivacy.before}
-                      <Link href={localePath(locale, "/privacy")} className="link">
-                        {t.home.faqPrivacy.link}
-                      </Link>
-                      {t.home.faqPrivacy.after}
-                    </dd>
-                  </div>
-                </dl>
+                <FaqList
+                  items={[
+                    ...t.home.faq,
+                    {
+                      q: t.home.faqPrivacy.q,
+                      a: (
+                        <>
+                          {t.home.faqPrivacy.before}
+                          <Link href={localePath(locale, "/privacy")} className="link">
+                            {t.home.faqPrivacy.link}
+                          </Link>
+                          {t.home.faqPrivacy.after}
+                        </>
+                      ),
+                    },
+                  ]}
+                />
               </section>
             </div>
 

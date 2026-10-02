@@ -429,6 +429,14 @@ export const en: Dict = {
     metaDescription: "Paste a list of links and download all the QR codes at once in a ZIP file.",
     title: "Make many QR codes",
     tagline: "Add a list of links and get every QR code at once",
+    faqTitle: "Questions about batch",
+    faq: [
+      { q: "Can I paste from Excel or Google Sheets?", a: "Yes. Copy two columns (name, link) and paste into the table. Each row lands in its own line, with the name and link in the right fields. One column works too." },
+      { q: "What do I get?", a: "A ZIP file with one PNG per line, named 001-name.png, plus an index.csv that lists which file holds which link." },
+      { q: "Links or plain text?", a: "Each line is detected on its own. Anything that looks like a web address becomes a link; everything else is stored as text. A small label next to the field shows which one it is." },
+      { q: "Is there a limit?", a: "Up to 200 codes per download. For larger lists, split them into a few downloads." },
+      { q: "Do my links get stored?", a: "Only when you download: we keep the count and a short sample of the first lines, never the whole list. See the privacy policy." },
+    ],
     steps: [
       { title: "Paste", body: "Type or paste one link per line." },
       { title: "Check", body: "A preview appears next to each line." },

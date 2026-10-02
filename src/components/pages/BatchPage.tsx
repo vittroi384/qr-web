@@ -1,4 +1,5 @@
 import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
+import { FaqList } from "@/components/FaqList";
 import { BatchTool } from "@/components/batch/BatchTool";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { getDict, type Locale } from "@/lib/i18n";
@@ -40,16 +41,29 @@ export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
             </I18nProvider>
           </div>
 
-          {/* 본문 중간 + 오른쪽 세로 — top-aligned, so the rectangle keeps its own height. */}
+          {/* Lower band: in-content rectangle + FAQ on the left, right vertical unit (xl+) beside them —
+              the FAQ gives the column real height so the vertical unit never stands alone. */}
           <div
             className={`mt-12 grid items-start gap-8 border-t border-border pt-12 ${
               showRight ? "xl:grid-cols-[minmax(0,1fr)_300px]" : ""
             }`}
           >
-            <AdSlot config={ads.incontent} name="본문 중간" shape="rectangle" />
+            <div className="min-w-0">
+              <AdSlot config={ads.incontent} name="본문 중간" shape="rectangle" />
+              <section className="mt-12" aria-labelledby="batch-faq-heading">
+                <h2 id="batch-faq-heading" className="section-title">
+                  {t.faqTitle}
+                </h2>
+                <div className="mt-4">
+                  <FaqList items={t.faq} />
+                </div>
+              </section>
+            </div>
             {showRight ? (
               <aside className="hidden xl:block">
-                <AdSlot config={ads.right} name="오른쪽" shape="vertical" />
+                <div className="sticky top-20">
+                  <AdSlot config={ads.right} name="오른쪽" shape="vertical" />
+                </div>
               </aside>
             ) : null}
           </div>
