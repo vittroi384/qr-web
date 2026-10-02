@@ -166,3 +166,15 @@ settings 키 (기본값 포함): `site_name`, `site_url`, `site_description`, `a
 - `curl -X POST /api/log` 40회 연속 → 429 발생.
 - `docker compose up --build` 로컬에서 기동 → `http://localhost` 접속, 컨테이너 재시작 후 `data/qr.db` 데이터 유지.
 - 서버 배포 후 `https://<DOMAIN>` 인증서 자동 발급, 관리자 로그에 실제 공인 IP 표시(X-Forwarded-For 처리 확인).
+
+
+---
+
+## 7. 2차 기능 추가 (2026-10-02 소유자 요청)
+
+1. **영어 버전** — 경로 기반 i18n. `/` = 한국어, `/en/...` = 영어. `src/proxy.ts`가 `x-locale` 요청 헤더를 설정하고 루트 레이아웃이 `<html lang>`·헤더/푸터 언어를 결정. 사전은 `src/lib/i18n/{ko,en}.ts`, 페이지 본문은 `src/components/pages/*`로 공유하고 `app/en/*`는 얇은 래퍼. 메타데이터에 `alternates.languages`(hreflang). 관리자 영역은 한국어 고정.
+2. **인쇄용 안내판** — 미리보기의 "인쇄용 안내판" 버튼 → 다이얼로그(A4 비율)에서 제목/부제/하단 문구 편집 → `window.print()`로 인쇄/PDF 저장. `@media print`에서 시트만 출력. 이벤트 `print` 기록.
+3. **SNS/앱 링크 타입** — `QrType "social"`, `SOCIAL_PLATFORMS`(encoders.ts) 프리셋으로 아이디 → 프로필 URL. 전체 URL 붙여 넣기도 허용.
+4. **일괄 생성** (`/batch`, `/en/batch`) — 줄 단위 입력(최대 200, `라벨,내용` 형식 지원) → 오프스크린 캔버스 렌더 → 의존성 없는 STORE ZIP(`src/components/batch/zip.ts`) + `index.csv`. 이벤트 `batch` 1회 기록(건수·샘플).
+
+소유자 결정: QR 읽기(스캐너) 기능은 생성 전용 방향에 맞지 않아 보류. 사용법 페이지(`/guide`)는 제거.

@@ -29,6 +29,12 @@ const TYPE_PATHS: Record<QrType, ReactNode> = {
       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
     </>
   ),
+  social: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
+    </>
+  ),
   text: (
     <>
       <path d="M4 6h16" />
@@ -201,6 +207,35 @@ export function WarningIcon({ className }: IconProps) {
       <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
       <path d="M12 9v4" />
       <path d="M12 17h.01" />
+    </Svg>
+  );
+}
+
+export function PrinterIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M6 9V3h12v6" />
+      <rect x="2.5" y="9" width="19" height="9" rx="2" />
+      <path d="M6 14h12v7H6z" />
+    </Svg>
+  );
+}
+
+export function CloseIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </Svg>
+  );
+}
+
+export function ArchiveIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <rect x="2.5" y="3.5" width="19" height="5" rx="1.5" />
+      <path d="M4.5 8.5V19a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V8.5" />
+      <path d="M10 12.5h4" />
     </Svg>
   );
 }

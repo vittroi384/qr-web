@@ -24,15 +24,21 @@ function maskSensitive(input: LogInput): Pick<LogInput, "payload" | "encoded"> {
   };
 }
 
-function send(event: LogEvent, input: LogInput) {
-  const safe = maskSensitive(input);
-  const body = JSON.stringify({
-    type: input.type,
-    event,
-    payload: safe.payload,
-    options: { ...input.options, logoDataUrl: input.options.logoDataUrl ? "1" : null },
-    encoded: safe.encoded.slice(0, 200),
-  });
+/** Body accepted by POST /api/log. */
+export type LogBody = {
+  type: QrType;
+  event: LogEvent;
+  payload: Record<string, string | number | boolean>;
+  options: Record<string, string | number | boolean | null>;
+  encoded: string;
+};
+
+/**
+ * Fire-and-forget POST to /api/log. Callers are responsible for masking secrets first.
+ * Only ever call this from an explicit user action (download, copy, print, batch export).
+ */
+export function sendLog(log: LogBody) {
+  const body = JSON.stringify({ ...log, encoded: log.encoded.slice(0, 200) });
   try {
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: "application/json" });
@@ -42,6 +48,17 @@ function send(event: LogEvent, input: LogInput) {
   } catch {
     // Logging must never affect the user experience.
   }
+}
+
+function send(event: LogEvent, input: LogInput) {
+  const safe = maskSensitive(input);
+  sendLog({
+    type: input.type,
+    event,
+    payload: safe.payload as LogBody["payload"],
+    options: { ...input.options, logoDataUrl: input.options.logoDataUrl ? "1" : null },
+    encoded: safe.encoded,
+  });
 }
 
 /**

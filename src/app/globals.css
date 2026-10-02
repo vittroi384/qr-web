@@ -204,3 +204,97 @@
     @apply border-t border-border transition-colors first:border-t-0 hover:bg-subtle;
   }
 }
+
+/*
+ * Print sheet (A4 poster).
+ * All sizes are container-width units, so one layout serves the on-screen preview and the
+ * 186 mm printable width (A4 210 mm − 2 × 12 mm margins). Colours are fixed: it is paper.
+ */
+.poster-frame {
+  container-type: inline-size;
+  width: 100%;
+}
+.poster {
+  display: flex;
+  aspect-ratio: 186 / 270;
+  flex-direction: column;
+  align-items: center;
+  padding: 11cqw 8cqw 7cqw;
+  background: #ffffff;
+  color: #111111;
+  text-align: center;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.poster-head {
+  width: 100%;
+}
+.poster-headline {
+  font-size: 8.6cqw;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.poster-subline {
+  margin-top: 2.6cqw;
+  font-size: 4cqw;
+  line-height: 1.35;
+  color: #52525b;
+  text-wrap: balance;
+}
+.poster-qr {
+  display: flex;
+  min-height: 0;
+  width: 100%;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+.poster-qr img {
+  width: 68cqw;
+  height: auto;
+  aspect-ratio: 1;
+}
+.poster-footer {
+  min-height: 1.4em;
+  font-size: 3cqw;
+  line-height: 1.4;
+  color: #71717a;
+}
+
+.print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+    background-image: none !important;
+  }
+  /*
+   * While the print sheet is open, only the portalled sheet prints: header, footer, ads, the
+   * page and the dialog are hidden. Scoped with :has() so ordinary Ctrl+P still prints the page.
+   */
+  html:has(body > .print-root) {
+    overflow: visible !important;
+  }
+  body:has(> .print-root) > :not(.print-root) {
+    display: none !important;
+  }
+  body > .print-root {
+    display: block !important;
+    width: 186mm;
+  }
+  .print-root .poster {
+    /* A hair under 273 mm so rounding never spills onto a second page. */
+    aspect-ratio: auto;
+    height: 270mm;
+    break-inside: avoid;
+  }
+}

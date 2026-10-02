@@ -1,8 +1,9 @@
-export const QR_TYPES = ["url", "text", "wifi", "vcard", "email", "sms", "phone", "geo", "event"] as const;
+export const QR_TYPES = ["url", "social", "text", "wifi", "vcard", "email", "sms", "phone", "geo", "event"] as const;
 export type QrType = (typeof QR_TYPES)[number];
 
 export const QR_TYPE_LABELS: Record<QrType, string> = {
   url: "URL / 링크",
+  social: "SNS / 앱 링크",
   text: "텍스트",
   wifi: "Wi-Fi",
   vcard: "연락처",
@@ -15,6 +16,7 @@ export const QR_TYPE_LABELS: Record<QrType, string> = {
 
 export const QR_TYPE_DESCRIPTIONS: Record<QrType, string> = {
   url: "스캔하면 웹사이트가 바로 열립니다.",
+  social: "인스타그램·유튜브·카카오톡 오픈채팅 등 아이디만 넣으면 링크를 만들어 줍니다.",
   text: "메모, 시리얼 번호 등 임의의 텍스트를 담습니다.",
   wifi: "스캔하면 Wi-Fi에 자동으로 연결됩니다.",
   vcard: "스캔하면 연락처가 주소록에 저장됩니다.",
@@ -26,6 +28,7 @@ export const QR_TYPE_DESCRIPTIONS: Record<QrType, string> = {
 };
 
 export type UrlPayload = { url: string };
+export type SocialPayload = { platform: string; handle: string };
 export type TextPayload = { text: string };
 export type WifiPayload = {
   ssid: string;
@@ -60,6 +63,7 @@ export type EventPayload = {
 
 export type QrPayloadMap = {
   url: UrlPayload;
+  social: SocialPayload;
   text: TextPayload;
   wifi: WifiPayload;
   vcard: VCardPayload;
@@ -94,6 +98,7 @@ export const DEFAULT_STYLE: QrStyleOptions = {
 
 export const DEFAULT_PAYLOADS: QrPayloadMap = {
   url: { url: "" },
+  social: { platform: "instagram", handle: "" },
   text: { text: "" },
   wifi: { ssid: "", password: "", encryption: "WPA", hidden: false },
   vcard: {
@@ -115,5 +120,5 @@ export const DEFAULT_PAYLOADS: QrPayloadMap = {
   event: { title: "", location: "", description: "", start: "", end: "", allDay: false },
 };
 
-export type LogEvent = "generate" | "download_png" | "download_svg" | "copy";
-export const LOG_EVENTS: readonly LogEvent[] = ["generate", "download_png", "download_svg", "copy"];
+export type LogEvent = "generate" | "download_png" | "download_svg" | "copy" | "print" | "batch";
+export const LOG_EVENTS: readonly LogEvent[] = ["generate", "download_png", "download_svg", "copy", "print", "batch"];

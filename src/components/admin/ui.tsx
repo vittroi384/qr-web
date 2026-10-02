@@ -22,6 +22,8 @@ export const EVENT_LABELS: Record<string, string> = {
   download_png: "PNG 저장",
   download_svg: "SVG 저장",
   copy: "복사",
+  print: "인쇄",
+  batch: "일괄 생성",
 };
 
 const EVENT_DOT: Record<string, string> = {
@@ -29,6 +31,8 @@ const EVENT_DOT: Record<string, string> = {
   download_png: "bg-accent",
   download_svg: "bg-accent",
   copy: "bg-success",
+  print: "bg-success",
+  batch: "bg-accent",
 };
 
 export function EventBadge({ event }: { event: string }) {

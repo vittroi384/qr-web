@@ -41,12 +41,17 @@ export function hardenSecretsForStorage(
   if (type === "wifi" && payload.password !== undefined && payload.password !== "") {
     return { ...payload, password: FIXED_MASK };
   }
+  // A raw WIFI: string pasted into the free-text type carries the password too.
+  if (type === "text" && typeof payload.text === "string" && /^WIFI:/i.test(payload.text)) {
+    return { ...payload, text: maskEncodedSecrets("wifi", payload.text) };
+  }
   return payload;
 }
 
 /** Mask secrets inside the encoded QR string (applied BEFORE any truncation). */
 export function maskEncodedSecrets(type: QrType, encoded: string): string {
-  if (type !== "wifi") return encoded;
+  // Also catch raw WIFI: strings typed into the free-text type.
+  if (type !== "wifi" && !/^WIFI:/i.test(encoded)) return encoded;
   // P: value runs to the first unescaped ';'. If the string was cut mid-value there is no
   // terminator, so also mask an unterminated tail.
   return encoded.replace(/P:(?:\\.|[^;\\])*(?:;|$)/, `P:${FIXED_MASK};`);

@@ -1,4 +1,4 @@
-import type { QrPayloadMap, QrType, WifiPayload, VCardPayload, EventPayload } from "./types";
+import type { QrPayloadMap, QrType, WifiPayload, VCardPayload, EventPayload, SocialPayload } from "./types";
 
 /** Escape characters that are structural in WIFI: strings. */
 function escapeWifi(value: string): string {
@@ -23,6 +23,47 @@ export function encodeUrl(url: string): string {
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(trimmed);
   if (scheme) return ALLOWED_URL_SCHEMES.has(scheme[1].toLowerCase()) ? trimmed : "";
   return `https://${trimmed}`;
+}
+
+/** Social / app-link presets: an ID or handle becomes a canonical profile URL. */
+export type SocialPlatform = {
+  id: string;
+  label: string;
+  /** `{handle}` is replaced with the normalised handle. */
+  template: string;
+  placeholder: string;
+  /** Strip a leading "@" from handles (false for platforms where the ID is a code). */
+  stripAt: boolean;
+};
+
+export const SOCIAL_PLATFORMS: readonly SocialPlatform[] = [
+  { id: "instagram", label: "Instagram", template: "https://www.instagram.com/{handle}/", placeholder: "@username", stripAt: true },
+  { id: "youtube", label: "YouTube", template: "https://www.youtube.com/@{handle}", placeholder: "@channel", stripAt: true },
+  { id: "tiktok", label: "TikTok", template: "https://www.tiktok.com/@{handle}", placeholder: "@username", stripAt: true },
+  { id: "x", label: "X (Twitter)", template: "https://x.com/{handle}", placeholder: "@username", stripAt: true },
+  { id: "threads", label: "Threads", template: "https://www.threads.net/@{handle}", placeholder: "@username", stripAt: true },
+  { id: "facebook", label: "Facebook", template: "https://www.facebook.com/{handle}", placeholder: "page.name", stripAt: true },
+  { id: "linkedin", label: "LinkedIn", template: "https://www.linkedin.com/in/{handle}/", placeholder: "profile-id", stripAt: true },
+  { id: "kakao_openchat", label: "카카오톡 오픈채팅", template: "https://open.kakao.com/o/{handle}", placeholder: "오픈채팅 링크 뒤 코드 (예: gAbCdEf)", stripAt: false },
+  { id: "kakao_channel", label: "카카오톡 채널", template: "https://pf.kakao.com/{handle}", placeholder: "채널 ID (예: _AbCdE)", stripAt: false },
+  { id: "naver_blog", label: "네이버 블로그", template: "https://blog.naver.com/{handle}", placeholder: "블로그 ID", stripAt: true },
+  { id: "naver_smartstore", label: "네이버 스마트스토어", template: "https://smartstore.naver.com/{handle}", placeholder: "스토어 ID", stripAt: true },
+  { id: "github", label: "GitHub", template: "https://github.com/{handle}", placeholder: "username", stripAt: true },
+  { id: "telegram", label: "Telegram", template: "https://t.me/{handle}", placeholder: "@username", stripAt: true },
+  { id: "line", label: "LINE", template: "https://line.me/R/ti/p/{handle}", placeholder: "@line-id", stripAt: false },
+];
+
+export function encodeSocial(p: SocialPayload): string {
+  const platform = SOCIAL_PLATFORMS.find((s) => s.id === p.platform);
+  let handle = p.handle.trim();
+  if (!platform || !handle) return "";
+  // Pasting a full profile URL is common; accept it as-is when it is http(s).
+  if (/^https?:\/\//i.test(handle)) return encodeUrl(handle);
+  if (platform.stripAt) handle = handle.replace(/^@+/, "");
+  // Handles are path segments: keep the ID characters, drop whitespace and slashes.
+  handle = handle.replace(/[\s/]+/g, "");
+  if (!handle) return "";
+  return platform.template.replace("{handle}", encodeURIComponent(handle));
 }
 
 export function encodeWifi(p: WifiPayload): string {
@@ -130,6 +171,8 @@ export function encodePayload<T extends QrType>(type: T, payload: QrPayloadMap[T
   switch (type) {
     case "url":
       return encodeUrl((payload as QrPayloadMap["url"]).url);
+    case "social":
+      return encodeSocial(payload as SocialPayload);
     case "text":
       return (payload as QrPayloadMap["text"]).text;
     case "wifi":

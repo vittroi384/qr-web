@@ -1,15 +1,17 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
+import { SOCIAL_PLATFORMS, encodeSocial } from "@/lib/qr/encoders";
 import type { QrPayloadMap, QrType } from "@/lib/qr/types";
 import { LocateIcon } from "../icons";
+import { useI18n } from "../i18n/I18nProvider";
 
 type FormProps<T extends QrType> = {
   value: QrPayloadMap[T];
   onChange: (next: QrPayloadMap[T]) => void;
 };
 
-function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
+function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: ReactNode }) {
   return (
     <label className="block min-w-0">
       <span className="label">{label}</span>
@@ -20,27 +22,73 @@ function Field({ label, children, hint }: { label: string; children: ReactNode; 
 }
 
 function UrlForm({ value, onChange }: FormProps<"url">) {
+  const t = useI18n().t.forms.url;
   return (
-    <Field label="웹사이트 주소" hint="https:// 를 생략하면 자동으로 붙습니다.">
+    <Field label={t.label} hint={t.hint}>
       <input
         className="input"
         type="url"
         inputMode="url"
-        placeholder="example.com 또는 https://example.com/page"
+        placeholder={t.placeholder}
         value={value.url}
         onChange={(e) => onChange({ url: e.target.value })}
-       
       />
     </Field>
   );
 }
 
-function TextForm({ value, onChange }: FormProps<"text">) {
+function SocialForm({ value, onChange }: FormProps<"social">) {
+  const t = useI18n().t.forms.social;
+  const resultId = useId();
+  const platform = SOCIAL_PLATFORMS.find((p) => p.id === value.platform) ?? SOCIAL_PLATFORMS[0];
+  const url = encodeSocial(value);
   return (
-    <Field label="텍스트" hint={`${value.text.length} 자 · 길어질수록 QR이 복잡해집니다.`}>
+    <div className="grid gap-4 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
+      <Field label={t.platform}>
+        <select className="input" value={platform.id} onChange={(e) => onChange({ ...value, platform: e.target.value })}>
+          {SOCIAL_PLATFORMS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {t.platformNames[p.id] ?? p.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field
+        label={t.handle}
+        hint={
+          <>
+            {t.hint}
+            {url ? (
+              <span id={resultId} className="mt-1.5 flex min-w-0 items-baseline gap-2">
+                <span className="shrink-0">{t.result}</span>
+                <span className="min-w-0 font-mono text-[12px] break-all text-foreground">{url}</span>
+              </span>
+            ) : null}
+          </>
+        }
+      >
+        <input
+          className="input"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder={t.platformPlaceholders[platform.id] ?? platform.placeholder}
+          aria-describedby={url ? resultId : undefined}
+          value={value.handle}
+          onChange={(e) => onChange({ ...value, handle: e.target.value })}
+        />
+      </Field>
+    </div>
+  );
+}
+
+function TextForm({ value, onChange }: FormProps<"text">) {
+  const t = useI18n().t.forms.text;
+  return (
+    <Field label={t.label} hint={t.count(value.text.length)}>
       <textarea
         className="input min-h-28"
-        placeholder="QR에 담을 내용을 입력하세요"
+        placeholder={t.placeholder}
         value={value.text}
         maxLength={2000}
         onChange={(e) => onChange({ text: e.target.value })}
@@ -50,27 +98,28 @@ function TextForm({ value, onChange }: FormProps<"text">) {
 }
 
 function WifiForm({ value, onChange }: FormProps<"wifi">) {
+  const t = useI18n().t.forms.wifi;
   const set = <K extends keyof QrPayloadMap["wifi"]>(k: K, v: QrPayloadMap["wifi"][K]) => onChange({ ...value, [k]: v });
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="네트워크 이름 (SSID)">
+      <Field label={t.ssid}>
         <input className="input" value={value.ssid} onChange={(e) => set("ssid", e.target.value)} />
       </Field>
-      <Field label="암호화 방식">
+      <Field label={t.encryption}>
         <select className="input" value={value.encryption} onChange={(e) => set("encryption", e.target.value as QrPayloadMap["wifi"]["encryption"])}>
-          <option value="WPA">WPA / WPA2 / WPA3</option>
-          <option value="WEP">WEP</option>
-          <option value="nopass">없음 (개방형)</option>
+          <option value="WPA">{t.encWpa}</option>
+          <option value="WEP">{t.encWep}</option>
+          <option value="nopass">{t.encNone}</option>
         </select>
       </Field>
       {value.encryption !== "nopass" ? (
-        <Field label="비밀번호">
+        <Field label={t.password}>
           <input className="input" type="text" autoComplete="off" value={value.password} onChange={(e) => set("password", e.target.value)} />
         </Field>
       ) : null}
       <label className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg border border-border-strong bg-card px-3 text-sm text-foreground shadow-xs transition-colors hover:border-zinc-400 hover:bg-subtle self-end">
         <input type="checkbox" checked={value.hidden} onChange={(e) => set("hidden", e.target.checked)} />
-        숨겨진 네트워크
+        {t.hidden}
       </label>
     </div>
   );
@@ -79,39 +128,40 @@ function WifiForm({ value, onChange }: FormProps<"wifi">) {
 function VCardForm({ value, onChange }: FormProps<"vcard">) {
   const set = (k: keyof QrPayloadMap["vcard"]) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     onChange({ ...value, [k]: e.target.value });
+  const t = useI18n().t.forms.vcard;
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="성">
+      <Field label={t.lastName}>
         <input className="input" value={value.lastName} onChange={set("lastName")} />
       </Field>
-      <Field label="이름">
+      <Field label={t.firstName}>
         <input className="input" value={value.firstName} onChange={set("firstName")} />
       </Field>
-      <Field label="회사 / 소속">
+      <Field label={t.org}>
         <input className="input" value={value.org} onChange={set("org")} />
       </Field>
-      <Field label="직함">
+      <Field label={t.title}>
         <input className="input" value={value.title} onChange={set("title")} />
       </Field>
-      <Field label="휴대전화">
+      <Field label={t.mobile}>
         <input className="input" type="tel" value={value.mobile} onChange={set("mobile")} />
       </Field>
-      <Field label="회사 전화">
+      <Field label={t.phone}>
         <input className="input" type="tel" value={value.phone} onChange={set("phone")} />
       </Field>
-      <Field label="이메일">
+      <Field label={t.email}>
         <input className="input" type="email" value={value.email} onChange={set("email")} />
       </Field>
-      <Field label="웹사이트">
+      <Field label={t.website}>
         <input className="input" type="url" value={value.website} onChange={set("website")} />
       </Field>
       <div className="sm:col-span-2">
-        <Field label="주소">
+        <Field label={t.address}>
           <input className="input" value={value.address} onChange={set("address")} />
         </Field>
       </div>
       <div className="sm:col-span-2">
-        <Field label="메모">
+        <Field label={t.note}>
           <textarea className="input min-h-16" value={value.note} onChange={set("note")} />
         </Field>
       </div>
@@ -120,15 +170,16 @@ function VCardForm({ value, onChange }: FormProps<"vcard">) {
 }
 
 function EmailForm({ value, onChange }: FormProps<"email">) {
+  const t = useI18n().t.forms.email;
   return (
     <div className="grid gap-4">
-      <Field label="받는 사람">
+      <Field label={t.to}>
         <input className="input" type="email" placeholder="name@example.com" value={value.to} onChange={(e) => onChange({ ...value, to: e.target.value })} />
       </Field>
-      <Field label="제목">
+      <Field label={t.subject}>
         <input className="input" value={value.subject} onChange={(e) => onChange({ ...value, subject: e.target.value })} />
       </Field>
-      <Field label="본문">
+      <Field label={t.body}>
         <textarea className="input min-h-24" value={value.body} onChange={(e) => onChange({ ...value, body: e.target.value })} />
       </Field>
     </div>
@@ -136,12 +187,13 @@ function EmailForm({ value, onChange }: FormProps<"email">) {
 }
 
 function SmsForm({ value, onChange }: FormProps<"sms">) {
+  const t = useI18n().t.forms.sms;
   return (
     <div className="grid gap-4">
-      <Field label="받는 번호">
+      <Field label={t.phone}>
         <input className="input" type="tel" placeholder="010-1234-5678" value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} />
       </Field>
-      <Field label="메시지">
+      <Field label={t.message}>
         <textarea className="input min-h-24" value={value.message} onChange={(e) => onChange({ ...value, message: e.target.value })} />
       </Field>
     </div>
@@ -149,14 +201,16 @@ function SmsForm({ value, onChange }: FormProps<"sms">) {
 }
 
 function PhoneForm({ value, onChange }: FormProps<"phone">) {
+  const t = useI18n().t.forms.phone;
   return (
-    <Field label="전화번호" hint="국제번호는 +82-10-1234-5678 형식으로 입력하세요.">
+    <Field label={t.label} hint={t.hint}>
       <input className="input" type="tel" placeholder="010-1234-5678" value={value.phone} onChange={(e) => onChange({ phone: e.target.value })} />
     </Field>
   );
 }
 
 function GeoForm({ value, onChange }: FormProps<"geo">) {
+  const t = useI18n().t.forms.geo;
   const locate = () => {
     navigator.geolocation?.getCurrentPosition((pos) =>
       onChange({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) }),
@@ -164,15 +218,15 @@ function GeoForm({ value, onChange }: FormProps<"geo">) {
   };
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-      <Field label="위도 (latitude)">
+      <Field label={t.lat}>
         <input className="input" inputMode="decimal" placeholder="37.5665" value={value.lat} onChange={(e) => onChange({ ...value, lat: e.target.value })} />
       </Field>
-      <Field label="경도 (longitude)">
+      <Field label={t.lng}>
         <input className="input" inputMode="decimal" placeholder="126.9780" value={value.lng} onChange={(e) => onChange({ ...value, lng: e.target.value })} />
       </Field>
       <button type="button" className="btn" onClick={locate}>
         <LocateIcon />
-        현재 위치
+        {t.locate}
       </button>
     </div>
   );
@@ -181,27 +235,28 @@ function GeoForm({ value, onChange }: FormProps<"geo">) {
 function EventForm({ value, onChange }: FormProps<"event">) {
   const set = <K extends keyof QrPayloadMap["event"]>(k: K, v: QrPayloadMap["event"][K]) => onChange({ ...value, [k]: v });
   const inputType = value.allDay ? "date" : "datetime-local";
+  const t = useI18n().t.forms.event;
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
-        <Field label="일정 제목">
+        <Field label={t.title}>
           <input className="input" value={value.title} onChange={(e) => set("title", e.target.value)} />
         </Field>
       </div>
-      <Field label="시작">
+      <Field label={t.start}>
         <input className="input" type={inputType} value={value.start} onChange={(e) => set("start", e.target.value)} />
       </Field>
-      <Field label="종료">
+      <Field label={t.end}>
         <input className="input" type={inputType} value={value.end} onChange={(e) => set("end", e.target.value)} />
       </Field>
       <label className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg border border-border-strong bg-card px-3 text-sm text-foreground shadow-xs transition-colors hover:border-zinc-400 hover:bg-subtle sm:col-span-2">
         <input type="checkbox" checked={value.allDay} onChange={(e) => onChange({ ...value, allDay: e.target.checked, start: "", end: "" })} />
-        하루 종일
+        {t.allDay}
       </label>
-      <Field label="장소">
+      <Field label={t.location}>
         <input className="input" value={value.location} onChange={(e) => set("location", e.target.value)} />
       </Field>
-      <Field label="설명">
+      <Field label={t.description}>
         <input className="input" value={value.description} onChange={(e) => set("description", e.target.value)} />
       </Field>
     </div>
@@ -212,6 +267,8 @@ export function PayloadForm<T extends QrType>({ type, value, onChange }: { type:
   switch (type) {
     case "url":
       return <UrlForm value={value as QrPayloadMap["url"]} onChange={onChange as FormProps<"url">["onChange"]} />;
+    case "social":
+      return <SocialForm value={value as QrPayloadMap["social"]} onChange={onChange as FormProps<"social">["onChange"]} />;
     case "text":
       return <TextForm value={value as QrPayloadMap["text"]} onChange={onChange as FormProps<"text">["onChange"]} />;
     case "wifi":

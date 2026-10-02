@@ -2,31 +2,16 @@
 
 import { useId, useState, type DragEvent, type ReactNode } from "react";
 import type { QrStyleOptions } from "@/lib/qr/types";
+import type { Dict } from "@/lib/i18n";
 import { CheckIcon, ChevronDownIcon, ImageIcon, WarningIcon } from "../icons";
+import { useI18n } from "../i18n/I18nProvider";
+import { ColorSwatches } from "./ColorSwatches";
+import { BACKGROUNDS, CODE_COLORS, TRANSPARENT } from "./presets";
 import { Segmented } from "./Segmented";
 
 const MAX_LOGO_BYTES = 1024 * 1024;
 /** Below this contrast ratio many phone cameras struggle to read the code. */
 const MIN_CONTRAST = 4;
-
-/** Code colours — each is ≥ 7:1 against white. */
-const CODE_COLORS = [
-  { name: "블랙", value: "#111111" },
-  { name: "차콜", value: "#3f3f46" },
-  { name: "네이비", value: "#1e3a8a" },
-  { name: "블루", value: "#1d4ed8" },
-  { name: "그린", value: "#166534" },
-  { name: "틸", value: "#115e59" },
-  { name: "버건디", value: "#881337" },
-  { name: "퍼플", value: "#5b21b6" },
-] as const;
-
-const BACKGROUNDS = [
-  { name: "흰색", value: "#ffffff" },
-  { name: "연회색", value: "#f4f4f5" },
-  { name: "아이보리", value: "#fdf9ef" },
-  { name: "투명", value: "#ffffff00" },
-] as const;
 
 /** #rgb / #rrggbb / #rrggbbaa → WCAG relative luminance. Fully transparent is treated as white. */
 function luminance(hex: string): number | null {
@@ -44,13 +29,13 @@ function luminance(hex: string): number | null {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-function colorWarning(dark: string, light: string): string | null {
+function colorWarning(dark: string, light: string, t: Dict["style"]): string | null {
   const ld = luminance(dark);
   const ll = luminance(light);
   if (ld === null || ll === null) return null;
-  if (ld > ll) return "코드 색이 배경보다 밝으면 일부 스캐너에서 인식되지 않을 수 있습니다.";
+  if (ld > ll) return t.warnInverted;
   const ratio = (ll + 0.05) / (ld + 0.05);
-  if (ratio < MIN_CONTRAST) return "대비가 낮아 스캔이 어려울 수 있습니다. 더 어두운 코드 색을 골라 주세요.";
+  if (ratio < MIN_CONTRAST) return t.warnContrast;
   return null;
 }
 
@@ -65,6 +50,7 @@ function Group({ label, hint, children, className = "" }: { label: string; hint?
 }
 
 export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onChange: (v: QrStyleOptions) => void }) {
+  const t = useI18n().t.style;
   const [logoError, setLogoError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const fileId = useId();
@@ -73,11 +59,11 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
     setLogoError(null);
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setLogoError("이미지 파일만 사용할 수 있습니다.");
+      setLogoError(t.logoTypeError);
       return;
     }
     if (file.size > MAX_LOGO_BYTES) {
-      setLogoError("로고 이미지는 1MB 이하만 가능합니다.");
+      setLogoError(t.logoSizeError);
       return;
     }
     const reader = new FileReader();
@@ -101,46 +87,28 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
   };
 
   const presetColor = CODE_COLORS.some((c) => c.value === value.darkColor.toLowerCase());
-  const warning = colorWarning(value.darkColor, value.lightColor);
+  const warning = colorWarning(value.darkColor, value.lightColor, t);
   const hasLogo = Boolean(value.logoDataUrl);
 
   return (
     <details className="group">
       <summary className="-m-2 flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors select-none hover:bg-subtle">
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold text-foreground">꾸미기</span>
-          <span className="mt-0.5 block text-[13px] text-muted">색상 · 배경 · 복원력 · 로고 (선택)</span>
+          <span className="block text-[15px] font-semibold text-foreground">{t.title}</span>
+          <span className="mt-0.5 block text-[13px] text-muted">{t.summary}</span>
         </span>
         {value.logoDataUrl || value.darkColor.toLowerCase() !== "#111111" || value.lightColor.toLowerCase() !== "#ffffff" ? (
-          <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">변경됨</span>
+          <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span>
         ) : null}
         <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
       </summary>
     <div className="mt-6 grid gap-6 sm:grid-cols-2">
-      <Group label="코드 색상" className="sm:col-span-2">
+      <Group label={t.codeColor} className="sm:col-span-2">
         <div className="flex flex-wrap items-center gap-2.5">
-          {CODE_COLORS.map((c) => {
-            const active = value.darkColor.toLowerCase() === c.value;
-            return (
-              <button
-                key={c.value}
-                type="button"
-                aria-pressed={active}
-                aria-label={c.name}
-                title={c.name}
-                onClick={() => onChange({ ...value, darkColor: c.value })}
-                className={`grid size-8 place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 ${
-                  active ? "outline-2 outline-offset-2 outline-foreground" : ""
-                }`}
-                style={{ backgroundColor: c.value }}
-              >
-                {active ? <CheckIcon className="size-4" /> : null}
-              </button>
-            );
-          })}
+          <ColorSwatches value={value.darkColor} onChange={(darkColor) => onChange({ ...value, darkColor })} />
           <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
           <label
-            title="직접 선택"
+            title={t.customColor}
             className={`relative grid size-8 cursor-pointer place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
               presetColor ? "" : "outline-2 outline-offset-2 outline-foreground"
             }`}
@@ -153,7 +121,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
             <input
               type="color"
               className="sr-only"
-              aria-label="코드 색상 직접 선택"
+              aria-label={t.customColorLabel}
               value={/^#[0-9a-f]{6}$/i.test(value.darkColor) ? value.darkColor : "#111111"}
               onChange={(e) => onChange({ ...value, darkColor: e.target.value })}
             />
@@ -163,8 +131,8 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
         </div>
       </Group>
 
-      <Group label="배경" className="sm:col-span-2" hint={value.lightColor === "#ffffff00" ? "투명 배경은 내려받은 PNG · SVG 파일에 적용됩니다." : undefined}>
-        <Segmented label="배경" options={BACKGROUNDS} selected={value.lightColor.toLowerCase()} onSelect={(lightColor) => onChange({ ...value, lightColor })} />
+      <Group label={t.background} className="sm:col-span-2" hint={value.lightColor === TRANSPARENT ? t.transparentHint : undefined}>
+        <Segmented label={t.background} options={BACKGROUNDS.map((b) => ({ name: t.backgrounds[b.id], value: b.value }))} selected={value.lightColor.toLowerCase()} onSelect={(lightColor) => onChange({ ...value, lightColor })} />
       </Group>
 
       {warning ? (
@@ -175,18 +143,18 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
       ) : null}
 
       <Group
-        label="복원력"
+        label={t.ecc}
         className="sm:col-span-2"
         hint={
           hasLogo
-            ? "로고가 코드 일부를 가리므로 최대 복원력으로 고정됩니다."
-            : "최대로 하면 일부가 가려지거나 훼손되어도 읽히지만, 코드가 더 촘촘해집니다."
+            ? t.eccHintLogo
+            : t.eccHint
         }
       >
         <Segmented
           options={[
-            { name: "기본", value: "basic", sub: "권장" },
-            { name: "최대", value: "max", sub: "로고 · 인쇄물" },
+            { name: t.eccBasic, value: "basic", sub: t.eccBasicSub },
+            { name: t.eccMax, value: "max", sub: t.eccMaxSub },
           ]}
           selected={value.errorCorrectionLevel === "H" ? "max" : "basic"}
           disabled={hasLogo}
@@ -194,7 +162,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
         />
       </Group>
 
-      <Group label="중앙 로고" className="sm:col-span-2">
+      <Group label={t.logo} className="sm:col-span-2">
         <input
           id={fileId}
           type="file"
@@ -216,14 +184,14 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
               aria-hidden="true"
             />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-foreground">로고 적용됨</span>
-              <span className="block text-xs text-muted">QR 코드 가운데에 표시됩니다.</span>
+              <span className="block text-sm font-medium text-foreground">{t.logoApplied}</span>
+              <span className="block text-xs text-muted">{t.logoAppliedSub}</span>
             </span>
             <label htmlFor={fileId} className="btn btn-sm cursor-pointer">
-              변경
+              {t.change}
             </label>
             <button type="button" className="btn btn-sm btn-danger" onClick={() => onChange({ ...value, logoDataUrl: null })}>
-              제거
+              {t.remove}
             </button>
           </div>
         ) : (
@@ -239,9 +207,10 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
             </span>
             <span className="min-w-0">
               <span className="block text-sm text-foreground">
-                이미지를 끌어다 놓거나 <span className="font-medium text-accent">파일 선택</span>
+                {t.dropPrefix}
+                <span className="font-medium text-accent">{t.choose}</span>
               </span>
-              <span className="mt-0.5 block text-xs text-muted">PNG · JPG · SVG · WEBP, 최대 1MB</span>
+              <span className="mt-0.5 block text-xs text-muted">{t.logoFormats}</span>
             </span>
           </label>
         )}
