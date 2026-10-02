@@ -264,7 +264,7 @@ export const en: Dict = {
     copyUnsupported: "This browser can't copy images. Save the PNG instead.",
     size: "Size",
     sizeLabel: "Output size",
-    sizes: { small: "Small", medium: "Medium", large: "Large" },
+    sizes: { small: "Small", medium: "Medium", large: "Large", max: "Max" },
     margin: "Margin",
     margins: { standard: "Standard", wide: "Wide" },
     summaryPrefix: "Output",

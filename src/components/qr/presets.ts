@@ -22,4 +22,4 @@ export const BACKGROUNDS = [
 export const TRANSPARENT = "#ffffff00";
 
 /** Output resolutions offered for saved PNGs. */
-export const OUTPUT_SIZES = [256, 512, 1024] as const;
+export const OUTPUT_SIZES = [256, 512, 1024, 2048] as const;

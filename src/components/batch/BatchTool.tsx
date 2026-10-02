@@ -260,7 +260,7 @@ export function BatchTool() {
   const reason = (c: RowCheck) =>
     c.state !== "invalid" ? "" : c.error === "scheme" ? b.errScheme : c.error === "tooLong" ? b.errTooLong : b.errEmpty;
 
-  const sizeOptions = OUTPUT_SIZES.map((v) => ({
+  const sizeOptions = OUTPUT_SIZES.filter((v) => v <= 1024).map((v) => ({
     name: v === 256 ? t.preview.sizes.small : v === 512 ? t.preview.sizes.medium : t.preview.sizes.large,
     value: v,
     sub: `${v}px`,

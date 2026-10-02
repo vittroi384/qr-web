@@ -231,7 +231,7 @@ export const ko = {
     copyUnsupported: "이 브라우저에서는 이미지 복사를 지원하지 않습니다. PNG 다운로드를 이용해 주세요.",
     size: "크기",
     sizeLabel: "저장 크기",
-    sizes: { small: "작게", medium: "보통", large: "크게" },
+    sizes: { small: "작게", medium: "보통", large: "크게", max: "최대" },
     margin: "여백",
     margins: { standard: "표준", wide: "넓게" },
     summaryPrefix: "저장 크기",

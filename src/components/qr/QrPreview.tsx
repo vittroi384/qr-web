@@ -5,7 +5,7 @@ import type { QrStyleOptions } from "@/lib/qr/types";
 import { CheckIcon, CodeIcon, CopyIcon, DownloadIcon, PrinterIcon, QrMarkIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
 import { PrintSheetDialog, type SheetText } from "./PrintSheet";
-import { buildSvg, drawQrToCanvas, isCapacityError, triggerDownload } from "./render";
+import { buildSvg, drawQrToCanvas, exactWidth, isCapacityError, triggerDownload } from "./render";
 import { Segmented } from "./Segmented";
 
 type Props = {
@@ -33,6 +33,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
     { name: p.sizes.small, value: 256 },
     { name: p.sizes.medium, value: 512 },
     { name: p.sizes.large, value: 1024 },
+    { name: p.sizes.max, value: 2048 },
   ];
   /** Quiet zone in modules — the QR spec requires at least 4. */
   const margins = [
@@ -114,6 +115,15 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
       ? { text: p.badgeLive, cls: "bg-success-soft text-success" }
       : { text: p.badgeIdle, cls: "bg-surface text-muted" };
 
+  let outputPx = style.size;
+  if (encoded) {
+    try {
+      outputPx = exactWidth(encoded, style);
+    } catch {
+      // content too long for a QR — the error state is shown elsewhere
+    }
+  }
+
   return (
     <div className="flex flex-col">
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -165,7 +175,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
       <p className="mt-2 text-xs text-muted tabular-nums">
         {p.summaryPrefix}{" "}
         <span className="font-mono text-foreground tabular-nums">
-          {style.size} × {style.size}px
+          {outputPx} × {outputPx}px
         </span>{" "}
         · {p.summaryMargin(style.margin)}
       </p>

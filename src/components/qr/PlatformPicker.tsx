@@ -51,11 +51,11 @@ export function PlatformPicker({
               onClick={() => onChange(o.id)}
               className={`flex min-h-[68px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-lg border px-1 py-2 text-center text-[11.5px] leading-tight font-medium transition-colors ${
                 active
-                  ? "border-foreground bg-card text-foreground shadow-[0_0_0_1px_var(--foreground)]"
+                  ? "border-accent bg-accent text-white shadow-[0_2px_10px_rgb(2_132_199/0.35)]"
                   : "border-border bg-card text-muted hover:border-border-strong hover:bg-subtle hover:text-foreground"
               }`}
             >
-              <BrandGlyph id={o.id} label={o.fullName} className={`size-6 ${active ? "text-accent" : ""}`} />
+              <BrandGlyph id={o.id} label={o.fullName} className={`size-6 ${active ? "text-white" : ""}`} />
               <span className="line-clamp-2 max-w-full break-keep">{o.name}</span>
             </button>
           );

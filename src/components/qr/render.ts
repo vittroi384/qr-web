@@ -19,9 +19,21 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
  * live preview, the print sheet and batch export so every output looks the same.
  * Throws when the content does not fit (qrcode's "too big" error).
  */
+/**
+ * qrcode maps modules to pixels with a fractional scale when `width` is not a multiple of the
+ * module count, so some modules end up 1px wider than others. Snapping the width to a whole
+ * number of pixels per module keeps every module identical and edges razor-sharp.
+ */
+export function exactWidth(encoded: string, style: QrStyleOptions): number {
+  const modules = QRCode.create(encoded, { errorCorrectionLevel: style.errorCorrectionLevel }).modules.size;
+  const total = modules + style.margin * 2;
+  const scale = Math.max(1, Math.round(style.size / total));
+  return scale * total;
+}
+
 export async function drawQrToCanvas(canvas: HTMLCanvasElement, encoded: string, style: QrStyleOptions) {
   await QRCode.toCanvas(canvas, encoded, {
-    width: style.size,
+    width: exactWidth(encoded, style),
     margin: style.margin,
     errorCorrectionLevel: style.errorCorrectionLevel,
     color: { dark: style.darkColor, light: style.lightColor },
