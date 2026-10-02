@@ -16,8 +16,8 @@ const PAGES: Page[] = [
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const base = getSettings().site_url.replace(/\/$/, "");
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const base = (await getSettings()).site_url.replace(/\/$/, "");
   const now = new Date();
   const url = (path: string) => (path === "/" ? `${base}/` : `${base}${path}`);
   return PAGES.flatMap((p) =>

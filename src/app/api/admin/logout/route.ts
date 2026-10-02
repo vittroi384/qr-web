@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const authed = await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value, req.headers.get("user-agent"));
   if (authed) {
     const meta = getRequestMeta(req);
-    writeAudit({ action: "logout", ip: meta.ip, userAgent: meta.userAgent });
+    await writeAudit({ action: "logout", ip: meta.ip, userAgent: meta.userAgent });
   }
   // Don't reveal the admin login page to callers that never passed the gate.
   const gated = await gateSatisfied(req.cookies.get(GATE_COOKIE)?.value);

@@ -1,12 +1,29 @@
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qr
+      POSTGRES_DB: qr
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Not published: only the app container on the compose network can reach Postgres.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qr -d qr"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   app:
     build: .
     restart: unless-stopped
     env_file: .env
     environment:
-      DATABASE_PATH: /app/data/qr.db
-    volumes:
-      - ./data:/app/data
+      DATABASE_URL: postgres://qr:${POSTGRES_PASSWORD}@db:5432/qr
+    depends_on:
+      db:
+        condition: service_healthy
     expose:
       - "3000"
     healthcheck:
@@ -33,5 +50,6 @@ services:
       - caddy_config:/config
 
 volumes:
+  pgdata:
   caddy_data:
   caddy_config:

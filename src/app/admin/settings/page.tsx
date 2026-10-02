@@ -31,7 +31,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const sp = await searchParams;
-  const s = getSettings();
+  const s = await getSettings();
   const saved = typeof sp.saved === "string" ? Number.parseInt(sp.saved, 10) : null;
   const error = typeof sp.error === "string" ? ERROR_MESSAGES[sp.error] : null;
 
@@ -97,7 +97,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <h2 className="text-[15px] font-semibold">서버 환경변수 (파일에서만 변경)</h2>
         <p className="mt-1.5 text-[13px] leading-relaxed text-muted [&_code]:rounded [&_code]:bg-surface [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs [&_code]:text-foreground">
           비밀번호와 세션 키는 보안상 <code>.env</code> 파일로만 관리합니다: <code>ADMIN_PASSWORD</code>, <code>SESSION_SECRET</code>,{" "}
-          <code>DOMAIN</code>, <code>DATABASE_PATH</code>. 변경 후 <code>docker compose up -d</code> 로 재시작하세요.
+          <code>DOMAIN</code>, <code>POSTGRES_PASSWORD</code>(<code>DATABASE_URL</code>). 변경 후 <code>docker compose up -d</code> 로 재시작하세요.
         </p>
       </section>
 

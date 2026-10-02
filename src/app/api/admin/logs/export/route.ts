@@ -5,7 +5,7 @@ import { writeAudit } from "@/lib/audit";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getRequestMeta } from "@/lib/ip";
 import { iterateLogsForExport, type LogFilter } from "@/lib/logs";
-import { toKstIso } from "@/lib/time";
+import { toKstIso, toUtcIso } from "@/lib/time";
 
 export const runtime = "nodejs";
 
@@ -55,31 +55,40 @@ export async function GET(req: NextRequest) {
     to: sp.get("to") ?? undefined,
   };
 
-  writeAudit({ action: "logs_export", newValue: JSON.stringify(filter), ip: meta.ip, userAgent: meta.userAgent });
+  await writeAudit({ action: "logs_export", newValue: JSON.stringify(filter), ip: meta.ip, userAgent: meta.userAgent });
 
   const encoder = new TextEncoder();
+  const rows = iterateLogsForExport(filter);
+  // Pull-based: the next 1000-row batch is fetched only when the client has consumed the last.
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       // BOM so Excel opens UTF-8 Korean text correctly.
       controller.enqueue(encoder.encode("﻿" + COLUMNS.join(",") + "\r\n"));
-      for (const row of iterateLogsForExport(filter)) {
-        const cells = [
-          row.id,
-          `${row.created_at}Z`,
-          toKstIso(row.created_at),
-          row.qr_type,
-          row.event,
-          row.payload_json,
-          row.encoded_preview,
-          row.options_json,
-          row.ip,
-          row.user_agent,
-          row.referer,
-          row.accept_language,
-        ];
-        controller.enqueue(encoder.encode(cells.map(csvCell).join(",") + "\r\n"));
+    },
+    async pull(controller) {
+      const { value: row, done } = await rows.next();
+      if (done) {
+        controller.close();
+        return;
       }
-      controller.close();
+      const cells = [
+        row.id,
+        toUtcIso(row.created_at),
+        toKstIso(row.created_at),
+        row.qr_type,
+        row.event,
+        row.payload_json,
+        row.encoded_preview,
+        row.options_json,
+        row.ip,
+        row.user_agent,
+        row.referer,
+        row.accept_language,
+      ];
+      controller.enqueue(encoder.encode(cells.map(csvCell).join(",") + "\r\n"));
+    },
+    async cancel() {
+      await rows.return(undefined);
     },
   });
 

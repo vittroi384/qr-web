@@ -62,16 +62,16 @@ export function landingMetadata(locale: Locale, slug: string): Metadata {
  * preselected, then type-specific long-form copy, FAQ (also as FAQPage JSON-LD) and links to the
  * other generators. Ads use the home page's five-slot layout and the same distance rules.
  */
-export function LandingPage({ locale, type }: { locale: Locale; type: QrType }) {
+export async function LandingPage({ locale, type }: { locale: Locale; type: QrType }) {
   const t = getDict(locale);
   const c = getLanding(locale)[type];
-  const s = getSettings();
+  const s = await getSettings();
   const ads = {
-    top: adConfig(s.ad_slot_top),
-    left: adConfig(s.ad_slot_left),
-    right: adConfig(s.ad_slot_right),
-    bottom: adConfig(s.ad_slot_bottom),
-    incontent: adConfig(s.ad_slot_incontent),
+    top: adConfig(s, s.ad_slot_top),
+    left: adConfig(s, s.ad_slot_left),
+    right: adConfig(s, s.ad_slot_right),
+    bottom: adConfig(s, s.ad_slot_bottom),
+    incontent: adConfig(s, s.ad_slot_incontent),
   };
   const sideVisible = (cfg: AdSlotConfig) => (cfg.enabled && cfg.client && cfg.slotId) || cfg.showPlaceholder;
 

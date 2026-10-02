@@ -1,9 +1,8 @@
-import { getSettings, isOn } from "@/lib/settings";
+import { isOn, type Settings } from "@/lib/settings";
 import type { AdSlotConfig } from "./AdSlot";
 
-/** Server-only: resolves one AdSense slot from the runtime settings. */
-export function adConfig(slotId: string): AdSlotConfig {
-  const s = getSettings();
+/** Server-only: resolves one AdSense slot from already-loaded runtime settings. */
+export function adConfig(s: Settings, slotId: string): AdSlotConfig {
   return {
     client: s.adsense_client,
     slotId,

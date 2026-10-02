@@ -4,8 +4,8 @@ import { getDashboardStats } from "@/lib/logs";
 import { getSettings } from "@/lib/settings";
 import { QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
 
-export default function AdminDashboard() {
-  const stats = getDashboardStats(Number.parseInt(getSettings().log_retention_days, 10) || 0);
+export default async function AdminDashboard() {
+  const stats = await getDashboardStats(Number.parseInt((await getSettings()).log_retention_days, 10) || 0);
   const maxDay = Math.max(1, ...stats.byDay.map((d) => d.c));
 
   return (

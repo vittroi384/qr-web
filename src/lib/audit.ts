@@ -1,4 +1,6 @@
-import { getDb } from "./db";
+import { count, desc } from "drizzle-orm";
+import { db } from "./db";
+import { adminAudit, type AdminAudit } from "./db/schema";
 
 export type AuditAction =
   | "login"
@@ -8,17 +10,36 @@ export type AuditAction =
   | "logs_export"
   | "logs_delete";
 
-export function writeAudit(entry: {
+export type AuditRow = AdminAudit;
+
+export async function writeAudit(entry: {
   action: AuditAction;
   key?: string | null;
   oldValue?: string | null;
   newValue?: string | null;
   ip?: string | null;
   userAgent?: string | null;
-}) {
-  getDb()
-    .prepare(
-      "INSERT INTO admin_audit (action, key, old_value, new_value, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?)",
-    )
-    .run(entry.action, entry.key ?? null, entry.oldValue ?? null, entry.newValue ?? null, entry.ip ?? null, entry.userAgent ?? null);
+}): Promise<void> {
+  await db.insert(adminAudit).values({
+    action: entry.action,
+    key: entry.key ?? null,
+    oldValue: entry.oldValue ?? null,
+    newValue: entry.newValue ?? null,
+    ip: entry.ip ?? null,
+    userAgent: entry.userAgent ?? null,
+  });
+}
+
+/** One page of the audit trail, newest first. */
+export async function listAudit(page: number, pageSize: number): Promise<{ rows: AuditRow[]; total: number }> {
+  const [[{ c: total }], rows] = await Promise.all([
+    db.select({ c: count() }).from(adminAudit),
+    db
+      .select()
+      .from(adminAudit)
+      .orderBy(desc(adminAudit.id))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
+  ]);
+  return { rows, total };
 }

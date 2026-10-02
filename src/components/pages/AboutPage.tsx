@@ -3,9 +3,9 @@ import { ArrowRightIcon } from "@/components/icons";
 import { getDict, localePath, type Locale } from "@/lib/i18n";
 import { getSettings } from "@/lib/settings";
 
-export function AboutPage({ locale }: { locale: Locale }) {
+export async function AboutPage({ locale }: { locale: Locale }) {
   const t = getDict(locale).about;
-  const s = getSettings();
+  const s = await getSettings();
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <header>

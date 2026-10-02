@@ -10,13 +10,13 @@ export const metadata: Metadata = {
   alternates: alternatesFor("ko", "/batch"),
 };
 
-export default function Page() {
-  const s = getSettings();
+export default async function Page() {
+  const s = await getSettings();
   const ads = {
-    left: adConfig(s.ad_slot_left),
-    right: adConfig(s.ad_slot_right),
-    incontent: adConfig(s.ad_slot_incontent),
-    bottom: adConfig(s.ad_slot_bottom),
+    left: adConfig(s, s.ad_slot_left),
+    right: adConfig(s, s.ad_slot_right),
+    incontent: adConfig(s, s.ad_slot_incontent),
+    bottom: adConfig(s, s.ad_slot_bottom),
   };
   return <BatchPage locale="ko" ads={ads} />;
 }

@@ -8,5 +8,7 @@ data
 !.env.example
 Dockerfile
 docker-compose.yml
+docker-compose.local.yml
+backups
 Caddyfile
 deploy.sh

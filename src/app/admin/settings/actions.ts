@@ -50,11 +50,11 @@ export async function saveSettingsAction(formData: FormData) {
     if (patch[key] !== undefined) patch[key] = patch[key]!.slice(0, 500);
   }
 
-  const changes = updateSettings(patch);
+  const changes = await updateSettings(patch);
 
   const meta = getRequestMetaFromHeaders(await headers());
   for (const [key, oldValue, newValue] of changes) {
-    writeAudit({ action: "settings_update", key, oldValue, newValue, ip: meta.ip, userAgent: meta.userAgent });
+    await writeAudit({ action: "settings_update", key, oldValue, newValue, ip: meta.ip, userAgent: meta.userAgent });
   }
 
   revalidatePath("/", "layout");

@@ -32,7 +32,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
     to: first(sp.to) || undefined,
   };
   const page = Math.max(1, Number.parseInt(first(sp.page) || "1", 10) || 1);
-  const { rows, total } = listLogs(filter, page, PAGE_SIZE);
+  const { rows, total } = await listLogs(filter, page, PAGE_SIZE);
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const query = new URLSearchParams();

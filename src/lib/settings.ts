@@ -1,4 +1,6 @@
-import { getDb } from "./db";
+import { sql } from "drizzle-orm";
+import { db } from "./db";
+import { settings } from "./db/schema";
 
 export const SETTING_KEYS = [
   "site_name",
@@ -59,9 +61,10 @@ export const BOOLEAN_SETTINGS: SettingKey[] = ["ads_enabled", "ad_placeholders",
 const CACHE_TTL_MS = 30_000;
 let cache: { value: Settings; at: number } | null = null;
 
-export function getSettings(): Settings {
+/** Settings merged over the defaults, cached in memory for 30s (every page render reads them). */
+export async function getSettings(): Promise<Settings> {
   if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.value;
-  const rows = getDb().prepare("SELECT key, value FROM settings").all() as { key: string; value: string }[];
+  const rows = await db.select({ key: settings.key, value: settings.value }).from(settings);
   const merged: Settings = { ...DEFAULT_SETTINGS };
   for (const row of rows) {
     if ((SETTING_KEYS as readonly string[]).includes(row.key)) {
@@ -80,25 +83,27 @@ export function isOn(value: string): boolean {
   return value === "1" || value === "true";
 }
 
-/** Writes changed keys only; returns [key, old, new] tuples for auditing. */
-export function updateSettings(patch: Partial<Settings>): Array<[SettingKey, string, string]> {
-  const db = getDb();
-  const current = getSettings();
+/** Writes changed keys only (in one transaction); returns [key, old, new] tuples for auditing. */
+export async function updateSettings(patch: Partial<Settings>): Promise<Array<[SettingKey, string, string]>> {
+  invalidateSettingsCache(); // compare against the stored values, not a stale cache
+  const current = await getSettings();
   const changes: Array<[SettingKey, string, string]> = [];
-  const upsert = db.prepare(
-    "INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
-  );
-  const tx = db.transaction(() => {
-    for (const key of SETTING_KEYS) {
-      const next = patch[key];
-      if (next === undefined) continue;
-      const trimmed = next.trim();
-      if (trimmed === current[key]) continue;
-      upsert.run(key, trimmed);
-      changes.push([key, current[key], trimmed]);
-    }
-  });
-  tx();
+  for (const key of SETTING_KEYS) {
+    const next = patch[key];
+    if (next === undefined) continue;
+    const trimmed = next.trim();
+    if (trimmed === current[key]) continue;
+    changes.push([key, current[key], trimmed]);
+  }
+  if (changes.length > 0) {
+    await db
+      .insert(settings)
+      .values(changes.map(([key, , value]) => ({ key, value, updatedAt: sql`now()` })))
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value: sql`excluded.value`, updatedAt: sql`excluded.updated_at` },
+      });
+  }
   invalidateSettingsCache();
   return changes;
 }

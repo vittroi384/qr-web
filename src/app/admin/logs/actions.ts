@@ -17,9 +17,9 @@ export async function deleteLogsAction(formData: FormData) {
     .map((v) => Number.parseInt(String(v), 10))
     .filter((n) => Number.isInteger(n) && n > 0);
   if (ids.length === 0) return;
-  const deleted = deleteLogs(ids);
+  const deleted = await deleteLogs(ids);
   const meta = getRequestMetaFromHeaders(await headers());
-  writeAudit({ action: "logs_delete", newValue: `${deleted} rows: ${ids.join(",")}`, ip: meta.ip, userAgent: meta.userAgent });
+  await writeAudit({ action: "logs_delete", newValue: `${deleted} rows: ${ids.join(",")}`, ip: meta.ip, userAgent: meta.userAgent });
   revalidatePath("/admin/logs");
   revalidatePath("/admin");
 }

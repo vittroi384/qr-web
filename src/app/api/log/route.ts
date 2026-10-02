@@ -19,7 +19,7 @@ const RATE_LIMIT = 30; // requests
 const RATE_WINDOW_MS = 60_000;
 
 export async function POST(req: NextRequest) {
-  const settings = getSettings();
+  const settings = await getSettings();
   if (!isOn(settings.logging_enabled)) {
     return NextResponse.json({ ok: true, skipped: true });
   }
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   const encodedPreview =
     typeof body.encoded === "string" ? maskEncodedSecrets(body.type, body.encoded).slice(0, 200) : null;
 
-  insertLog({
+  await insertLog({
     qrType: body.type,
     event: body.event,
     payload,
@@ -74,8 +74,7 @@ export async function POST(req: NextRequest) {
   // Opportunistic retention cleanup instead of a cron job.
   if (Math.random() < 0.01) {
     const retention = Number.parseInt(settings.log_retention_days, 10);
-    if (retention > 0) pruneOldLogs(retention);
-    pruneOldAudit(AUDIT_RETENTION_DAYS);
+    await Promise.all([pruneOldLogs(retention), pruneOldAudit(AUDIT_RETENTION_DAYS)]);
   }
 
   return NextResponse.json({ ok: true });

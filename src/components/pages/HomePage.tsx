@@ -9,15 +9,15 @@ import { getDict, localePath, typeToSlug, type Locale } from "@/lib/i18n";
 import { QR_TYPES } from "@/lib/qr/types";
 import { getSettings } from "@/lib/settings";
 
-export function HomePage({ locale }: { locale: Locale }) {
+export async function HomePage({ locale }: { locale: Locale }) {
   const t = getDict(locale);
-  const s = getSettings();
+  const s = await getSettings();
   const ads = {
-    top: adConfig(s.ad_slot_top),
-    left: adConfig(s.ad_slot_left),
-    right: adConfig(s.ad_slot_right),
-    bottom: adConfig(s.ad_slot_bottom),
-    incontent: adConfig(s.ad_slot_incontent),
+    top: adConfig(s, s.ad_slot_top),
+    left: adConfig(s, s.ad_slot_left),
+    right: adConfig(s, s.ad_slot_right),
+    bottom: adConfig(s, s.ad_slot_bottom),
+    incontent: adConfig(s, s.ad_slot_incontent),
   };
   const sideVisible = (c: AdSlotConfig) => (c.enabled && c.client && c.slotId) || c.showPlaceholder;
 

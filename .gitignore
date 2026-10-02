@@ -40,8 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# sqlite data
+# local data (old SQLite files, OTP QR image) and database backups
 /data/
+/backups/
 
 
 # keep the template

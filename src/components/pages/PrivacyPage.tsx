@@ -1,9 +1,9 @@
 import { getDict, type Locale } from "@/lib/i18n";
 import { getSettings, isOn } from "@/lib/settings";
 
-export function PrivacyPage({ locale }: { locale: Locale }) {
+export async function PrivacyPage({ locale }: { locale: Locale }) {
   const t = getDict(locale).privacy;
-  const s = getSettings();
+  const s = await getSettings();
   const logging = isOn(s.logging_enabled);
   const retention = Number.parseInt(s.log_retention_days, 10);
 

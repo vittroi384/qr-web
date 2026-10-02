@@ -187,3 +187,17 @@ settings 키 (기본값 포함): `site_name`, `site_url`, `site_description`, `a
 - 구성: H1 + 타입이 미리 선택된 생성기 + 타입별 고유 콘텐츠(동작 원리·활용·팁·FAQ) + 다른 생성기 링크. 광고 5슬롯은 메인과 동일.
 - 메타: 타입별 title/description, hreflang, FAQPage·SoftwareApplication JSON-LD, sitemap 등록.
 - 내부 링크: 메인 "지원하는 형식" 타일 → 랜딩, 푸터 "Generators" 열.
+
+## 9. DB를 PostgreSQL + Drizzle로 전환 (2026-10-02, 포트폴리오/운영 관점)
+
+위 1~2절의 SQLite(better-sqlite3) 구성은 이 전환으로 대체됨. 기능·화면·권한 모델은 그대로.
+
+- **스택**: PostgreSQL 16 (`postgres:16-alpine`) + Drizzle ORM + postgres.js. 네이티브 모듈이 사라져 Dockerfile에서 python3/make/g++ 제거.
+- **스키마**: `src/lib/db/schema.ts` — `qr_logs`, `settings`, `admin_audit`. `created_at`은 `timestamptz`, `payload_json`/`options_json`은 `jsonb`. ERD는 [`ERD.md`](ERD.md).
+- **마이그레이션**: `npm run db:generate` → `drizzle/*.sql` 커밋. 로컬은 `npm run db:migrate`, 운영은 컨테이너 시작 시 `scripts/migrate.mjs`(drizzle-orm 마이그레이터, 런타임 의존성만 사용) 실행 후 `server.js`.
+- **데이터 모듈**: `logs.ts`·`settings.ts`·`audit.ts`의 공개 함수 이름은 유지하고 전부 async로. 감사 로그 페이지의 직접 SQL은 `listAudit()`로 이동. CSV 내보내기는 1000행 단위 keyset 페이지 + pull 스트림.
+- **시간대**: 필터·"오늘"은 KST 달력일 경계를 instant로 비교, 14일 추이는 `date_trunc('day', created_at AT TIME ZONE 'Asia/Seoul')`.
+- **빌드**: DB 클라이언트는 첫 쿼리 때 생성(lazy) → `next build`는 DB 없이 동작.
+- **Compose**: `db` 서비스(포트 미공개, `pgdata` 볼륨, `pg_isready` healthcheck) → app은 `service_healthy` 이후 기동. 로컬 개발용 `docker-compose.local.yml`(localhost:5432).
+- **백업**: `scripts/backup.sh` — `pg_dump | gzip` → `backups/qr-YYYY-MM-DD.sql.gz`, 30일 보관(cron).
+- 기존 SQLite 파일(`data/qr.db`)의 데이터 이관 스크립트는 포함하지 않음. 새 DB는 빈 상태에서 시작(설정은 기본값).

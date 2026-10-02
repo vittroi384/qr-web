@@ -1,6 +1,8 @@
-import { getDb, type QrLogRow } from "./db";
+import { and, count, countDistinct, desc, eq, gte, ilike, inArray, lt, or, sql, type SQL } from "drizzle-orm";
+import { db } from "./db";
+import { adminAudit, qrLogs, type QrLog } from "./db/schema";
 import type { LogEvent, QrType } from "./qr/types";
-import { isValidDay, kstDayEndUtcExclusive, kstDayStartUtc, kstToday } from "./time";
+import { DISPLAY_TZ, isValidDay, kstDayEndExclusive, kstDayStart, kstToday } from "./time";
 
 export type LogFilter = {
   type?: string;
@@ -10,35 +12,62 @@ export type LogFilter = {
   to?: string; // YYYY-MM-DD (KST calendar day, inclusive)
 };
 
-function buildWhere(filter: LogFilter): { where: string; params: unknown[] } {
-  const clauses: string[] = [];
-  const params: unknown[] = [];
-  if (filter.type) {
-    clauses.push("qr_type = ?");
-    params.push(filter.type);
-  }
-  if (filter.event) {
-    clauses.push("event = ?");
-    params.push(filter.event);
-  }
-  if (filter.q) {
-    clauses.push("(payload_json LIKE ? OR encoded_preview LIKE ? OR ip LIKE ?)");
-    const like = `%${filter.q}%`;
-    params.push(like, like, like);
-  }
-  // Dates are entered as KST days; rows are stored in UTC, so convert the boundaries.
-  if (filter.from && isValidDay(filter.from)) {
-    clauses.push("created_at >= ?");
-    params.push(kstDayStartUtc(filter.from));
-  }
-  if (filter.to && isValidDay(filter.to)) {
-    clauses.push("created_at < ?");
-    params.push(kstDayEndUtcExclusive(filter.to));
-  }
-  return { where: clauses.length ? `WHERE ${clauses.join(" AND ")}` : "", params };
+/**
+ * A log row as the admin UI and CSV export see it: column names as in the table, jsonb columns
+ * serialised back to JSON text (PayloadSummary, the detail view and CSV cells work on strings).
+ */
+export type QrLogRow = {
+  id: number;
+  created_at: Date;
+  qr_type: string;
+  event: string;
+  payload_json: string;
+  encoded_preview: string | null;
+  options_json: string | null;
+  ip: string | null;
+  user_agent: string | null;
+  referer: string | null;
+  accept_language: string | null;
+};
+
+function toRow(r: QrLog): QrLogRow {
+  return {
+    id: r.id,
+    created_at: r.createdAt,
+    qr_type: r.qrType,
+    event: r.event,
+    payload_json: JSON.stringify(r.payloadJson),
+    encoded_preview: r.encodedPreview,
+    options_json: r.optionsJson == null ? null : JSON.stringify(r.optionsJson),
+    ip: r.ip,
+    user_agent: r.userAgent,
+    referer: r.referer,
+    accept_language: r.acceptLanguage,
+  };
 }
 
-export function insertLog(entry: {
+/** Escape LIKE wildcards so a search for "50%" matches literally. */
+function likePattern(q: string): string {
+  return `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+}
+
+function buildWhere(filter: LogFilter): SQL | undefined {
+  const clauses: SQL[] = [];
+  if (filter.type) clauses.push(eq(qrLogs.qrType, filter.type));
+  if (filter.event) clauses.push(eq(qrLogs.event, filter.event));
+  if (filter.q) {
+    const like = likePattern(filter.q);
+    clauses.push(
+      or(ilike(sql`${qrLogs.payloadJson}::text`, like), ilike(qrLogs.encodedPreview, like), ilike(qrLogs.ip, like))!,
+    );
+  }
+  // Dates are entered as KST calendar days; compare against the matching instants.
+  if (filter.from && isValidDay(filter.from)) clauses.push(gte(qrLogs.createdAt, kstDayStart(filter.from)));
+  if (filter.to && isValidDay(filter.to)) clauses.push(lt(qrLogs.createdAt, kstDayEndExclusive(filter.to)));
+  return clauses.length ? and(...clauses) : undefined;
+}
+
+export async function insertLog(entry: {
   qrType: QrType;
   event: LogEvent;
   payload: Record<string, unknown>;
@@ -48,90 +77,115 @@ export function insertLog(entry: {
   userAgent: string | null;
   referer: string | null;
   acceptLanguage: string | null;
-}) {
-  getDb()
-    .prepare(
-      `INSERT INTO qr_logs (qr_type, event, payload_json, encoded_preview, options_json, ip, user_agent, referer, accept_language)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      entry.qrType,
-      entry.event,
-      JSON.stringify(entry.payload),
-      entry.encodedPreview,
-      JSON.stringify(entry.options),
-      entry.ip,
-      entry.userAgent,
-      entry.referer,
-      entry.acceptLanguage,
-    );
+}): Promise<void> {
+  await db.insert(qrLogs).values({
+    qrType: entry.qrType,
+    event: entry.event,
+    payloadJson: entry.payload,
+    encodedPreview: entry.encodedPreview,
+    optionsJson: entry.options,
+    ip: entry.ip,
+    userAgent: entry.userAgent,
+    referer: entry.referer,
+    acceptLanguage: entry.acceptLanguage,
+  });
 }
 
-export function pruneOldLogs(retentionDays: number) {
+const olderThanDays = (column: typeof qrLogs.createdAt | typeof adminAudit.createdAt, days: number) =>
+  lt(column, sql`now() - make_interval(days => ${Math.floor(days)})`);
+
+export async function pruneOldLogs(retentionDays: number): Promise<void> {
   if (retentionDays <= 0) return;
-  getDb()
-    .prepare("DELETE FROM qr_logs WHERE created_at < datetime('now', ?)")
-    .run(`-${Math.floor(retentionDays)} days`);
+  await db.delete(qrLogs).where(olderThanDays(qrLogs.createdAt, retentionDays));
 }
 
-export function pruneOldAudit(retentionDays: number) {
+export async function pruneOldAudit(retentionDays: number): Promise<void> {
   if (retentionDays <= 0) return;
-  getDb()
-    .prepare("DELETE FROM admin_audit WHERE created_at < datetime('now', ?)")
-    .run(`-${Math.floor(retentionDays)} days`);
+  await db.delete(adminAudit).where(olderThanDays(adminAudit.createdAt, retentionDays));
 }
 
-export function listLogs(filter: LogFilter, page: number, pageSize: number): { rows: QrLogRow[]; total: number } {
-  const db = getDb();
-  const { where, params } = buildWhere(filter);
-  const total = (db.prepare(`SELECT COUNT(*) AS c FROM qr_logs ${where}`).get(...params) as { c: number }).c;
-  const rows = db
-    .prepare(`SELECT * FROM qr_logs ${where} ORDER BY id DESC LIMIT ? OFFSET ?`)
-    .all(...params, pageSize, (page - 1) * pageSize) as QrLogRow[];
-  return { rows, total };
+export async function listLogs(filter: LogFilter, page: number, pageSize: number): Promise<{ rows: QrLogRow[]; total: number }> {
+  const where = buildWhere(filter);
+  const [[{ c: total }], rows] = await Promise.all([
+    db.select({ c: count() }).from(qrLogs).where(where),
+    db
+      .select()
+      .from(qrLogs)
+      .where(where)
+      .orderBy(desc(qrLogs.id))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
+  ]);
+  return { rows: rows.map(toRow), total };
 }
 
-export function iterateLogsForExport(filter: LogFilter): IterableIterator<QrLogRow> {
-  const { where, params } = buildWhere(filter);
-  return getDb().prepare(`SELECT * FROM qr_logs ${where} ORDER BY id DESC`).iterate(...params) as IterableIterator<QrLogRow>;
+const EXPORT_BATCH = 1000;
+
+/**
+ * Yields every matching row, newest first, fetching 1000 at a time with keyset pagination
+ * (id < last id) so memory stays bounded however large the export is.
+ */
+export async function* iterateLogsForExport(filter: LogFilter): AsyncGenerator<QrLogRow> {
+  const where = buildWhere(filter);
+  let beforeId: number | null = null;
+  for (;;) {
+    const batch: QrLog[] = await db
+      .select()
+      .from(qrLogs)
+      .where(beforeId === null ? where : and(where, lt(qrLogs.id, beforeId)))
+      .orderBy(desc(qrLogs.id))
+      .limit(EXPORT_BATCH);
+    for (const r of batch) yield toRow(r);
+    if (batch.length < EXPORT_BATCH) return;
+    beforeId = batch[batch.length - 1].id;
+  }
 }
 
-export function deleteLogs(ids: number[]): number {
+export async function deleteLogs(ids: number[]): Promise<number> {
   if (ids.length === 0) return 0;
-  const placeholders = ids.map(() => "?").join(",");
-  const result = getDb().prepare(`DELETE FROM qr_logs WHERE id IN (${placeholders})`).run(...ids);
-  return result.changes;
+  const deleted = await db.delete(qrLogs).where(inArray(qrLogs.id, ids)).returning({ id: qrLogs.id });
+  return deleted.length;
 }
 
 export const AUDIT_RETENTION_DAYS = 365;
 
-export function getDashboardStats(logRetentionDays = 0) {
-  const db = getDb();
+export async function getDashboardStats(logRetentionDays = 0) {
   // Retention cleanup also runs here so it happens even when logging is off or traffic is idle.
-  pruneOldLogs(logRetentionDays);
-  pruneOldAudit(AUDIT_RETENTION_DAYS);
-  const count = (sql: string, ...params: unknown[]) => (db.prepare(sql).get(...params) as { c: number }).c;
-  const todayStartUtc = kstDayStartUtc(kstToday());
-  return {
-    total: count("SELECT COUNT(*) AS c FROM qr_logs"),
-    today: count("SELECT COUNT(*) AS c FROM qr_logs WHERE created_at >= ?", todayStartUtc),
-    last7: count("SELECT COUNT(*) AS c FROM qr_logs WHERE created_at >= datetime('now', '-7 days')"),
-    last30: count("SELECT COUNT(*) AS c FROM qr_logs WHERE created_at >= datetime('now', '-30 days')"),
-    uniqueIps30: count(
-      "SELECT COUNT(DISTINCT ip) AS c FROM qr_logs WHERE created_at >= datetime('now', '-30 days')",
-    ),
-    byType: db
-      .prepare("SELECT qr_type, COUNT(*) AS c FROM qr_logs GROUP BY qr_type ORDER BY c DESC")
-      .all() as { qr_type: string; c: number }[],
-    byEvent: db
-      .prepare("SELECT event, COUNT(*) AS c FROM qr_logs GROUP BY event ORDER BY c DESC")
-      .all() as { event: string; c: number }[],
-    // Group by KST calendar day (UTC+9) so the chart matches what the owner sees.
-    byDay: db
-      .prepare(
-        "SELECT date(created_at, '+9 hours') AS day, COUNT(*) AS c FROM qr_logs WHERE created_at >= datetime('now', '-14 days') GROUP BY day ORDER BY day",
-      )
-      .all() as { day: string; c: number }[],
-    recent: db.prepare("SELECT * FROM qr_logs ORDER BY id DESC LIMIT 20").all() as QrLogRow[],
-  };
+  await Promise.all([pruneOldLogs(logRetentionDays), pruneOldAudit(AUDIT_RETENTION_DAYS)]);
+
+  const since = (days: number) => gte(qrLogs.createdAt, sql`now() - make_interval(days => ${days})`);
+  const countWhere = async (where?: SQL) => (await db.select({ c: count() }).from(qrLogs).where(where))[0].c;
+  // Group by KST calendar day so the chart matches what the owner sees.
+  const kstDay = sql<string>`to_char(date_trunc('day', ${qrLogs.createdAt} AT TIME ZONE ${DISPLAY_TZ}), 'YYYY-MM-DD')`;
+
+  const [total, today, last7, last30, uniqueIps30, byType, byEvent, byDay, recent] = await Promise.all([
+    countWhere(),
+    countWhere(gte(qrLogs.createdAt, kstDayStart(kstToday()))),
+    countWhere(since(7)),
+    countWhere(since(30)),
+    db
+      .select({ c: countDistinct(qrLogs.ip) })
+      .from(qrLogs)
+      .where(since(30))
+      .then((r) => r[0].c),
+    db
+      .select({ qr_type: qrLogs.qrType, c: count() })
+      .from(qrLogs)
+      .groupBy(qrLogs.qrType)
+      .orderBy(desc(count())),
+    db
+      .select({ event: qrLogs.event, c: count() })
+      .from(qrLogs)
+      .groupBy(qrLogs.event)
+      .orderBy(desc(count())),
+    db
+      .select({ day: kstDay, c: count() })
+      .from(qrLogs)
+      .where(since(14))
+      .groupBy(sql`1`)
+      .orderBy(sql`1`),
+    db.select().from(qrLogs).orderBy(desc(qrLogs.id)).limit(20),
+  ]);
+
+  return { total, today, last7, last30, uniqueIps30, byType, byEvent, byDay, recent: recent.map(toRow) };
 }

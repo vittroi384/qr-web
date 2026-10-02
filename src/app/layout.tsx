@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { DEFAULT_LOCALE, getDict, isLocale, type Locale } from "@/lib/i18n";
 import { DEFAULT_SETTINGS, getSettings, isOn } from "@/lib/settings";
 
-// Settings live in SQLite and can change at runtime, so never bake pages at build time.
+// Settings live in PostgreSQL and can change at runtime, so never bake pages at build time.
 export const dynamic = "force-dynamic";
 
 /**
@@ -20,7 +20,7 @@ async function requestLocale(): Promise<Locale> {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const s = getSettings();
+  const s = await getSettings();
   const locale = await requestLocale();
   const t = getDict(locale).meta;
   // The site description is admin-edited copy in the primary language (English); other
@@ -51,7 +51,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const s = getSettings();
+  const s = await getSettings();
   const locale = await requestLocale();
   // The footer notice is admin-edited copy. Translate it only while it is the stock text.
   const notice = s.footer_notice === DEFAULT_SETTINGS.footer_notice ? getDict(locale).footer.defaultNotice : s.footer_notice;

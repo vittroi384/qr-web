@@ -44,9 +44,9 @@ export function EventBadge({ event }: { event: string }) {
   );
 }
 
-/** SQLite stores UTC; show it in KST with an explicit zone label. */
-export function formatDate(utc: string): string {
-  return formatKst(utc);
+/** Stored as timestamptz; show it in KST with an explicit zone label. */
+export function formatDate(value: Date | string): string {
+  return formatKst(value);
 }
 
 export function PayloadSummary({ json, max = 80 }: { json: string; max?: number }) {

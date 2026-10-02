@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatDate } from "@/components/admin/ui";
-import { getDb, type AdminAuditRow } from "@/lib/db";
+import { listAudit } from "@/lib/audit";
 import { SETTING_LABELS, type SettingKey } from "@/lib/settings";
 
 const PAGE_SIZE = 50;
@@ -17,11 +17,7 @@ const ACTION_LABELS: Record<string, string> = {
 export default async function AuditPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
   const page = Math.max(1, Number.parseInt(typeof sp.page === "string" ? sp.page : "1", 10) || 1);
-  const db = getDb();
-  const total = (db.prepare("SELECT COUNT(*) AS c FROM admin_audit").get() as { c: number }).c;
-  const rows = db
-    .prepare("SELECT * FROM admin_audit ORDER BY id DESC LIMIT ? OFFSET ?")
-    .all(PAGE_SIZE, (page - 1) * PAGE_SIZE) as AdminAuditRow[];
+  const { rows, total } = await listAudit(page, PAGE_SIZE);
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
@@ -45,13 +41,13 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="align-top">
-                <td className="whitespace-nowrap text-muted tabular-nums">{formatDate(r.created_at)}</td>
+                <td className="whitespace-nowrap text-muted tabular-nums">{formatDate(r.createdAt)}</td>
                 <td className="whitespace-nowrap">
                   <span className={r.action === "login_failed" ? "font-medium text-danger" : ""}>{ACTION_LABELS[r.action] ?? r.action}</span>
                 </td>
                 <td className="text-xs">{r.key ? SETTING_LABELS[r.key as SettingKey] ?? r.key : ""}</td>
-                <td className="max-w-xs text-xs break-all text-muted">{r.old_value}</td>
-                <td className="max-w-xs text-xs break-all">{r.new_value}</td>
+                <td className="max-w-xs text-xs break-all text-muted">{r.oldValue}</td>
+                <td className="max-w-xs text-xs break-all">{r.newValue}</td>
                 <td className="font-mono text-xs">{r.ip}</td>
               </tr>
             ))}

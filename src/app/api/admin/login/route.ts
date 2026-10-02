@@ -56,13 +56,13 @@ export async function POST(req: NextRequest) {
 
   if (!passwordOk || !totpOk) {
     recordLoginFailure(meta.ip);
-    writeAudit({ action: "login_failed", key: !passwordOk ? "password" : "totp", ip: meta.ip, userAgent: meta.userAgent });
+    await writeAudit({ action: "login_failed", key: !passwordOk ? "password" : "totp", ip: meta.ip, userAgent: meta.userAgent });
     await sleep(FAILURE_DELAY_MS);
     return NextResponse.json({ ok: false, error: "invalid" }, { status: 401 });
   }
 
   clearLoginFailures(meta.ip);
-  writeAudit({ action: "login", ip: meta.ip, userAgent: meta.userAgent });
+  await writeAudit({ action: "login", ip: meta.ip, userAgent: meta.userAgent });
   const token = await createSessionToken(meta.userAgent);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions);
