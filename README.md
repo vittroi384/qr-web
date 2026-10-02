@@ -1,131 +1,128 @@
-# QR-Web — 무엇이든 QR 코드로
+# QR Maker — 무엇이든 QR 코드로 바꾸는 무료 생성기
 
-URL · 텍스트 · Wi-Fi · 연락처(vCard) · 이메일 · 문자 · 전화 · 위치 · 일정을 QR 코드로 바꿔주는 공개 웹사이트.
-방문자가 입력한 내용은 **내 서버의 SQLite DB에 기록**되고, `/admin`에서 조회·검색·CSV 내보내기·설정 변경을 할 수 있습니다.
-Google AdSense 광고 자리 5곳(상단·좌·우·하단·본문 중간)이 미리 잡혀 있습니다. 팝업 광고는 없습니다.
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-better--sqlite3-003B57?logo=sqlite&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose%20%2B%20Caddy-2496ED?logo=docker&logoColor=white)
+![Oracle Cloud](https://img.shields.io/badge/Oracle%20Cloud-Ampere%20A1-F80000?logo=oracle&logoColor=white)
 
-- 스택: Next.js 16 (App Router, TypeScript) · Tailwind CSS 4 · better-sqlite3 · `qrcode`
+URL·SNS·WhatsApp·Wi-Fi·연락처·결제 링크 등 **14종 정보를 QR 코드로** 만드는 공개 웹서비스입니다.
+QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 서버에 종속되지 않습니다(경쟁 서비스의 "동적 QR + 구독" 모델을 의도적으로 배제).
+해외 사용자가 주 타깃이라 **영어가 기본**(`/`), 한국어는 `/ko`. 수익은 AdSense 광고 5슬롯, 유입은 타입별 SEO 랜딩 페이지 28개. 방문자가 저장한 QR 내용은 운영자 전용 관리자에서 확인합니다.
 
-### 기능
-- QR 종류 10가지: URL · **SNS/앱 링크**(Instagram, YouTube, 카카오톡 오픈채팅/채널, 네이버 등 아이디만 입력) · 텍스트 · Wi-Fi · 연락처 · 이메일 · 문자 · 전화 · 위치 · 일정
-- 실시간 미리보기, 색/배경/복원력/로고 프리셋, PNG · SVG 저장, 이미지 복사
-- **인쇄용 안내판**: 제목·안내문을 넣은 A4 시트를 브라우저 인쇄 → PDF 저장
-- **일괄 생성** (`/batch`): 한 줄에 하나씩 붙여 넣으면 PNG를 ZIP(+index.csv)으로 한 번에 내려받기 (외부 라이브러리 없는 ZIP 생성)
-- **영어/한국어**: `/` 영어(기본), `/ko/...` 한국어 (경로 기반, hreflang 포함)
-- **타입별 랜딩 페이지**: `/wifi-qr-code`, `/whatsapp-qr-code`, `/paypal-qr-code` … 14개 (한국어는 `/ko/<slug>`). 검색 유입용 — 타입이 미리 선택된 생성기 + 타입별 설명/활용/FAQ(FAQPage JSON-LD)
-- 배포: Docker Compose + Caddy(자동 HTTPS) → 오라클 클라우드 등 아무 리눅스 서버. 새 서버는 `scripts/server-setup.sh` 한 번 실행
+## 스크린샷
 
-## 로컬 개발
+> 광고 자리는 개발 모드의 점선 placeholder입니다.
 
-```bash
-cp .env.example .env     # ADMIN_PASSWORD, SESSION_SECRET 채우기
-npm install
-npm run dev              # http://localhost:3000
-npm test                 # 인코더 단위 테스트
-npm run lint
+| | |
+|---|---|
+| **메인** — 14종 타입, 실시간 미리보기, 크기·여백·꾸미기 ![메인](assets/main.png) | **타입별 랜딩** — 검색어에 맞춘 제목 + 타입 선택된 생성기 + 고유 콘텐츠·FAQ ![랜딩](assets/landing.png) |
+| **일괄 생성** — 엑셀 붙여 넣기 → PNG ZIP, 외부 라이브러리 없는 ZIP 작성기 ![일괄](assets/batch.png) | **모바일(한국어)** — 390px, 광고 3슬롯 ![모바일](assets/mobile.png) |
+
+## 주요 기능
+
+- **QR 14종**: URL · SNS/앱 링크(28개 플랫폼 프리셋, 링크 붙여 넣기 자동 인식) · WhatsApp · 텍스트 · Wi-Fi · 연락처(vCard 3.0) · 이메일 · SMS · 전화 · 위치 · 일정(iCalendar) · 결제 링크(PayPal/Venmo/Cash App… 금액 사전 입력) · 암호화폐(BIP-21/EIP-681) · PDF/파일 링크
+- **출력**: PNG(256~2048px, 모듈 단위 정수 스케일 보정으로 픽셀 정확) · SVG · 클립보드 복사 · **인쇄용 A4 안내판**(제목/부제 편집 → 브라우저 인쇄/PDF)
+- **꾸미기**: 색 프리셋 8종 + 직접 선택, 배경(흰색/연회색/아이보리/투명), 복원력, 중앙 로고(자동 ECC H), 대비 경고
+- **일괄 생성**: 표 편집기 + 엑셀 2열 붙여 넣기, 줄별 링크/텍스트 자동 판별, 최대 200개 → `001-이름.png` ZIP + `index.csv`
+- **i18n/SEO**: 경로 기반 EN/KO(hreflang, sitemap 36 URL), 타입별 랜딩 14×2(고유 본문 400~600단어, `FAQPage`·`SoftwareApplication` JSON-LD)
+- **광고**: AdSense 슬롯 5곳(상단·좌·우·하단·본문 중간), 팝업/오버레이 없음, 다운로드 버튼과 거리 확보, `/ads.txt` 자동
+- **방문자 기록**: PNG/SVG/복사/인쇄/일괄 저장 시에만 종류·내용·IP·브라우저 기록(입력 중 전송 없음). Wi-Fi 비밀번호는 저장 전 항상 `****`. IP당 분당 30회 제한, 보관 90일 자동 정리
+- **관리자**: 대시보드(KST 집계), 기록 검색·삭제·CSV(BOM, 수식 주입 차단), 설정(사이트 URL·AdSense ID·슬롯 ID — 재배포 없이 변경), 감사 로그(변경 전/후 값)
+
+## 관리자 3중 잠금
+
+| 계층 | 동작 | 설정 |
+|---|---|---|
+| 비밀 입구 URL | `/admin`은 누구에게나 **일반 404와 동일한 응답**. `https://<도메인>/<ADMIN_PATH>`를 먼저 열면 30일 게이트 쿠키가 생기고 그 브라우저에서만 `/admin`이 열림 | `ADMIN_PATH` |
+| 비밀번호 + OTP | 인증 앱(Google Authenticator 등) 6자리 코드, RFC 6238 직접 구현(재사용 차단). 5회 실패 시 10분 잠금, 실패마다 지연 | `ADMIN_PASSWORD`, `ADMIN_TOTP_SECRET` (`npm run totp-setup`) |
+| IP 허용 목록(선택) | 지정 IP/CIDR 외에는 입구 URL조차 404 | `ADMIN_ALLOWED_IPS` |
+
+세션 쿠키는 HTTPS에서 `__Host-` 접두 + `SameSite=Strict` + 브라우저 지문 바인딩, 24시간 만료. 관리자 응답 `noindex`/`no-store`, robots.txt에 관리자 경로 미노출. `X-Real-IP`는 Caddy가 덮어쓰며 앱 포트는 외부에 publish하지 않습니다.
+
+## 아키텍처 (오라클 클라우드 배포 구성)
+
+```
+방문자 ──HTTPS──▶ Caddy (자동 TLS, 보안 헤더, 64KB 본문 캡) ──▶ Next.js 16 standalone (Node, non-root)
+                       │                                            │ better-sqlite3 (WAL)
+                  OCI A1 (Docker Compose) ───────────────────────▶ ./data/qr.db (볼륨)
+                       │
+                  배포: git pull && docker compose up -d --build  (deploy.sh)
 ```
 
-- 관리자: `http://localhost:3000/admin` (비밀번호 = `.env`의 `ADMIN_PASSWORD`)
-- 개발 모드에서는 광고 자리가 점선 박스로 표시됩니다.
-- DB 파일: `./data/qr.db` (자동 생성, git 제외)
+- **단일 서버·단일 파일 DB**: 운영 비용 0원(무료 티어). 백업은 `qr.db` 파일 하나
+- **설정은 DB, 비밀은 .env**: 사이트명·URL·광고 ID는 관리자 화면, 비밀번호·키·입구 경로는 환경변수
+- **QR 인코더는 순수 함수**: `src/lib/qr/encoders.ts` — Wi-Fi 이스케이프, vCard, VEVENT(UTC/종일 DTEND 미포함), wa.me, BIP-21 등 `node:test` 30건으로 고정
 
 ## 구조
 
 ```
-src/app/                 페이지 · API 라우트 (page.tsx = 메인 생성기, admin/* = 관리자)
-src/components/qr/       QR 생성기 UI (탭, 폼, 미리보기, 디자인 옵션, 기록 전송 훅)
-src/components/ads/      AdSense 스크립트 · 광고 슬롯 컴포넌트
-src/lib/qr/encoders.ts   입력값 → QR 문자열 (WIFI:, vCard, VEVENT, mailto:, SMSTO:, tel:, geo:)
-src/lib/settings.ts      관리자 설정 (DB 저장, 재배포 없이 변경)
-src/lib/logs.ts          방문자 입력 기록 조회/삭제/통계
-src/lib/audit.ts         관리자 활동 감사로그
-src/proxy.ts             /admin/* 세션 보호
+src/app/                 라우트: / /ko /batch /[slug] /ko/[slug] /admin/* /api/*
+src/components/qr/       생성기 UI(타입 타일·폼·미리보기·꾸미기·플랫폼 피커·인쇄 안내판·렌더 헬퍼)
+src/components/batch/    일괄 생성(표 편집기, 붙여 넣기 파서, STORE ZIP 작성기)
+src/components/pages/    Home/Landing/Batch/About/Privacy 본문(언어 공유)
+src/lib/qr/              타입·인코더·저장용 마스킹 (+ 테스트)
+src/lib/i18n/            ko/en 사전, 랜딩 콘텐츠, slug 매핑
+src/lib/{auth,adminAccess,totp}.ts   세션·게이트·IP 허용목록·TOTP
+src/proxy.ts             locale 헤더, 관리자 게이트/404, /en→/ 301
 ```
 
-### 동작 요약
+## 로컬 실행
 
-- QR 이미지는 **브라우저에서** 생성됩니다(서버 부하 없음).
-- 미리보기는 브라우저에서 실시간으로 그려지며 서버로 아무것도 보내지 않습니다. **PNG/SVG 다운로드 또는 이미지 복사를 눌렀을 때만** `POST /api/log`로 종류·입력값·옵션·IP·브라우저가 기록됩니다(이벤트: download_png / download_svg / copy / print / batch).
-  IP당 분당 30회 제한, 16KB 본문 제한(Caddy에서도 64KB 캡), Wi-Fi 비밀번호는 저장 전 항상 `****`로 마스킹(설정으로 끌 수 없음).
-  기록 보관 기본 90일, 감사 로그 365일 후 자동 정리.
-- 관리자 설정(사이트 URL, 이름, AdSense ID, 슬롯 ID, 기록 on/off, 보관 일수 등)은 DB에 저장되고 변경 전/후 값이 **감사 로그**에 남습니다.
-- `/ads.txt`, `/robots.txt`, `/sitemap.xml`, OG 메타는 설정값으로 동적 생성됩니다.
+```bash
+cp .env.example .env     # ADMIN_PASSWORD, SESSION_SECRET(openssl rand -hex 32), ADMIN_PATH
+npm ci
+npm run dev              # http://localhost:3000  (관리자: http://localhost:3000/<ADMIN_PATH>)
+npm test                 # 인코더·TOTP 단위 테스트
+npm run build
+```
 
-## 서버 배포 (오라클 클라우드 Ubuntu 기준)
+개발 모드에서는 광고 자리가 점선으로 표시됩니다. DB는 `./data/qr.db`에 자동 생성됩니다.
 
-### 1. 네트워크 열기
-1. OCI 콘솔 → VCN → 서브넷의 **보안 목록** → Ingress 규칙에 `0.0.0.0/0` TCP **80**, **443** 추가.
-2. 인스턴스 안에서도 iptables가 막고 있으므로:
+## 서버 배포 (오라클 클라우드 Ubuntu)
+
+1. OCI 콘솔 → VCN 보안 목록 → Ingress **80, 443** 추가
+2. 서버에서 (private 저장소는 GitHub 토큰을 비밀번호로):
    ```bash
-   sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
-   sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
-   sudo apt-get install -y iptables-persistent && sudo netfilter-persistent save
+   git clone https://github.com/vittroi384/qr-web.git ~/qr-web
+   bash ~/qr-web/scripts/server-setup.sh   # iptables 개방, Docker 설치, .env 생성(SESSION_SECRET·ADMIN_PATH 자동)
+   cd ~/qr-web && nano .env                 # ADMIN_PASSWORD 입력, DOMAIN은 DNS 연결 후
+   newgrp docker && ./deploy.sh
    ```
-3. 도메인을 쓸 경우 DNS A 레코드를 서버 공인 IP로 지정.
+3. OTP 등록: `docker compose exec app node scripts/totp-setup.mjs` → QR을 인증 앱으로 스캔 → `.env`에 `ADMIN_TOTP_SECRET` 추가 → `docker compose up -d`
+4. 도메인 연결 시 `.env`의 `DOMAIN=`만 채우면 Caddy가 HTTPS를 자동 발급. 관리자 설정의 **사이트 URL**도 실제 도메인으로 변경
+5. 업데이트: `./deploy.sh` (git pull + 재빌드). 백업: `docker compose exec -T app node -e "require('better-sqlite3')('/app/data/qr.db').backup('/app/data/backup.db')"`
 
-### 2. Docker 설치
-```bash
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker $USER && newgrp docker
-```
-
-### 3. 코드 받기 & 설정
-```bash
-git clone <이 저장소 URL> qr-web && cd qr-web
-cp .env.example .env
-nano .env
-#   DOMAIN=qr.example.com          # 도메인 없으면 비워두기 → http://서버IP 로 접속
-#   ADMIN_PASSWORD=긴-비밀번호
-#   SESSION_SECRET=$(openssl rand -hex 32)
-chmod +x deploy.sh
-```
-
-### 4. 배포 / 업데이트
-```bash
-./deploy.sh          # git pull + docker compose up -d --build
-docker compose logs -f app
-```
-DOMAIN을 지정하면 Caddy가 Let's Encrypt 인증서를 자동 발급해 HTTPS로 서비스합니다.
-DOMAIN을 비우면 평문 HTTP(:80)로 동작하며 이때 관리자 세션 쿠키는 `Secure` 없이 발급됩니다(테스트 용도로만 권장).
-배포 후 `/admin/settings`에서 **사이트 URL**을 실제 도메인으로 바꿔 주세요(sitemap/OG에 사용).
-
-### 5. 백업
-SQLite 파일 하나(`./data/qr.db`)가 전부입니다.
-```bash
-# 매일 03:00 백업, 30일 보관 (crontab -e)
-0 3 * * * cd /home/ubuntu/qr-web && docker compose exec -T app node -e "require('better-sqlite3')('/app/data/qr.db').backup('/app/data/backup-'+new Date().toISOString().slice(0,10)+'.db')" && find data -name 'backup-*.db' -mtime +30 -delete
-```
+> `DOMAIN`을 비우면 평문 HTTP로 동작하며 세션 쿠키에 `Secure`가 붙지 않습니다(테스트 용도). HSTS에 `includeSubDomains`가 포함되어 있으니 HTTP 전용 서브도메인이 있으면 Caddyfile에서 빼세요.
 
 ## AdSense 연결
 
-1. AdSense에서 사이트를 추가하고 승인 받기(`/about`, `/privacy`, 메인의 종류 소개·FAQ 등 콘텍스트 콘텐츠 포함).
-2. 광고 단위(디스플레이) 5개 생성 → 각 `data-ad-slot` 값을 `/admin/settings`의 슬롯 ID 칸에 입력.
-3. 게시자 ID(`ca-pub-…`) 입력, **광고 표시** 체크, 저장. `/ads.txt`는 자동으로 채워집니다.
-4. 슬롯 ID가 비어 있는 자리는 렌더되지 않습니다. 레이아웃만 확인하려면 **광고 자리 점선 표시**를 켜세요.
-
-## 관리자 보안 (3중 잠금)
-
-| 계층 | 동작 | 설정 |
-| --- | --- | --- |
-| 비밀 입구 URL | `/admin`은 누구에게나 **404**. `https://<도메인>/<ADMIN_PATH>`를 먼저 열면 30일짜리 게이트 쿠키가 생기고 그 브라우저에서만 `/admin`이 열림 | `ADMIN_PATH` (영숫자 8~64자, `openssl rand -hex 8`) |
-| 비밀번호 + OTP | 비밀번호와 인증 앱(Google Authenticator 등) 6자리 코드. 5회 실패 시 10분 잠금, 실패마다 지연 | `ADMIN_PASSWORD`, `ADMIN_TOTP_SECRET` (`npm run totp-setup`으로 QR 발급) |
-| IP 허용 목록(선택) | 지정한 IP/CIDR 외에는 입구 URL조차 404 | `ADMIN_ALLOWED_IPS=1.2.3.4, 10.0.0.0/8` |
-
-그 외: 세션 쿠키는 HTTPS에서 `__Host-` 접두 + `SameSite=Strict` + 브라우저 지문 바인딩, 24시간 만료. 관리자 응답은 `noindex`/`no-store`, robots.txt에 관리자 경로를 노출하지 않음. Caddy가 HSTS·Permissions-Policy 헤더를 추가.
-게이트 쿠키를 지웠거나 다른 기기에서 접속하려면 입구 URL을 다시 열면 됩니다.
-
-> Caddy의 HSTS 헤더에 `includeSubDomains`가 포함되어 있습니다. 같은 도메인의 다른 서브도메인을 HTTP로만 운영한다면 Caddyfile에서 그 옵션을 빼세요. OTP 기기를 잃어버리면 서버 `.env`의 `ADMIN_TOTP_SECRET`을 지우고 재시작한 뒤 다시 발급하세요.
+1. 실제 도메인으로 배포 후 AdSense에 사이트 추가 → 게시자 ID(`ca-pub-…`) 발급
+2. 관리자 → 설정 → 게시자 ID 입력 + **광고 표시** 체크 → `/ads.txt`와 스크립트가 자동 활성화 → 사이트 확인·심사
+3. 승인 후 디스플레이 광고 단위 5개 생성 → 각 `data-ad-slot`을 설정의 슬롯 ID 칸에 입력. 비어 있는 자리는 렌더되지 않음. 자동 광고는 끄기(배치 규칙이 깨짐)
 
 ## 환경변수
 
 | 이름 | 설명 |
-| --- | --- |
+|---|---|
 | `DOMAIN` | Caddy용 도메인. 비우면 `:80` 평문 HTTP |
-| `ADMIN_PATH` | 관리자 비밀 입구 경로 (없으면 게이트 비활성 — 개발용) |
-| `ADMIN_PASSWORD` | `/admin` 로그인 비밀번호 |
+| `ADMIN_PATH` | 관리자 비밀 입구 경로 (`/gate-…`, 영숫자 8~64자). 없으면 게이트 비활성(개발용) |
+| `ADMIN_PASSWORD` | 관리자 비밀번호 |
 | `ADMIN_TOTP_SECRET` | OTP 비밀키 (없으면 OTP 생략 — 운영에서는 설정 권장) |
 | `ADMIN_ALLOWED_IPS` | 관리자 접근 허용 IP/CIDR 목록 (선택) |
-| `SESSION_SECRET` | 세션 쿠키 서명 키 (`openssl rand -hex 32`) |
+| `SESSION_SECRET` | 세션·게이트 쿠키 서명 키 (`openssl rand -hex 32`) |
 | `DATABASE_PATH` | SQLite 경로. Docker에서는 `/app/data/qr.db` 고정 |
 
-> 보안 주의: 앱은 `X-Real-IP`(Caddy가 덮어씀)를 신뢰합니다. `docker-compose.yml`의 app 서비스에 `ports:`를 추가해 3000 포트를 외부에 직접 노출하지 마세요. 노출하면 클라이언트가 IP를 위조할 수 있습니다.
+## 설계 결정
+
+- **정적 QR만**: 사용자가 인쇄한 QR이 이 서버의 가동 여부에 종속되지 않게. 리다이렉트·통계·수정 기능(동적 QR)은 피싱 중계·운영 책임을 동반하므로 배제
+- **기록은 저장 시점에만**: 입력 중 디바운스 전송을 없애 "타이핑마다 저장되는" 느낌을 제거. PNG/SVG/복사/인쇄/ZIP 클릭이 곧 "만든 것"
+- **민감값은 서버에 도달하기 전·후 모두 마스킹**: 클라이언트가 `****`로 보내고 서버가 다시 고정 마스킹. 설정으로 끌 수 없음
+- **관리자는 존재 자체를 숨김**: 로그인 폼을 노출하는 대신 404로 응답해 무차별 대입의 표면을 없앰
+- 전체 계획과 검증 기록은 [`docs/PLAN.md`](docs/PLAN.md)
+
+## 라이선스
+
+MIT
