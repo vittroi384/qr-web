@@ -13,7 +13,7 @@ Google AdSense 광고 자리 5곳(상단·좌·우·하단·본문 중간)이 �
 - **일괄 생성** (`/batch`): 한 줄에 하나씩 붙여 넣으면 PNG를 ZIP(+index.csv)으로 한 번에 내려받기 (외부 라이브러리 없는 ZIP 생성)
 - **영어/한국어**: `/` 영어(기본), `/ko/...` 한국어 (경로 기반, hreflang 포함)
 - **타입별 랜딩 페이지**: `/wifi-qr-code`, `/whatsapp-qr-code`, `/paypal-qr-code` … 14개 (한국어는 `/ko/<slug>`). 검색 유입용 — 타입이 미리 선택된 생성기 + 타입별 설명/활용/FAQ(FAQPage JSON-LD)
-- 배포: Docker Compose + Caddy(자동 HTTPS) → 오라클 클라우드 등 아무 리눅스 서버
+- 배포: Docker Compose + Caddy(자동 HTTPS) → 오라클 클라우드 등 아무 리눅스 서버. 새 서버는 `scripts/server-setup.sh` 한 번 실행
 
 ## 로컬 개발
 
