@@ -1,85 +1,102 @@
 import { encodeUrl } from "@/lib/qr/encoders";
 
-export const MAX_LINES = 200;
+export const MAX_ROWS = 200;
 /** Largest byte-mode payload a version-40 code holds at error correction M. */
 const MAX_BYTES = 2331;
 const MAX_NAME = 40;
 
-export type BatchMode = "url" | "text";
-export type BatchError = "scheme" | "empty" | "tooLong";
+export type RowKind = "url" | "text";
+export type RowError = "scheme" | "empty" | "tooLong";
 
-export type BatchItem = {
-  /** 1-based line number in the textarea (blank lines count). */
-  line: number;
-  label: string;
-  content: string;
-  /** What goes into the QR code. Empty when `error` is set. */
-  encoded: string;
-  error: BatchError | null;
-};
+export type RowInput = { name: string; content: string };
 
-export type BatchParse = { items: BatchItem[]; total: number; valid: number };
+export type RowCheck =
+  | { state: "blank" }
+  | { state: "invalid"; error: RowError }
+  | { state: "ok"; kind: RowKind; encoded: string };
 
-const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
-/** "example.com/menu" — a bare address, so a comma after it is part of the URL, not a label. */
-const BARE_HOST = /^[\w-]+(\.[\w-]+)+(\/\S*)?$/;
-
-/**
- * Splits "label<TAB>content" or "label, content" (first separator only, so content keeps its
- * commas). A line that already starts like an address is never split at a comma. In text mode
- * only a Tab separates: commas are ordinary punctuation there.
- */
-function splitLine(line: string, mode: BatchMode): { label: string; content: string } {
-  const tab = line.indexOf("\t");
-  if (tab >= 0) return { label: line.slice(0, tab).trim(), content: line.slice(tab + 1).trim() };
-  if (mode === "url") {
-    const comma = line.indexOf(",");
-    if (comma > 0) {
-      const head = line.slice(0, comma).trim();
-      if (!SCHEME.test(head) && !BARE_HOST.test(head)) return { label: head, content: line.slice(comma + 1).trim() };
-    }
-  }
-  return { label: "", content: line.trim() };
-}
+/** Schemes that must never end up in a printed code, whatever the user meant. */
+const BLOCKED_SCHEME = /^(javascript|data|vbscript|file|blob):\S/i;
+/** "https://…", "ftp://…" — anything written as an address with "//". */
+const SCHEME_URL = /^[a-z][a-z0-9+.-]*:\/\//i;
+/** Address-like schemes without "//" that scanners open directly. */
+const OPAQUE_URL = /^(mailto|tel|sms|geo|market|itms-apps):/i;
+/** "example.com", "shop.example.co.kr/menu?x=1" — a bare host with a letter TLD, no spaces. */
+const BARE_HOST = /^[\w-]+(\.[\w-]+)*\.[a-z]{2,}(:\d+)?([/?#]\S*)?$/i;
 
 const utf8 = new TextEncoder();
 
-export function parseBatch(text: string, mode: BatchMode): BatchParse {
-  const items: BatchItem[] = [];
-  text.split(/\r?\n/).forEach((raw, i) => {
-    if (!raw.trim()) return;
-    const { label, content } = splitLine(raw, mode);
-    let encoded = "";
-    let error: BatchError | null = null;
-    if (!content) error = "empty";
-    else {
-      encoded = mode === "url" ? encodeUrl(content) : content;
-      if (!encoded) error = "scheme";
-      else if (utf8.encode(encoded).length > MAX_BYTES) error = "tooLong";
+/**
+ * Decides per row whether the content is a link or plain text, so visitors never pick a mode.
+ * Text that merely contains a colon ("Note: …") stays text; only address-shaped input is a URL.
+ */
+export function checkRow(row: RowInput): RowCheck {
+  const content = row.content.trim();
+  if (!content) return row.name.trim() ? { state: "invalid", error: "empty" } : { state: "blank" };
+  if (BLOCKED_SCHEME.test(content)) return { state: "invalid", error: "scheme" };
+
+  let kind: RowKind = "text";
+  let encoded = content;
+  if (SCHEME_URL.test(content) || OPAQUE_URL.test(content) || BARE_HOST.test(content)) {
+    kind = "url";
+    encoded = encodeUrl(content);
+    if (!encoded) return { state: "invalid", error: "scheme" };
+  }
+  if (utf8.encode(encoded).length > MAX_BYTES) return { state: "invalid", error: "tooLong" };
+  return { state: "ok", kind, encoded };
+}
+
+function looksLikeUrl(value: string): boolean {
+  const v = value.trim();
+  return SCHEME_URL.test(v) || BARE_HOST.test(v);
+}
+
+/**
+ * Turns pasted text into rows: one line per row. A Tab (what spreadsheets put between cells)
+ * splits "name<TAB>link"; if the link is clearly in the first column, the two are swapped.
+ * Single-column input goes entirely into the link/content cell.
+ */
+export function rowsFromPaste(text: string): RowInput[] {
+  const lines = text.replace(/\r\n?/g, "\n").split("\n");
+  const rows: RowInput[] = [];
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cells = line.split("\t").map((c) => c.trim());
+    const filled = cells.filter(Boolean);
+    if (filled.length >= 2) {
+      const [a, b] = [cells[0], cells.slice(1).find(Boolean) ?? ""];
+      rows.push(looksLikeUrl(a) && !looksLikeUrl(b) ? { name: b, content: a } : { name: a, content: b });
+    } else {
+      rows.push({ name: "", content: filled[0] ?? "" });
     }
-    items.push({ line: i + 1, label, content, encoded: error ? "" : encoded, error });
-  });
-  return { items, total: items.length, valid: items.filter((it) => !it.error).length };
+  }
+  return rows;
+}
+
+/** True when pasting this should fan out into rows instead of filling one cell. */
+export function isMultiCellPaste(text: string): boolean {
+  return /\t|\n/.test(text.replace(/\r?\n$/, ""));
 }
 
 // Built at runtime: TypeScript rejects the `u` flag literal when targeting ES2017.
 const UNSAFE_CHARS = new RegExp("[^\\p{L}\\p{N}._-]+", "gu");
 
-/** "메뉴판" / "https://example.com/a?b" → "메뉴판" / "example.com-a-b": safe on every OS. */
-export function safeFileStem(item: Pick<BatchItem, "label" | "content">): string {
-  const source = item.label || item.content.replace(/^[a-z][a-z0-9+.-]*:(\/\/)?/i, "");
-  const stem = source
+/** "메뉴판 (2층)" → "메뉴판-2층": safe on every OS, at most 40 characters. */
+export function safeFileStem(name: string): string {
+  const stem = name
     .normalize("NFC")
     .replace(UNSAFE_CHARS, "-")
     .replace(/-{2,}/g, "-")
     .replace(/^[-.]+|[-.]+$/g, "");
   // Cut by code points so a surrogate pair is never split, then tidy the new end.
-  const cut = Array.from(stem).slice(0, MAX_NAME).join("").replace(/[-.]+$/, "");
-  return cut || "qr";
+  return Array.from(stem).slice(0, MAX_NAME).join("").replace(/[-.]+$/, "");
 }
 
-export function fileName(index: number, item: Pick<BatchItem, "label" | "content">): string {
-  return `${String(index + 1).padStart(3, "0")}-${safeFileStem(item)}.png`;
+/** "001-메뉴판.png", or just "001.png" when the row has no name. */
+export function fileName(index: number, name: string): string {
+  const number = String(index + 1).padStart(3, "0");
+  const stem = safeFileStem(name);
+  return stem ? `${number}-${stem}.png` : `${number}.png`;
 }
 
 function csvCell(value: string): string {
