@@ -15,6 +15,7 @@ export const SETTING_KEYS = [
   "ad_slot_right",
   "ad_slot_bottom",
   "ad_slot_incontent",
+  "ad_slot_inarticle",
   "logging_enabled",
   "log_retention_days",
   "affiliate_print_url",
@@ -39,6 +40,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ad_slot_right: "",
   ad_slot_bottom: "",
   ad_slot_incontent: "",
+  ad_slot_inarticle: "",
   logging_enabled: "1",
   log_retention_days: "90",
   // Monetisation slots: an empty URL hides the slot entirely.
@@ -61,6 +63,7 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   ad_slot_right: "광고 슬롯 ID — 오른쪽 세로",
   ad_slot_bottom: "광고 슬롯 ID — 하단 가로",
   ad_slot_incontent: "광고 슬롯 ID — 본문 중간",
+  ad_slot_inarticle: "광고 슬롯 ID — 글 사이 (인아티클)",
   logging_enabled: "방문자 입력 기록 저장",
   log_retention_days: "기록 보관 일수 (0 = 무제한)",
   affiliate_print_url: "인쇄 제휴 링크 URL (비우면 숨김)",

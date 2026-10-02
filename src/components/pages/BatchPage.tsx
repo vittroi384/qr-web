@@ -4,7 +4,7 @@ import { BatchTool } from "@/components/batch/BatchTool";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { getDict, type Locale } from "@/lib/i18n";
 
-export type BatchAds = { left: AdSlotConfig; right: AdSlotConfig; incontent: AdSlotConfig; bottom: AdSlotConfig };
+export type BatchAds = { top: AdSlotConfig; left: AdSlotConfig; right: AdSlotConfig; incontent: AdSlotConfig; bottom: AdSlotConfig };
 
 const sideVisible = (c: AdSlotConfig) => Boolean((c.enabled && c.client && c.slotId) || c.showPlaceholder);
 
@@ -17,7 +17,10 @@ export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
   const t = getDict(locale).batch;
   const showRight = sideVisible(ads.right);
   return (
-    <main className="mx-auto w-full max-w-[1400px] px-4 pt-6 pb-16 sm:px-6 sm:pt-8">
+    <main className="mx-auto w-full max-w-[1400px] px-4 pt-4 pb-16 sm:px-6 sm:pt-5">
+      {/* 상단 가로 광고 — same low-profile banner as the home page */}
+      <AdSlot config={ads.top} name="상단" shape="horizontal" compact className="mb-5" />
+
       <div className="flex gap-6 xl:gap-8">
         {/* 왼쪽 세로 광고 (lg 이상) */}
         {sideVisible(ads.left) ? (
@@ -30,7 +33,7 @@ export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
 
         <div className="min-w-0 flex-1">
           <div className="mx-auto max-w-4xl">
-            <header className="mb-5">
+            <header className="mt-2 mb-5">
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.title}</h1>
               <p className="mt-1 text-sm text-muted">{t.tagline}</p>
             </header>

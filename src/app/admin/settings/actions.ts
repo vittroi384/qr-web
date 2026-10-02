@@ -9,7 +9,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getRequestMetaFromHeaders } from "@/lib/ip";
 import { BOOLEAN_SETTINGS, SETTING_KEYS, type Settings, updateSettings } from "@/lib/settings";
 
-const AD_SLOT_KEYS = ["ad_slot_top", "ad_slot_left", "ad_slot_right", "ad_slot_bottom", "ad_slot_incontent"] as const;
+const AD_SLOT_KEYS = ["ad_slot_top", "ad_slot_left", "ad_slot_right", "ad_slot_bottom", "ad_slot_incontent", "ad_slot_inarticle"] as const;
 
 export async function saveSettingsAction(formData: FormData) {
   const cookieStore = await cookies();

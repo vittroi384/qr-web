@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 export default async function Page() {
   const s = await getSettings();
   const ads = {
+    top: adConfig(s, s.ad_slot_top),
     left: adConfig(s, s.ad_slot_left),
     right: adConfig(s, s.ad_slot_right),
     incontent: adConfig(s, s.ad_slot_incontent),

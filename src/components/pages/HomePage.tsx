@@ -19,6 +19,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
     right: adConfig(s, s.ad_slot_right),
     bottom: adConfig(s, s.ad_slot_bottom),
     incontent: adConfig(s, s.ad_slot_incontent),
+    inarticle: adConfig(s, s.ad_slot_inarticle),
   };
   const sideVisible = (c: AdSlotConfig) => (c.enabled && c.client && c.slotId) || c.showPlaceholder;
 
@@ -77,6 +78,9 @@ export async function HomePage({ locale }: { locale: Locale }) {
                   ))}
                 </ul>
               </section>
+
+              {/* 6. 글 사이 광고 — between the type guide and the FAQ */}
+              <AdSlot config={ads.inarticle} name="글 사이" shape="inarticle" className="mt-16" />
 
               <section className="mt-16" aria-labelledby="faq-heading">
                 <h2 id="faq-heading" className="section-title">

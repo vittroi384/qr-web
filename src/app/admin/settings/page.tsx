@@ -12,8 +12,8 @@ const GROUPS: { title: string; description?: string; keys: SettingKey[] }[] = [
   {
     title: "광고 (Google AdSense)",
     description:
-      "게시자 ID를 넣고 '광고 표시'를 켜면 슬롯 ID가 있는 자리에만 광고가 나옵니다. /ads.txt 도 자동으로 생성됩니다. 슬롯 ID는 AdSense에서 '디스플레이 광고' 단위를 만들면 data-ad-slot 값으로 표시됩니다.",
-    keys: ["adsense_client", "ads_enabled", "ad_placeholders", "ad_slot_top", "ad_slot_left", "ad_slot_right", "ad_slot_bottom", "ad_slot_incontent"],
+      "게시자 ID를 넣고 '광고 표시'를 켜면 슬롯 ID가 있는 자리에만 광고가 나옵니다. /ads.txt 도 자동으로 생성됩니다. 슬롯 ID는 AdSense에서 '디스플레이 광고' 단위를 만들면 data-ad-slot 값으로 표시됩니다. '글 사이'는 '인아티클 광고' 단위를 만들어 넣으면 본문 글 사이(메인은 종류 안내와 FAQ 사이, 랜딩은 설명 글 사이)에 자연스럽게 섞여 나옵니다.",
+    keys: ["adsense_client", "ads_enabled", "ad_placeholders", "ad_slot_top", "ad_slot_left", "ad_slot_right", "ad_slot_bottom", "ad_slot_incontent", "ad_slot_inarticle"],
   },
   {
     title: "수익화",

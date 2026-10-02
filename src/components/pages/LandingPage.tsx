@@ -79,6 +79,7 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
     right: adConfig(s, s.ad_slot_right),
     bottom: adConfig(s, s.ad_slot_bottom),
     incontent: adConfig(s, s.ad_slot_incontent),
+    inarticle: adConfig(s, s.ad_slot_inarticle),
   };
   const sideVisible = (cfg: AdSlotConfig) => (cfg.enabled && cfg.client && cfg.slotId) || cfg.showPlaceholder;
 
@@ -156,6 +157,9 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
                     ))}
                   </div>
                 </section>
+
+                {/* 6. 글 사이 광고 — after the first section, inside the text column */}
+                <AdSlot config={ads.inarticle} name="글 사이" shape="inarticle" className="mt-12" />
 
                 <section className="mt-12" aria-labelledby="uses-heading">
                   <h2 id="uses-heading" className="section-title">

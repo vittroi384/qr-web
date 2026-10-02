@@ -44,10 +44,10 @@ const visibleSlots = (page: Page) =>
 test.describe("desktop layout", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test("home shows all five ad slots on a wide screen", async ({ page }) => {
+  test("home shows all six ad slots on a wide screen", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("[data-ad-slot-name]")).toHaveCount(5);
-    expect(await visibleSlots(page)).toBe(5);
+    await expect(page.locator("[data-ad-slot-name]")).toHaveCount(6);
+    expect(await visibleSlots(page)).toBe(6);
   });
 });
 
@@ -67,12 +67,12 @@ test.describe("phone layout (390×844)", () => {
     });
   }
 
-  test("only the top, in-content and bottom ads show on a phone", async ({ page }) => {
+  test("only the top, in-content, in-article and bottom ads show on a phone", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("[data-ad-slot-name]")).toHaveCount(5);
+    await expect(page.locator("[data-ad-slot-name]")).toHaveCount(6);
     const visible = await page
       .locator("[data-ad-slot-name]")
       .evaluateAll((els) => els.filter((el) => (el as HTMLElement).offsetParent !== null).map((el) => el.getAttribute("data-ad-slot-name")));
-    expect(visible).toEqual(["상단", "본문 중간", "하단"]);
+    expect(visible).toEqual(["상단", "본문 중간", "글 사이", "하단"]);
   });
 });

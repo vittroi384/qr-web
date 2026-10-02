@@ -13,7 +13,7 @@ type Props = {
   config: AdSlotConfig;
   name: string;
   /** Visual hint for the placeholder + AdSense data-ad-format. */
-  shape: "horizontal" | "vertical" | "rectangle";
+  shape: "horizontal" | "vertical" | "rectangle" | "inarticle";
   className?: string;
   /** Low-profile banner (top of page): reserves ~50–60px instead of 90px. */
   compact?: boolean;
@@ -29,6 +29,8 @@ const SHAPE_CLASS: Record<Props["shape"], string> = {
   horizontal: "min-h-[90px] w-full",
   vertical: "min-h-[600px] w-full",
   rectangle: "min-h-[250px] w-full",
+  // Fluid in-article unit: sits between paragraphs and takes the text column width.
+  inarticle: "min-h-[250px] w-full",
 };
 
 /**
@@ -63,8 +65,9 @@ export function AdSlot({ config, name, shape, className = "", compact = false }:
           style={{ display: "block" }}
           data-ad-client={config.client}
           data-ad-slot={config.slotId}
-          data-ad-format={shape === "vertical" ? "auto" : shape === "horizontal" ? "horizontal" : "rectangle"}
-          data-full-width-responsive="true"
+          data-ad-format={shape === "inarticle" ? "fluid" : shape === "vertical" ? "auto" : shape === "horizontal" ? "horizontal" : "rectangle"}
+          data-ad-layout={shape === "inarticle" ? "in-article" : undefined}
+          data-full-width-responsive={shape === "inarticle" ? undefined : "true"}
         />
       </div>
     );
