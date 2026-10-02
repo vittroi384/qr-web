@@ -4,12 +4,14 @@ import { writeAudit } from "@/lib/audit";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getRequestMeta } from "@/lib/ip";
 import { iterateLogsForExport, type LogFilter } from "@/lib/logs";
+import { toKstIso } from "@/lib/time";
 
 export const runtime = "nodejs";
 
 const COLUMNS = [
   "id",
-  "created_at",
+  "created_at_utc",
+  "created_at_kst",
   "qr_type",
   "event",
   "payload_json",
@@ -21,10 +23,16 @@ const COLUMNS = [
   "accept_language",
 ] as const;
 
+/**
+ * CSV cell: quote when needed, and neutralise spreadsheet formula injection.
+ * Values starting with = + - @ or tab/CR are prefixed with a single quote so
+ * Excel/Sheets treat them as text (visitor-controlled columns reach the sheet).
+ */
 function csvCell(value: unknown): string {
   if (value === null || value === undefined) return "";
-  const s = String(value);
-  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  let s = String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return /[",\r\n\t]/.test(s) || s.startsWith("'") ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 export async function GET(req: NextRequest) {
@@ -51,8 +59,21 @@ export async function GET(req: NextRequest) {
       // BOM so Excel opens UTF-8 Korean text correctly.
       controller.enqueue(encoder.encode("﻿" + COLUMNS.join(",") + "\r\n"));
       for (const row of iterateLogsForExport(filter)) {
-        const line = COLUMNS.map((c) => csvCell(row[c])).join(",") + "\r\n";
-        controller.enqueue(encoder.encode(line));
+        const cells = [
+          row.id,
+          `${row.created_at}Z`,
+          toKstIso(row.created_at),
+          row.qr_type,
+          row.event,
+          row.payload_json,
+          row.encoded_preview,
+          row.options_json,
+          row.ip,
+          row.user_agent,
+          row.referer,
+          row.accept_language,
+        ];
+        controller.enqueue(encoder.encode(cells.map(csvCell).join(",") + "\r\n"));
       }
       controller.close();
     },

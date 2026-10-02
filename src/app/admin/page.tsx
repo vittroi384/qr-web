@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { EVENT_LABELS, EventBadge, PayloadSummary, StatCard, TypeBadge, formatDate } from "@/components/admin/ui";
 import { getDashboardStats } from "@/lib/logs";
+import { getSettings } from "@/lib/settings";
 import { QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
 
 export default function AdminDashboard() {
-  const stats = getDashboardStats();
+  const stats = getDashboardStats(Number.parseInt(getSettings().log_retention_days, 10) || 0);
   const maxDay = Math.max(1, ...stats.byDay.map((d) => d.c));
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">대시보드</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">대시보드</h1>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="오늘" value={stats.today.toLocaleString()} />
@@ -19,7 +20,7 @@ export default function AdminDashboard() {
         <StatCard
           label="이벤트"
           value={
-            <span className="text-sm font-normal">
+            <span className="block text-sm leading-relaxed font-normal tracking-normal">
               {stats.byEvent.map((e) => `${EVENT_LABELS[e.event] ?? e.event} ${e.c}`).join(" · ") || "-"}
             </span>
           }
@@ -28,27 +29,27 @@ export default function AdminDashboard() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card">
-          <h2 className="font-semibold">최근 14일 추이</h2>
-          <div className="mt-4 flex h-32 items-end gap-1">
+          <h2 className="text-[15px] font-semibold">최근 14일 추이</h2>
+          <div className="mt-5 flex h-36 items-end gap-1.5">
             {stats.byDay.length === 0 ? <p className="text-sm text-muted">데이터 없음</p> : null}
             {stats.byDay.map((d) => (
               <div key={d.day} className="flex flex-1 flex-col items-center gap-1" title={`${d.day}: ${d.c}`}>
-                <div className="w-full rounded-t bg-accent/70" style={{ height: `${Math.max(4, (d.c / maxDay) * 100)}%` }} />
-                <span className="text-[10px] text-muted">{d.day.slice(5)}</span>
+                <div className="w-full rounded-t-sm bg-accent/80 transition-colors hover:bg-accent" style={{ height: `${Math.max(4, (d.c / maxDay) * 100)}%` }} />
+                <span className="text-[10px] text-muted tabular-nums">{d.day.slice(5)}</span>
               </div>
             ))}
           </div>
         </section>
 
         <section className="card">
-          <h2 className="font-semibold">종류별</h2>
-          <ul className="mt-3 space-y-2 text-sm">
+          <h2 className="text-[15px] font-semibold">종류별</h2>
+          <ul className="mt-5 space-y-3 text-sm">
             {stats.byType.length === 0 ? <li className="text-muted">데이터 없음</li> : null}
             {stats.byType.map((t) => (
               <li key={t.qr_type} className="flex items-center gap-3">
                 <span className="w-24 shrink-0">{(QR_TYPE_LABELS as Record<string, string>)[t.qr_type as QrType] ?? t.qr_type}</span>
-                <div className="h-2 flex-1 overflow-hidden rounded bg-background">
-                  <div className="h-full bg-accent/70" style={{ width: `${(t.c / Math.max(1, stats.total)) * 100}%` }} />
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface">
+                  <div className="h-full rounded-full bg-accent/80" style={{ width: `${(t.c / Math.max(1, stats.total)) * 100}%` }} />
                 </div>
                 <span className="w-12 text-right tabular-nums text-muted">{t.c}</span>
               </li>
@@ -57,48 +58,50 @@ export default function AdminDashboard() {
         </section>
       </div>
 
-      <section className="card overflow-x-auto">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold">최근 기록</h2>
-          <Link href="/admin/logs" className="text-sm text-accent hover:underline">
-            전체 보기 →
+      <section className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex items-center justify-between gap-3 px-5 py-4">
+          <h2 className="text-[15px] font-semibold">최근 기록</h2>
+          <Link href="/admin/logs" className="link text-sm">
+            전체 보기
           </Link>
         </div>
-        <table className="mt-3 w-full text-sm">
-          <thead className="text-left text-xs text-muted">
+        <div className="overflow-x-auto border-t border-border">
+        <table className="table">
+          <thead>
             <tr>
-              <th className="py-1.5 pr-3">시간</th>
-              <th className="py-1.5 pr-3">종류</th>
-              <th className="py-1.5 pr-3">이벤트</th>
-              <th className="py-1.5 pr-3">내용</th>
-              <th className="py-1.5">IP</th>
+              <th>시간</th>
+              <th>종류</th>
+              <th>이벤트</th>
+              <th>내용</th>
+              <th>IP</th>
             </tr>
           </thead>
           <tbody>
             {stats.recent.map((r) => (
-              <tr key={r.id} className="border-t border-border">
-                <td className="whitespace-nowrap py-1.5 pr-3 text-muted">{formatDate(r.created_at)}</td>
-                <td className="py-1.5 pr-3">
+              <tr key={r.id}>
+                <td className="whitespace-nowrap text-muted tabular-nums">{formatDate(r.created_at)}</td>
+                <td>
                   <TypeBadge type={r.qr_type} />
                 </td>
-                <td className="py-1.5 pr-3">
+                <td>
                   <EventBadge event={r.event} />
                 </td>
-                <td className="max-w-md truncate py-1.5 pr-3">
+                <td className="max-w-md truncate">
                   <PayloadSummary json={r.payload_json} />
                 </td>
-                <td className="py-1.5 font-mono text-xs">{r.ip}</td>
+                <td className="font-mono text-xs">{r.ip}</td>
               </tr>
             ))}
             {stats.recent.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-6 text-center text-muted">
+                <td colSpan={5} className="py-10 text-center text-muted">
                   아직 기록이 없습니다. 메인 페이지에서 QR을 만들어 보세요.
                 </td>
               </tr>
             ) : null}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   );

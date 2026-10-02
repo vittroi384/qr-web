@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { LockIcon } from "@/components/icons";
 
 function LoginForm() {
   const router = useRouter();
@@ -36,8 +37,13 @@ function LoginForm() {
   };
 
   return (
-    <form onSubmit={submit} className="card mx-auto mt-16 w-full max-w-sm space-y-4">
-      <h1 className="text-xl font-semibold">관리자 로그인</h1>
+    <form onSubmit={submit} className="mx-auto mt-10 w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-panel sm:mt-20 sm:p-8">
+      <span className="grid size-10 place-items-center rounded-lg bg-surface text-foreground">
+        <LockIcon />
+      </span>
+      <h1 className="mt-5 text-xl font-semibold tracking-tight">관리자 로그인</h1>
+      <p className="mt-1.5 text-sm text-muted">관리자 비밀번호를 입력하세요.</p>
+      <div className="mt-6 space-y-4">
       <label className="block">
         <span className="label">비밀번호</span>
         <input
@@ -50,10 +56,15 @@ function LoginForm() {
           required
         />
       </label>
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="rounded-lg border border-red-200 bg-danger-soft px-3 py-2.5 text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
       <button type="submit" className="btn btn-primary w-full" disabled={busy}>
         {busy ? "확인 중…" : "로그인"}
       </button>
+      </div>
     </form>
   );
 }

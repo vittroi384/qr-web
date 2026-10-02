@@ -1,39 +1,27 @@
 "use client";
 
 import { QR_TYPES, QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
-
-const ICONS: Record<QrType, string> = {
-  url: "🔗",
-  text: "📝",
-  wifi: "📶",
-  vcard: "👤",
-  email: "✉️",
-  sms: "💬",
-  phone: "📞",
-  geo: "📍",
-  event: "📅",
-};
+import { TypeIcon } from "../icons";
 
 export function TypeTabs({ value, onChange }: { value: QrType; onChange: (t: QrType) => void }) {
   return (
-    <div role="tablist" aria-label="QR 종류" className="flex flex-wrap gap-2">
+    <div role="group" aria-label="QR 종류" className="grid grid-cols-3 gap-2">
       {QR_TYPES.map((t) => {
         const active = t === value;
         return (
           <button
             key={t}
-            role="tab"
             type="button"
-            aria-selected={active}
+            aria-pressed={active}
             onClick={() => onChange(t)}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition ${
+            className={`flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2 text-[13px] leading-tight font-medium transition-colors sm:flex-row sm:justify-start sm:gap-2.5 sm:px-3 sm:text-sm ${
               active
-                ? "border-accent bg-accent text-accent-foreground"
-                : "border-border bg-card text-foreground hover:border-accent/60"
+                ? "border-foreground bg-card text-foreground shadow-[0_0_0_1px_var(--foreground)]"
+                : "border-border bg-card text-muted hover:border-border-strong hover:bg-subtle hover:text-foreground"
             }`}
           >
-            <span aria-hidden="true">{ICONS[t]}</span>
-            {QR_TYPE_LABELS[t]}
+            <TypeIcon type={t} className={`size-[18px] shrink-0 ${active ? "text-accent" : ""}`} />
+            <span className="text-center sm:text-left">{QR_TYPE_LABELS[t]}</span>
           </button>
         );
       })}

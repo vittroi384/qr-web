@@ -14,7 +14,6 @@ export const SETTING_KEYS = [
   "ad_slot_bottom",
   "ad_slot_incontent",
   "logging_enabled",
-  "mask_wifi_password",
   "log_retention_days",
 ] as const;
 
@@ -35,8 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ad_slot_bottom: "",
   ad_slot_incontent: "",
   logging_enabled: "1",
-  mask_wifi_password: "1",
-  log_retention_days: "0",
+  log_retention_days: "90",
 };
 
 export const SETTING_LABELS: Record<SettingKey, string> = {
@@ -53,11 +51,10 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   ad_slot_bottom: "광고 슬롯 ID — 하단 가로",
   ad_slot_incontent: "광고 슬롯 ID — 본문 중간",
   logging_enabled: "방문자 입력 기록 저장",
-  mask_wifi_password: "Wi-Fi 비밀번호 마스킹 저장",
   log_retention_days: "기록 보관 일수 (0 = 무제한)",
 };
 
-export const BOOLEAN_SETTINGS: SettingKey[] = ["ads_enabled", "ad_placeholders", "logging_enabled", "mask_wifi_password"];
+export const BOOLEAN_SETTINGS: SettingKey[] = ["ads_enabled", "ad_placeholders", "logging_enabled"];
 
 const CACHE_TTL_MS = 30_000;
 let cache: { value: Settings; at: number } | null = null;

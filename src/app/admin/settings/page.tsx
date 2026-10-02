@@ -17,14 +17,16 @@ const GROUPS: { title: string; description?: string; keys: SettingKey[] }[] = [
   },
   {
     title: "방문자 입력 기록",
-    description: "방문자가 QR로 만든 내용과 접속 정보를 서버 DB에 저장할지 결정합니다.",
-    keys: ["logging_enabled", "mask_wifi_password", "log_retention_days"],
+    description: "방문자가 QR로 만든 내용과 접속 정보를 서버 DB에 저장할지 결정합니다. Wi-Fi 비밀번호는 설정과 무관하게 항상 마스킹(****)되어 저장됩니다. 보관 일수가 지난 기록은 자동 삭제됩니다.",
+    keys: ["logging_enabled", "log_retention_days"],
   },
 ];
 
 const ERROR_MESSAGES: Record<string, string> = {
   site_url: "사이트 URL 형식이 올바르지 않습니다. 예: https://example.com",
   adsense_client: "AdSense 게시자 ID 형식이 올바르지 않습니다. 예: ca-pub-1234567890123456",
+  ad_slot: "광고 슬롯 ID는 숫자 5~20자리여야 합니다. 비워 두면 해당 자리는 표시되지 않습니다. (다른 변경도 함께 저장되지 않았습니다)",
+  log_retention_days: "기록 보관 일수는 0 이상의 정수여야 합니다. (다른 변경도 함께 저장되지 않았습니다)",
 };
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -34,31 +36,38 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const error = typeof sp.error === "string" ? ERROR_MESSAGES[sp.error] : null;
 
   return (
-    <form action={saveSettingsAction} className="space-y-6">
+    <form action={saveSettingsAction} className="mx-auto max-w-4xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">설정</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">설정</h1>
         <button type="submit" className="btn btn-primary">
           저장
         </button>
       </div>
 
       {saved !== null ? (
-        <p className="rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm">
+        <p role="status" className="rounded-lg border border-green-200 bg-success-soft px-4 py-3 text-sm text-success">
           {saved > 0 ? `${saved}개 항목이 저장되었습니다. 변경 내역은 감사 로그에 기록되었습니다.` : "변경된 항목이 없습니다."}
         </p>
       ) : null}
-      {error ? <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="rounded-lg border border-red-200 bg-danger-soft px-4 py-3 text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
 
       {GROUPS.map((g) => (
-        <section key={g.title} className="card space-y-4">
-          <div>
-            <h2 className="font-semibold">{g.title}</h2>
-            {g.description ? <p className="mt-1 text-xs text-muted">{g.description}</p> : null}
+        <section key={g.title} className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="border-b border-border px-5 py-4 sm:px-6">
+            <h2 className="text-[15px] font-semibold">{g.title}</h2>
+            {g.description ? <p className="mt-1 text-[13px] leading-relaxed text-muted">{g.description}</p> : null}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6">
             {g.keys.map((key) =>
               BOOLEAN_SETTINGS.includes(key) ? (
-                <label key={key} className="flex items-center gap-2 text-sm">
+                <label
+                  key={key}
+                  className="flex min-h-11 cursor-pointer items-center gap-2.5 self-end rounded-lg border border-border-strong bg-card px-3 text-sm shadow-xs transition-colors hover:border-zinc-400 hover:bg-subtle"
+                >
                   <input type="checkbox" name={key} defaultChecked={s[key] === "1"} />
                   {SETTING_LABELS[key]}
                 </label>
@@ -84,9 +93,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         </section>
       ))}
 
-      <section className="card space-y-2 text-sm">
-        <h2 className="font-semibold">서버 환경변수 (파일에서만 변경)</h2>
-        <p className="text-xs text-muted">
+      <section className="rounded-xl border border-border bg-subtle px-5 py-4 text-sm sm:px-6">
+        <h2 className="text-[15px] font-semibold">서버 환경변수 (파일에서만 변경)</h2>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-muted [&_code]:rounded [&_code]:bg-surface [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs [&_code]:text-foreground">
           비밀번호와 세션 키는 보안상 <code>.env</code> 파일로만 관리합니다: <code>ADMIN_PASSWORD</code>, <code>SESSION_SECRET</code>,{" "}
           <code>DOMAIN</code>, <code>DATABASE_PATH</code>. 변경 후 <code>docker compose up -d</code> 로 재시작하세요.
         </p>

@@ -1,7 +1,12 @@
-import Script from "next/script";
+"use client";
 
-/** Loads the AdSense loader once per page. Rendered only when a publisher ID is configured. */
+import Script from "next/script";
+import { usePathname } from "next/navigation";
+
+/** Loads the AdSense loader once per page on public pages only (never under /admin). */
 export function AdSenseScript({ client }: { client: string }) {
+  const pathname = usePathname();
+  if (!client || pathname.startsWith("/admin")) return null;
   return (
     <Script
       async

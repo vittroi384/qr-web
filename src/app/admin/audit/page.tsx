@@ -26,55 +26,57 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">
-        감사 로그 <span className="text-sm font-normal text-muted">관리자 활동 {total.toLocaleString()}건</span>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        감사 로그 <span className="ml-1 text-sm font-normal tracking-normal text-muted tabular-nums">관리자 활동 {total.toLocaleString()}건</span>
       </h1>
-      <div className="card overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-background text-left text-xs text-muted">
-            <tr>
-              <th className="px-3 py-2">시간 (KST)</th>
-              <th className="px-3 py-2">활동</th>
-              <th className="px-3 py-2">항목</th>
-              <th className="px-3 py-2">이전 값</th>
-              <th className="px-3 py-2">새 값</th>
-              <th className="px-3 py-2">IP</th>
-            </tr>
-          </thead>
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="overflow-x-auto">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>시간 (KST)</th>
+                <th>활동</th>
+                <th>항목</th>
+                <th>이전 값</th>
+                <th>새 값</th>
+                <th>IP</th>
+              </tr>
+            </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-t border-border align-top">
-                <td className="whitespace-nowrap px-3 py-2 text-muted">{formatDate(r.created_at)}</td>
-                <td className="whitespace-nowrap px-3 py-2">
-                  <span className={r.action === "login_failed" ? "text-red-500" : ""}>{ACTION_LABELS[r.action] ?? r.action}</span>
+              <tr key={r.id} className="align-top">
+                <td className="whitespace-nowrap text-muted tabular-nums">{formatDate(r.created_at)}</td>
+                <td className="whitespace-nowrap">
+                  <span className={r.action === "login_failed" ? "font-medium text-danger" : ""}>{ACTION_LABELS[r.action] ?? r.action}</span>
                 </td>
-                <td className="px-3 py-2 text-xs">{r.key ? SETTING_LABELS[r.key as SettingKey] ?? r.key : ""}</td>
-                <td className="max-w-xs break-all px-3 py-2 text-xs text-muted">{r.old_value}</td>
-                <td className="max-w-xs break-all px-3 py-2 text-xs">{r.new_value}</td>
-                <td className="px-3 py-2 font-mono text-xs">{r.ip}</td>
+                <td className="text-xs">{r.key ? SETTING_LABELS[r.key as SettingKey] ?? r.key : ""}</td>
+                <td className="max-w-xs text-xs break-all text-muted">{r.old_value}</td>
+                <td className="max-w-xs text-xs break-all">{r.new_value}</td>
+                <td className="font-mono text-xs">{r.ip}</td>
               </tr>
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-3 py-8 text-center text-muted">
+                <td colSpan={6} className="py-12 text-center text-muted">
                   기록이 없습니다.
                 </td>
               </tr>
             ) : null}
           </tbody>
-        </table>
-        <div className="flex items-center justify-end gap-2 border-t border-border px-3 py-2 text-sm text-muted">
+          </table>
+        </div>
+        <div className="flex items-center justify-end gap-2 border-t border-border bg-subtle px-4 py-3 text-sm text-muted">
           {page > 1 ? (
-            <Link href={`/admin/audit?page=${page - 1}`} className="btn py-1 text-xs">
-              ← 이전
+            <Link href={`/admin/audit?page=${page - 1}`} className="btn btn-sm">
+              이전
             </Link>
           ) : null}
-          <span>
+          <span className="px-1 tabular-nums">
             {page} / {pages}
           </span>
           {page < pages ? (
-            <Link href={`/admin/audit?page=${page + 1}`} className="btn py-1 text-xs">
-              다음 →
+            <Link href={`/admin/audit?page=${page + 1}`} className="btn btn-sm">
+              다음
             </Link>
           ) : null}
         </div>

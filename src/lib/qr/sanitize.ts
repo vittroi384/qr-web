@@ -1,6 +1,7 @@
 import { LOG_EVENTS, QR_TYPES, type LogEvent, type QrType } from "./types";
 
 const MAX_STRING = 4000;
+const FIXED_MASK = "****";
 
 export function isQrType(value: unknown): value is QrType {
   return typeof value === "string" && (QR_TYPES as readonly string[]).includes(value);
@@ -27,6 +28,28 @@ export function sanitizePayloadForStorage(
     out.password = "*".repeat(Math.min(out.password.length, 12));
   }
   return out;
+}
+
+/**
+ * Final, unconditional pass right before a row is written: every known secret field becomes a
+ * fixed-length mask so neither the plaintext nor its length reaches the database or exports.
+ */
+export function hardenSecretsForStorage(
+  type: QrType,
+  payload: Record<string, string | number | boolean>,
+): Record<string, string | number | boolean> {
+  if (type === "wifi" && payload.password !== undefined && payload.password !== "") {
+    return { ...payload, password: FIXED_MASK };
+  }
+  return payload;
+}
+
+/** Mask secrets inside the encoded QR string (applied BEFORE any truncation). */
+export function maskEncodedSecrets(type: QrType, encoded: string): string {
+  if (type !== "wifi") return encoded;
+  // P: value runs to the first unescaped ';'. If the string was cut mid-value there is no
+  // terminator, so also mask an unterminated tail.
+  return encoded.replace(/P:(?:\\.|[^;\\])*(?:;|$)/, `P:${FIXED_MASK};`);
 }
 
 /** Strip large fields (logo image) from style options before storing. */

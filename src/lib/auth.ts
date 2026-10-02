@@ -46,7 +46,9 @@ export async function verifySessionToken(token: string | undefined): Promise<boo
 export const sessionCookieOptions = {
   httpOnly: true,
   sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
+  // Secure cookies are rejected by browsers over plain HTTP, and the HTTP-only mode
+  // (DOMAIN unset → Caddy serves :80) must still allow the admin to log in.
+  secure: process.env.NODE_ENV === "production" && Boolean(process.env.DOMAIN),
   path: "/",
   maxAge: SESSION_TTL_SEC,
 };
@@ -55,6 +57,9 @@ export const sessionCookieOptions = {
 const failures = new Map<string, { count: number; first: number }>();
 const LOCK_WINDOW_MS = 10 * 60 * 1000;
 const MAX_FAILURES = 5;
+const MAX_TRACKED_IPS = 5000;
+
+export const LOCK_WINDOW_SEC = LOCK_WINDOW_MS / 1000;
 
 export function isLockedOut(ip: string): boolean {
   const f = failures.get(ip);
@@ -69,6 +74,10 @@ export function isLockedOut(ip: string): boolean {
 export function recordLoginFailure(ip: string) {
   const f = failures.get(ip);
   if (!f || Date.now() - f.first > LOCK_WINDOW_MS) {
+    if (failures.size >= MAX_TRACKED_IPS) {
+      const oldest = failures.keys().next().value;
+      if (oldest !== undefined) failures.delete(oldest);
+    }
     failures.set(ip, { count: 1, first: Date.now() });
   } else {
     f.count += 1;

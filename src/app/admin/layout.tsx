@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { LogoutIcon } from "@/components/icons";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 
 export const metadata = { title: "관리자", robots: { index: false, follow: false } };
@@ -16,18 +17,24 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const authed = await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
       {authed ? (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-          <nav className="flex flex-wrap gap-1 text-sm">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+          <nav aria-label="관리자 메뉴" className="-mx-2.5 flex flex-wrap items-center gap-0.5 text-sm">
+            <span className="mr-2 ml-2.5 rounded bg-foreground px-1.5 py-0.5 text-[11px] font-semibold text-white">관리자</span>
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="rounded-lg px-3 py-1.5 hover:bg-background">
+              <Link
+                key={n.href}
+                href={n.href}
+                className="rounded-md px-2.5 py-1.5 text-muted transition-colors hover:bg-surface hover:text-foreground"
+              >
                 {n.label}
               </Link>
             ))}
           </nav>
           <form action="/api/admin/logout" method="post">
-            <button type="submit" className="btn py-1.5 text-xs">
+            <button type="submit" className="btn btn-sm">
+              <LogoutIcon />
               로그아웃
             </button>
           </form>

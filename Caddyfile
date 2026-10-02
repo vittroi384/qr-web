@@ -14,6 +14,11 @@
 	@static path /_next/static/*
 	header @static Cache-Control "public, max-age=31536000, immutable"
 
+	# Cap request bodies at the edge; the log API only needs a few KB.
+	request_body {
+		max_size 64KB
+	}
+
 	reverse_proxy app:3000 {
 		header_up X-Real-IP {remote_host}
 	}

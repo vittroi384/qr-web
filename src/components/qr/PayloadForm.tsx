@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { QrPayloadMap, QrType } from "@/lib/qr/types";
+import { LocateIcon } from "../icons";
 
 type FormProps<T extends QrType> = {
   value: QrPayloadMap[T];
@@ -10,10 +11,10 @@ type FormProps<T extends QrType> = {
 
 function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="label">{label}</span>
       {children}
-      {hint ? <span className="mt-1 block text-xs text-muted">{hint}</span> : null}
+      {hint ? <span className="hint">{hint}</span> : null}
     </label>
   );
 }
@@ -28,7 +29,7 @@ function UrlForm({ value, onChange }: FormProps<"url">) {
         placeholder="example.com 또는 https://example.com/page"
         value={value.url}
         onChange={(e) => onChange({ url: e.target.value })}
-        autoFocus
+       
       />
     </Field>
   );
@@ -51,9 +52,9 @@ function TextForm({ value, onChange }: FormProps<"text">) {
 function WifiForm({ value, onChange }: FormProps<"wifi">) {
   const set = <K extends keyof QrPayloadMap["wifi"]>(k: K, v: QrPayloadMap["wifi"][K]) => onChange({ ...value, [k]: v });
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-2">
       <Field label="네트워크 이름 (SSID)">
-        <input className="input" value={value.ssid} onChange={(e) => set("ssid", e.target.value)} autoFocus />
+        <input className="input" value={value.ssid} onChange={(e) => set("ssid", e.target.value)} />
       </Field>
       <Field label="암호화 방식">
         <select className="input" value={value.encryption} onChange={(e) => set("encryption", e.target.value as QrPayloadMap["wifi"]["encryption"])}>
@@ -67,7 +68,7 @@ function WifiForm({ value, onChange }: FormProps<"wifi">) {
           <input className="input" type="text" autoComplete="off" value={value.password} onChange={(e) => set("password", e.target.value)} />
         </Field>
       ) : null}
-      <label className="flex items-center gap-2 self-end pb-2 text-sm">
+      <label className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg border border-border-strong bg-card px-3 text-sm text-foreground shadow-xs transition-colors hover:border-zinc-400 hover:bg-subtle self-end">
         <input type="checkbox" checked={value.hidden} onChange={(e) => set("hidden", e.target.checked)} />
         숨겨진 네트워크
       </label>
@@ -79,9 +80,9 @@ function VCardForm({ value, onChange }: FormProps<"vcard">) {
   const set = (k: keyof QrPayloadMap["vcard"]) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     onChange({ ...value, [k]: e.target.value });
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-2">
       <Field label="성">
-        <input className="input" value={value.lastName} onChange={set("lastName")} autoFocus />
+        <input className="input" value={value.lastName} onChange={set("lastName")} />
       </Field>
       <Field label="이름">
         <input className="input" value={value.firstName} onChange={set("firstName")} />
@@ -120,9 +121,9 @@ function VCardForm({ value, onChange }: FormProps<"vcard">) {
 
 function EmailForm({ value, onChange }: FormProps<"email">) {
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-4">
       <Field label="받는 사람">
-        <input className="input" type="email" placeholder="name@example.com" value={value.to} onChange={(e) => onChange({ ...value, to: e.target.value })} autoFocus />
+        <input className="input" type="email" placeholder="name@example.com" value={value.to} onChange={(e) => onChange({ ...value, to: e.target.value })} />
       </Field>
       <Field label="제목">
         <input className="input" value={value.subject} onChange={(e) => onChange({ ...value, subject: e.target.value })} />
@@ -136,9 +137,9 @@ function EmailForm({ value, onChange }: FormProps<"email">) {
 
 function SmsForm({ value, onChange }: FormProps<"sms">) {
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-4">
       <Field label="받는 번호">
-        <input className="input" type="tel" placeholder="010-1234-5678" value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} autoFocus />
+        <input className="input" type="tel" placeholder="010-1234-5678" value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} />
       </Field>
       <Field label="메시지">
         <textarea className="input min-h-24" value={value.message} onChange={(e) => onChange({ ...value, message: e.target.value })} />
@@ -150,7 +151,7 @@ function SmsForm({ value, onChange }: FormProps<"sms">) {
 function PhoneForm({ value, onChange }: FormProps<"phone">) {
   return (
     <Field label="전화번호" hint="국제번호는 +82-10-1234-5678 형식으로 입력하세요.">
-      <input className="input" type="tel" placeholder="010-1234-5678" value={value.phone} onChange={(e) => onChange({ phone: e.target.value })} autoFocus />
+      <input className="input" type="tel" placeholder="010-1234-5678" value={value.phone} onChange={(e) => onChange({ phone: e.target.value })} />
     </Field>
   );
 }
@@ -162,14 +163,15 @@ function GeoForm({ value, onChange }: FormProps<"geo">) {
     );
   };
   return (
-    <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+    <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
       <Field label="위도 (latitude)">
-        <input className="input" inputMode="decimal" placeholder="37.5665" value={value.lat} onChange={(e) => onChange({ ...value, lat: e.target.value })} autoFocus />
+        <input className="input" inputMode="decimal" placeholder="37.5665" value={value.lat} onChange={(e) => onChange({ ...value, lat: e.target.value })} />
       </Field>
       <Field label="경도 (longitude)">
         <input className="input" inputMode="decimal" placeholder="126.9780" value={value.lng} onChange={(e) => onChange({ ...value, lng: e.target.value })} />
       </Field>
       <button type="button" className="btn" onClick={locate}>
+        <LocateIcon />
         현재 위치
       </button>
     </div>
@@ -180,10 +182,10 @@ function EventForm({ value, onChange }: FormProps<"event">) {
   const set = <K extends keyof QrPayloadMap["event"]>(k: K, v: QrPayloadMap["event"][K]) => onChange({ ...value, [k]: v });
   const inputType = value.allDay ? "date" : "datetime-local";
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <Field label="일정 제목">
-          <input className="input" value={value.title} onChange={(e) => set("title", e.target.value)} autoFocus />
+          <input className="input" value={value.title} onChange={(e) => set("title", e.target.value)} />
         </Field>
       </div>
       <Field label="시작">
@@ -192,7 +194,7 @@ function EventForm({ value, onChange }: FormProps<"event">) {
       <Field label="종료">
         <input className="input" type={inputType} value={value.end} onChange={(e) => set("end", e.target.value)} />
       </Field>
-      <label className="flex items-center gap-2 text-sm sm:col-span-2">
+      <label className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg border border-border-strong bg-card px-3 text-sm text-foreground shadow-xs transition-colors hover:border-zinc-400 hover:bg-subtle sm:col-span-2">
         <input type="checkbox" checked={value.allDay} onChange={(e) => onChange({ ...value, allDay: e.target.checked, start: "", end: "" })} />
         하루 종일
       </label>

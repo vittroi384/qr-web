@@ -84,8 +84,8 @@ export type QrStyleOptions = {
 };
 
 export const DEFAULT_STYLE: QrStyleOptions = {
-  size: 320,
-  margin: 2,
+  size: 512,
+  margin: 4,
   darkColor: "#111111",
   lightColor: "#ffffff",
   errorCorrectionLevel: "M",

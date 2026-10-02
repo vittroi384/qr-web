@@ -1,7 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getRequestMeta } from "@/lib/ip";
-import { insertLog, pruneOldLogs } from "@/lib/logs";
-import { isLogEvent, isQrType, sanitizeOptionsForStorage, sanitizePayloadForStorage } from "@/lib/qr/sanitize";
+import { AUDIT_RETENTION_DAYS, insertLog, pruneOldAudit, pruneOldLogs } from "@/lib/logs";
+import {
+  hardenSecretsForStorage,
+  isLogEvent,
+  isQrType,
+  maskEncodedSecrets,
+  sanitizeOptionsForStorage,
+  sanitizePayloadForStorage,
+} from "@/lib/qr/sanitize";
 import { rateLimit } from "@/lib/rateLimit";
 import { getSettings, isOn } from "@/lib/settings";
 
@@ -18,37 +25,42 @@ export async function POST(req: NextRequest) {
   }
 
   const meta = getRequestMeta(req);
-  if (!rateLimit(`log:${meta.ip}`, RATE_LIMIT, RATE_WINDOW_MS)) {
-    return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
+  const limit = rateLimit(`log:${meta.ip}`, RATE_LIMIT, RATE_WINDOW_MS);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { ok: false, error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } },
+    );
   }
 
-  const raw = await req.text();
-  if (raw.length > MAX_BODY_BYTES) {
+  // Reject oversized bodies before buffering them. Caddy also caps request bodies.
+  const declared = Number.parseInt(req.headers.get("content-length") ?? "", 10);
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
+    return NextResponse.json({ ok: false, error: "too_large" }, { status: 413 });
+  }
+  const rawBytes = new Uint8Array(await req.arrayBuffer());
+  if (rawBytes.byteLength > MAX_BODY_BYTES) {
     return NextResponse.json({ ok: false, error: "too_large" }, { status: 413 });
   }
 
   let body: Record<string, unknown>;
   try {
-    body = JSON.parse(raw);
+    body = JSON.parse(new TextDecoder().decode(rawBytes));
   } catch {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
-
-  if (!isQrType(body.type) || !isLogEvent(body.event)) {
+  if (!body || typeof body !== "object" || !isQrType(body.type) || !isLogEvent(body.event)) {
     return NextResponse.json({ ok: false, error: "invalid_fields" }, { status: 400 });
   }
 
-  const payload = sanitizePayloadForStorage(body.type, body.payload, {
-    maskWifiPassword: isOn(settings.mask_wifi_password),
-  });
+  // Secrets are always masked before anything touches the database — no setting turns this off.
+  const payload = hardenSecretsForStorage(
+    body.type,
+    sanitizePayloadForStorage(body.type, body.payload, { maskWifiPassword: true }),
+  );
   const options = sanitizeOptionsForStorage(body.options);
-  let encodedPreview: string | null = null;
-  if (typeof body.encoded === "string") {
-    encodedPreview = body.encoded.slice(0, 200);
-    if (body.type === "wifi" && isOn(settings.mask_wifi_password)) {
-      encodedPreview = encodedPreview.replace(/P:(?:\\.|[^;])*;/, "P:****;");
-    }
-  }
+  const encodedPreview =
+    typeof body.encoded === "string" ? maskEncodedSecrets(body.type, body.encoded).slice(0, 200) : null;
 
   insertLog({
     qrType: body.type,
@@ -60,8 +72,11 @@ export async function POST(req: NextRequest) {
   });
 
   // Opportunistic retention cleanup instead of a cron job.
-  const retention = Number.parseInt(settings.log_retention_days, 10);
-  if (retention > 0 && Math.random() < 0.01) pruneOldLogs(retention);
+  if (Math.random() < 0.01) {
+    const retention = Number.parseInt(settings.log_retention_days, 10);
+    if (retention > 0) pruneOldLogs(retention);
+    pruneOldAudit(AUDIT_RETENTION_DAYS);
+  }
 
   return NextResponse.json({ ok: true });
 }

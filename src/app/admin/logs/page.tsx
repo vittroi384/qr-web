@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EVENT_LABELS, EventBadge, TypeBadge, formatDate } from "@/components/admin/ui";
+import { DownloadIcon } from "@/components/icons";
 import { listLogs, type LogFilter } from "@/lib/logs";
 import { LOG_EVENTS, QR_TYPES, QR_TYPE_LABELS } from "@/lib/qr/types";
 import { deleteLogsAction } from "./actions";
@@ -41,15 +42,16 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">
-          입력 기록 <span className="text-sm font-normal text-muted">총 {total.toLocaleString()}건</span>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          입력 기록 <span className="ml-1 text-sm font-normal tracking-normal text-muted tabular-nums">총 {total.toLocaleString()}건</span>
         </h1>
-        <a href={`/api/admin/logs/export?${query}`} className="btn text-xs" download>
+        <a href={`/api/admin/logs/export?${query}`} className="btn btn-sm" download>
+          <DownloadIcon />
           CSV 내보내기 (현재 필터)
         </a>
       </div>
 
-      <form method="get" className="card grid gap-3 py-4 sm:grid-cols-2 lg:grid-cols-6">
+      <form method="get" className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-6">
         <label className="block">
           <span className="label">종류</span>
           <select name="type" className="input" defaultValue={filter.type ?? ""}>
@@ -94,39 +96,42 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
         </label>
       </form>
 
-      <form action={deleteLogsAction} className="card overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-background text-left text-xs text-muted">
+      <form action={deleteLogsAction} className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="overflow-x-auto">
+        <table className="table">
+          <thead>
             <tr>
-              <th className="px-3 py-2"></th>
-              <th className="px-3 py-2">시간 (KST)</th>
-              <th className="px-3 py-2">종류</th>
-              <th className="px-3 py-2">이벤트</th>
-              <th className="px-3 py-2">내용</th>
-              <th className="px-3 py-2">IP</th>
-              <th className="px-3 py-2">브라우저</th>
+              <th className="w-10">
+                <span className="sr-only">선택</span>
+              </th>
+              <th>시간 (KST)</th>
+              <th>종류</th>
+              <th>이벤트</th>
+              <th>내용</th>
+              <th>IP</th>
+              <th>브라우저</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-t border-border align-top">
-                <td className="px-3 py-2">
-                  <input type="checkbox" name="ids" value={r.id} aria-label={`기록 ${r.id} 선택`} />
+              <tr key={r.id} className="align-top">
+                <td>
+                  <input type="checkbox" name="ids" value={r.id} aria-label={`기록 ${r.id} 선택`} className="mt-0.5" />
                 </td>
-                <td className="whitespace-nowrap px-3 py-2 text-muted">
+                <td className="whitespace-nowrap text-muted tabular-nums">
                   {formatDate(r.created_at)}
-                  <div className="text-[10px]">#{r.id}</div>
+                  <div className="mt-0.5 font-mono text-[11px]">#{r.id}</div>
                 </td>
-                <td className="px-3 py-2">
+                <td>
                   <TypeBadge type={r.qr_type} />
                 </td>
-                <td className="px-3 py-2">
+                <td>
                   <EventBadge event={r.event} />
                 </td>
-                <td className="max-w-lg px-3 py-2">
+                <td className="max-w-lg">
                   <details>
-                    <summary className="cursor-pointer truncate">{r.encoded_preview || prettyJson(r.payload_json).slice(0, 100)}</summary>
-                    <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-background p-2 text-xs">
+                    <summary className="cursor-pointer truncate rounded hover:text-accent">{r.encoded_preview || prettyJson(r.payload_json).slice(0, 100)}</summary>
+                    <pre className="mt-2 max-h-64 overflow-auto rounded-md border border-border bg-subtle p-3 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap">
                       {prettyJson(r.payload_json)}
                       {r.options_json ? `\n\n옵션: ${r.options_json}` : ""}
                       {r.referer ? `\nreferer: ${r.referer}` : ""}
@@ -134,37 +139,38 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                     </pre>
                   </details>
                 </td>
-                <td className="px-3 py-2 font-mono text-xs">{r.ip}</td>
-                <td className="max-w-[200px] truncate px-3 py-2 text-xs text-muted" title={r.user_agent ?? ""}>
+                <td className="font-mono text-xs">{r.ip}</td>
+                <td className="max-w-[200px] truncate text-xs text-muted" title={r.user_agent ?? ""}>
                   {r.user_agent}
                 </td>
               </tr>
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-muted">
+                <td colSpan={7} className="py-12 text-center text-muted">
                   조건에 맞는 기록이 없습니다.
                 </td>
               </tr>
             ) : null}
           </tbody>
         </table>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-2 text-sm">
-          <button type="submit" className="btn text-xs text-red-500 hover:border-red-400 hover:text-red-500" disabled={rows.length === 0}>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-subtle px-4 py-3 text-sm">
+          <button type="submit" className="btn btn-sm btn-danger" disabled={rows.length === 0}>
             선택 삭제
           </button>
           <div className="flex items-center gap-2 text-muted">
             {page > 1 ? (
-              <Link href={pageHref(page - 1)} className="btn py-1 text-xs">
-                ← 이전
+              <Link href={pageHref(page - 1)} className="btn btn-sm">
+                이전
               </Link>
             ) : null}
-            <span>
+            <span className="px-1 tabular-nums">
               {page} / {pages}
             </span>
             {page < pages ? (
-              <Link href={pageHref(page + 1)} className="btn py-1 text-xs">
-                다음 →
+              <Link href={pageHref(page + 1)} className="btn btn-sm">
+                다음
               </Link>
             ) : null}
           </div>

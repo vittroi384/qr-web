@@ -1,12 +1,13 @@
 import { getDb, type QrLogRow } from "./db";
 import type { LogEvent, QrType } from "./qr/types";
+import { isValidDay, kstDayEndUtcExclusive, kstDayStartUtc, kstToday } from "./time";
 
 export type LogFilter = {
   type?: string;
   event?: string;
   q?: string;
-  from?: string; // YYYY-MM-DD
-  to?: string; // YYYY-MM-DD (inclusive)
+  from?: string; // YYYY-MM-DD (KST calendar day)
+  to?: string; // YYYY-MM-DD (KST calendar day, inclusive)
 };
 
 function buildWhere(filter: LogFilter): { where: string; params: unknown[] } {
@@ -25,13 +26,14 @@ function buildWhere(filter: LogFilter): { where: string; params: unknown[] } {
     const like = `%${filter.q}%`;
     params.push(like, like, like);
   }
-  if (filter.from && /^\d{4}-\d{2}-\d{2}$/.test(filter.from)) {
+  // Dates are entered as KST days; rows are stored in UTC, so convert the boundaries.
+  if (filter.from && isValidDay(filter.from)) {
     clauses.push("created_at >= ?");
-    params.push(`${filter.from} 00:00:00`);
+    params.push(kstDayStartUtc(filter.from));
   }
-  if (filter.to && /^\d{4}-\d{2}-\d{2}$/.test(filter.to)) {
-    clauses.push("created_at <= ?");
-    params.push(`${filter.to} 23:59:59`);
+  if (filter.to && isValidDay(filter.to)) {
+    clauses.push("created_at < ?");
+    params.push(kstDayEndUtcExclusive(filter.to));
   }
   return { where: clauses.length ? `WHERE ${clauses.join(" AND ")}` : "", params };
 }
@@ -72,6 +74,13 @@ export function pruneOldLogs(retentionDays: number) {
     .run(`-${Math.floor(retentionDays)} days`);
 }
 
+export function pruneOldAudit(retentionDays: number) {
+  if (retentionDays <= 0) return;
+  getDb()
+    .prepare("DELETE FROM admin_audit WHERE created_at < datetime('now', ?)")
+    .run(`-${Math.floor(retentionDays)} days`);
+}
+
 export function listLogs(filter: LogFilter, page: number, pageSize: number): { rows: QrLogRow[]; total: number } {
   const db = getDb();
   const { where, params } = buildWhere(filter);
@@ -94,12 +103,18 @@ export function deleteLogs(ids: number[]): number {
   return result.changes;
 }
 
-export function getDashboardStats() {
+export const AUDIT_RETENTION_DAYS = 365;
+
+export function getDashboardStats(logRetentionDays = 0) {
   const db = getDb();
-  const count = (sql: string) => (db.prepare(sql).get() as { c: number }).c;
+  // Retention cleanup also runs here so it happens even when logging is off or traffic is idle.
+  pruneOldLogs(logRetentionDays);
+  pruneOldAudit(AUDIT_RETENTION_DAYS);
+  const count = (sql: string, ...params: unknown[]) => (db.prepare(sql).get(...params) as { c: number }).c;
+  const todayStartUtc = kstDayStartUtc(kstToday());
   return {
     total: count("SELECT COUNT(*) AS c FROM qr_logs"),
-    today: count("SELECT COUNT(*) AS c FROM qr_logs WHERE created_at >= date('now')"),
+    today: count("SELECT COUNT(*) AS c FROM qr_logs WHERE created_at >= ?", todayStartUtc),
     last7: count("SELECT COUNT(*) AS c FROM qr_logs WHERE created_at >= datetime('now', '-7 days')"),
     last30: count("SELECT COUNT(*) AS c FROM qr_logs WHERE created_at >= datetime('now', '-30 days')"),
     uniqueIps30: count(
@@ -111,9 +126,10 @@ export function getDashboardStats() {
     byEvent: db
       .prepare("SELECT event, COUNT(*) AS c FROM qr_logs GROUP BY event ORDER BY c DESC")
       .all() as { event: string; c: number }[],
+    // Group by KST calendar day (UTC+9) so the chart matches what the owner sees.
     byDay: db
       .prepare(
-        "SELECT date(created_at) AS day, COUNT(*) AS c FROM qr_logs WHERE created_at >= datetime('now', '-14 days') GROUP BY day ORDER BY day",
+        "SELECT date(created_at, '+9 hours') AS day, COUNT(*) AS c FROM qr_logs WHERE created_at >= datetime('now', '-14 days') GROUP BY day ORDER BY day",
       )
       .all() as { day: string; c: number }[],
     recent: db.prepare("SELECT * FROM qr_logs ORDER BY id DESC LIMIT 20").all() as QrLogRow[],

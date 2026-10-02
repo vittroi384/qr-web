@@ -42,7 +42,7 @@ next-env.d.ts
 
 # sqlite data
 /data/
-!/data/.gitkeep
+
 
 # keep the template
 !.env.example

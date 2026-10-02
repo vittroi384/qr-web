@@ -3,10 +3,26 @@
 import QRCode from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import type { QrStyleOptions } from "@/lib/qr/types";
+import { CheckIcon, CodeIcon, CopyIcon, DownloadIcon, QrMarkIcon } from "../icons";
+import { Segmented } from "./Segmented";
+
+/** Output resolution of the saved PNG. The on-screen preview always scales to fit its frame. */
+const SIZES = [
+  { name: "작게", value: 256 },
+  { name: "보통", value: 512 },
+  { name: "크게", value: 1024 },
+] as const;
+
+/** Quiet zone in modules — the QR spec requires at least 4. */
+const MARGINS = [
+  { name: "표준", value: 4 },
+  { name: "넓게", value: 6 },
+] as const;
 
 type Props = {
   encoded: string;
   style: QrStyleOptions;
+  onStyleChange: (next: QrStyleOptions) => void;
   fileBase: string;
   onAction: (event: "download_png" | "download_svg" | "copy") => void;
 };
@@ -77,7 +93,7 @@ function triggerDownload(href: string, filename: string) {
   a.remove();
 }
 
-export function QrPreview({ encoded, style, fileBase, onAction }: Props) {
+export function QrPreview({ encoded, style, onStyleChange, fileBase, onAction }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -98,7 +114,7 @@ export function QrPreview({ encoded, style, fileBase, onAction }: Props) {
       .catch((e: unknown) => {
         if (cancelled) return;
         const msg = e instanceof Error ? e.message : String(e);
-        setError(/too big|capacity/i.test(msg) ? "내용이 너무 길어 QR에 담을 수 없습니다. 내용을 줄이거나 오류 정정 레벨을 낮춰 보세요." : msg);
+        setError(/too big|capacity/i.test(msg) ? "내용이 너무 길어 QR에 담을 수 없습니다. 내용을 줄이거나 꾸미기의 복원력을 “기본”으로 바꿔 보세요." : msg);
       });
     return () => {
       cancelled = true;
@@ -140,34 +156,91 @@ export function QrPreview({ encoded, style, fileBase, onAction }: Props) {
   const shownError = encoded ? error : null;
   const disabled = !encoded || Boolean(shownError);
 
+  const badge = shownError
+    ? { text: "오류", cls: "bg-danger-soft text-danger" }
+    : encoded
+      ? { text: "실시간 반영", cls: "bg-success-soft text-success" }
+      : { text: "입력 대기", cls: "bg-surface text-muted" };
+
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative grid aspect-square w-full max-w-[320px] place-items-center overflow-hidden rounded-xl border border-border bg-white">
-        <canvas ref={canvasRef} className={`h-full w-full ${encoded && !shownError ? "" : "opacity-0"}`} style={{ imageRendering: "pixelated" }} />
+    <div className="flex flex-col">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-[15px] font-semibold text-foreground">미리보기</h2>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${badge.cls}`}>
+          <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
+          {badge.text}
+        </span>
+      </div>
+
+      {/* The canvas keeps its full output resolution; CSS scales it to the frame. */}
+      <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-hidden rounded-lg border border-border bg-white">
+        <canvas
+          ref={canvasRef}
+          role="img"
+          aria-label="생성된 QR 코드 미리보기"
+          className={`block h-full w-full max-w-full ${encoded && !shownError ? "" : "opacity-0"}`}
+          style={{ imageRendering: "pixelated" }}
+        />
         {!encoded ? (
-          <p className="absolute inset-0 grid place-items-center px-6 text-center text-sm text-gray-500">
-            왼쪽에 내용을 입력하면
-            <br />
-            QR 코드가 여기에 나타납니다
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center">
+            <span className="grid size-11 place-items-center rounded-lg border border-dashed border-border-strong text-zinc-400">
+              <QrMarkIcon className="size-5" />
+            </span>
+            <p className="text-[13px] leading-relaxed text-muted">
+              내용을 입력하면
+              <br />
+              QR 코드가 바로 나타납니다.
+            </p>
+          </div>
+        ) : null}
+        {shownError ? (
+          <p role="alert" className="absolute inset-0 grid place-items-center px-8 text-center text-[13px] leading-relaxed font-medium text-danger">
+            {shownError}
           </p>
         ) : null}
-        {shownError ? <p className="absolute inset-0 grid place-items-center px-6 text-center text-sm text-red-500">{shownError}</p> : null}
       </div>
-      <div className="flex flex-wrap justify-center gap-2">
-        <button type="button" className="btn btn-primary" onClick={downloadPng} disabled={disabled}>
+
+      <div className="mt-4 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
+        <span className="text-[13px] font-medium text-foreground">크기</span>
+        <Segmented label="저장 크기" options={SIZES} selected={style.size} onSelect={(size) => onStyleChange({ ...style, size })} />
+        <span className="text-[13px] font-medium text-foreground">여백</span>
+        <Segmented
+          label="여백"
+          options={MARGINS}
+          selected={style.margin >= 6 ? 6 : 4}
+          onSelect={(margin) => onStyleChange({ ...style, margin })}
+        />
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        저장 크기 <span className="font-mono text-foreground tabular-nums">{style.size} × {style.size}px</span> · 여백 {style.margin}칸
+      </p>
+
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button type="button" className="btn btn-primary col-span-2" onClick={downloadPng} disabled={disabled}>
+          <DownloadIcon />
           PNG 다운로드
         </button>
         <button type="button" className="btn" onClick={downloadSvg} disabled={disabled}>
-          SVG 다운로드
+          <DownloadIcon />
+          SVG
         </button>
         <button type="button" className="btn" onClick={copyPng} disabled={disabled}>
-          {copied ? "복사됨 ✓" : "이미지 복사"}
+          {copied ? <CheckIcon className="text-success" /> : <CopyIcon />}
+          {copied ? "복사됨" : "이미지 복사"}
         </button>
       </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-muted">인쇄물에는 확대해도 선명한 SVG를 권장합니다. 사용 전에 휴대폰 카메라로 스캔해 확인하세요.</p>
+
       {encoded ? (
-        <details className="w-full text-xs text-muted">
-          <summary className="cursor-pointer">QR에 담긴 실제 데이터 보기</summary>
-          <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-background p-2">{encoded}</pre>
+        <details className="mt-3 border-t border-border pt-2 text-xs text-muted">
+          <summary className="flex cursor-pointer items-center gap-1.5 rounded py-1 font-medium transition-colors hover:text-foreground">
+            <CodeIcon className="size-3.5" />
+            QR에 담긴 실제 데이터 보기
+          </summary>
+          <pre className="mt-2 max-h-40 overflow-auto rounded-md border border-border bg-card p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap text-foreground">
+            {encoded}
+          </pre>
         </details>
       ) : null}
     </div>

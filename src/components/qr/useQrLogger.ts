@@ -1,9 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import type { LogEvent, QrPayload, QrStyleOptions, QrType } from "@/lib/qr/types";
-
-const DEBOUNCE_MS = 1500;
+import type { LogEvent, QrPayload, QrStyleOptions, QrType, WifiPayload } from "@/lib/qr/types";
 
 type LogInput = {
   type: QrType;
@@ -12,13 +10,28 @@ type LogInput = {
   encoded: string;
 };
 
+/**
+ * Never let a Wi-Fi password leave the browser in clear text. The server masks too, but this
+ * keeps the plaintext off the network entirely.
+ */
+function maskSensitive(input: LogInput): Pick<LogInput, "payload" | "encoded"> {
+  if (input.type !== "wifi") return { payload: input.payload, encoded: input.encoded };
+  const wifi = input.payload as WifiPayload;
+  return {
+    payload: wifi.password ? { ...wifi, password: "****" } : wifi,
+    // Fields are `;`-delimited and `;`/`:` inside values are backslash-escaped by the encoder.
+    encoded: input.encoded.replace(/;P:(?:\\.|[^;])*;/g, ";P:****;"),
+  };
+}
+
 function send(event: LogEvent, input: LogInput) {
+  const safe = maskSensitive(input);
   const body = JSON.stringify({
     type: input.type,
     event,
-    payload: input.payload,
+    payload: safe.payload,
     options: { ...input.options, logoDataUrl: input.options.logoDataUrl ? "1" : null },
-    encoded: input.encoded.slice(0, 200),
+    encoded: safe.encoded.slice(0, 200),
   });
   try {
     if (navigator.sendBeacon) {
@@ -32,29 +45,15 @@ function send(event: LogEvent, input: LogInput) {
 }
 
 /**
- * Reports what visitors generate. `generate` fires once the QR content has been stable for
- * 1.5s and is deduped per content string for the page session; explicit actions fire immediately.
+ * Reports what visitors save. Nothing is sent while typing or previewing — only when the visitor
+ * downloads (PNG/SVG) or copies the image. The returned callback always reports the latest content.
  */
 export function useQrLogger(current: LogInput) {
   const latest = useRef(current);
-  const seen = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     latest.current = current;
   });
-
-  useEffect(() => {
-    const encoded = current.encoded;
-    if (!encoded) return;
-    const key = `${current.type}\u0000${encoded}`;
-    if (seen.current.has(key)) return;
-    const timer = window.setTimeout(() => {
-      if (latest.current.encoded !== encoded) return;
-      seen.current.add(key);
-      send("generate", latest.current);
-    }, DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [current.type, current.encoded]);
 
   return useCallback((event: Exclude<LogEvent, "generate">) => {
     if (!latest.current.encoded) return;

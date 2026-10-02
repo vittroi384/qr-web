@@ -37,8 +37,9 @@ src/proxy.ts             /admin/* 세션 보호
 ### 동작 요약
 
 - QR 이미지는 **브라우저에서** 생성됩니다(서버 부하 없음).
-- 입력이 1.5초 동안 멈추면 `POST /api/log`로 종류·입력값·옵션·IP·브라우저가 기록됩니다. 다운로드/복사 클릭도 별도 이벤트로 기록됩니다.
-  IP당 분당 30회 제한, 16KB 본문 제한, Wi-Fi 비밀번호는 기본적으로 `****`로 마스킹 저장.
+- 미리보기는 브라우저에서 실시간으로 그려지며 서버로 아무것도 보내지 않습니다. **PNG/SVG 다운로드 또는 이미지 복사를 눌렀을 때만** `POST /api/log`로 종류·입력값·옵션·IP·브라우저가 기록됩니다(이벤트: download_png / download_svg / copy).
+  IP당 분당 30회 제한, 16KB 본문 제한(Caddy에서도 64KB 캡), Wi-Fi 비밀번호는 저장 전 항상 `****`로 마스킹(설정으로 끌 수 없음).
+  기록 보관 기본 90일, 감사 로그 365일 후 자동 정리.
 - 관리자 설정(사이트 URL, 이름, AdSense ID, 슬롯 ID, 기록 on/off, 보관 일수 등)은 DB에 저장되고 변경 전/후 값이 **감사 로그**에 남습니다.
 - `/ads.txt`, `/robots.txt`, `/sitemap.xml`, OG 메타는 설정값으로 동적 생성됩니다.
 
@@ -77,6 +78,7 @@ chmod +x deploy.sh
 docker compose logs -f app
 ```
 DOMAIN을 지정하면 Caddy가 Let's Encrypt 인증서를 자동 발급해 HTTPS로 서비스합니다.
+DOMAIN을 비우면 평문 HTTP(:80)로 동작하며 이때 관리자 세션 쿠키는 `Secure` 없이 발급됩니다(테스트 용도로만 권장).
 배포 후 `/admin/settings`에서 **사이트 URL**을 실제 도메인으로 바꿔 주세요(sitemap/OG에 사용).
 
 ### 5. 백업
@@ -101,3 +103,5 @@ SQLite 파일 하나(`./data/qr.db`)가 전부입니다.
 | `ADMIN_PASSWORD` | `/admin` 로그인 비밀번호 |
 | `SESSION_SECRET` | 세션 쿠키 서명 키 (`openssl rand -hex 32`) |
 | `DATABASE_PATH` | SQLite 경로. Docker에서는 `/app/data/qr.db` 고정 |
+
+> 보안 주의: 앱은 `X-Real-IP`(Caddy가 덮어씀)를 신뢰합니다. `docker-compose.yml`의 app 서비스에 `ports:`를 추가해 3000 포트를 외부에 직접 노출하지 마세요. 노출하면 클라이언트가 IP를 위조할 수 있습니다.

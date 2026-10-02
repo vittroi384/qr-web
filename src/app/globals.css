@@ -1,66 +1,195 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — light theme only.
+ *
+ * Neutrals carry the structure (zinc-based); a single blue accent (#2457d6, 6.2:1 on white)
+ * is reserved for primary actions, links and focus. Status colours are used only for state.
+ * Spacing follows a 4/8/12/16/24/32/48 scale; radius 8px for controls, 12px for containers.
+ */
 :root {
-  --background: #f6f7f9;
-  --foreground: #16181d;
+  --background: #f8f9fb;
+  --foreground: #18181b;
   --card: #ffffff;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --accent: #2563eb;
+  --surface: #f4f4f5;
+  --subtle: #fafafa;
+  --muted: #5c5f66;
+  --border: #e4e4e7;
+  --border-strong: #cfd0d5;
+  --accent: #2457d6;
+  --accent-hover: #1d47b8;
+  --accent-soft: #eef3fd;
   --accent-foreground: #ffffff;
-  --ad-placeholder: #cbd5e1;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f1115;
-    --foreground: #e6e7eb;
-    --card: #171a21;
-    --muted: #9ca3af;
-    --border: #2a2f3a;
-    --accent: #3b82f6;
-    --accent-foreground: #ffffff;
-    --ad-placeholder: #3f4654;
-  }
+  --success: #15803d;
+  --success-soft: #f0fdf4;
+  --warning: #92400e;
+  --warning-soft: #fffbeb;
+  --danger: #c81e1e;
+  --danger-soft: #fef2f2;
+  --ad-placeholder: #d4d4d8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
   --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --color-ad-placeholder: var(--ad-placeholder);
+
+  --shadow-xs: 0 1px 2px rgb(24 24 27 / 0.05);
+  --shadow-panel: 0 1px 2px rgb(24 24 27 / 0.04), 0 8px 24px -12px rgb(24 24 27 / 0.08);
+
   --font-sans:
     "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic",
     "Noto Sans KR", "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-html {
-  color-scheme: light dark;
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    font-feature-settings: "tnum" 0;
+  }
+
+  ::selection {
+    background: #cddcfb;
+    color: var(--foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"] {
+    accent-color: var(--accent);
+  }
+
+  input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+  }
+
+  summary {
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-}
+@layer components {
+  /* ---- Form controls: 44px height, 16px text on phones (prevents iOS zoom). ---- */
+  .input {
+    @apply block min-h-11 w-full rounded-lg border border-border-strong bg-card px-3 py-2.5 text-base text-foreground shadow-xs transition-[border-color,box-shadow] outline-none placeholder:text-zinc-400 hover:border-zinc-400 focus:border-accent focus:ring-3 focus:ring-accent/15 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted sm:text-sm;
+  }
+  select.input {
+    @apply cursor-pointer appearance-none pr-9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c5f66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+  textarea.input {
+    @apply resize-y leading-relaxed;
+  }
 
-/* Shared form controls */
-.input {
-  @apply w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-60;
-}
-.label {
-  @apply mb-1 block text-xs font-medium text-muted;
-}
-.btn {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium transition hover:border-accent/60 hover:text-accent disabled:cursor-not-allowed disabled:opacity-50;
-}
-.btn-primary {
-  @apply border-accent bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground;
-}
-.card {
-  @apply rounded-2xl border border-border bg-card p-5 shadow-sm;
+  .label {
+    @apply mb-2 block text-[13px] font-medium text-foreground;
+  }
+  .hint {
+    @apply mt-2 block text-xs leading-relaxed text-muted;
+  }
+
+  /* Default icon size; contextual rules below (.btn svg) take precedence by specificity. */
+  .icon {
+    @apply size-5 shrink-0;
+  }
+
+  /* ---- Buttons: one height (44px), one radius, one icon size (16px). ---- */
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border-strong bg-card px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground shadow-xs transition-colors select-none hover:bg-subtle hover:border-zinc-400 disabled:cursor-not-allowed disabled:border-border disabled:bg-surface disabled:text-zinc-400 disabled:shadow-none;
+  }
+  .btn svg {
+    @apply size-4 shrink-0;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent text-accent-foreground hover:border-accent-hover hover:bg-accent-hover;
+  }
+  .btn-ghost {
+    @apply border-transparent bg-transparent text-muted shadow-none hover:border-transparent hover:bg-surface hover:text-foreground;
+  }
+  .btn-danger {
+    @apply text-danger hover:border-red-300 hover:bg-danger-soft;
+  }
+  .btn-sm {
+    @apply min-h-8 rounded-md px-2.5 py-1 text-xs;
+  }
+  .btn-sm svg {
+    @apply size-3.5;
+  }
+
+  /* ---- Segmented control (neutral selection; accent is reserved for actions). ---- */
+  .segmented {
+    @apply grid auto-cols-fr grid-flow-col gap-1 rounded-lg bg-surface p-1;
+  }
+  .segmented-item {
+    @apply flex min-h-9 flex-col items-center justify-center rounded-md px-2 py-1 text-[13px] leading-tight font-medium text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-[0_1px_2px_rgb(24_24_27/0.08),0_0_0_1px_rgb(24_24_27/0.06)];
+  }
+
+  .card {
+    @apply rounded-xl border border-border bg-card p-5 sm:p-6;
+  }
+
+  .link {
+    @apply text-accent underline decoration-accent/30 underline-offset-[3px] transition-colors hover:decoration-accent;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold tracking-tight text-foreground;
+  }
+
+  /* ---- Data tables (admin). ---- */
+  .table {
+    @apply w-full text-sm;
+  }
+  .table thead {
+    @apply border-b border-border bg-subtle text-left text-xs font-medium text-muted;
+  }
+  .table th {
+    @apply px-4 py-2.5 font-medium whitespace-nowrap;
+  }
+  .table td {
+    @apply px-4 py-3;
+  }
+  .table tbody tr {
+    @apply border-t border-border transition-colors first:border-t-0 hover:bg-subtle;
+  }
 }

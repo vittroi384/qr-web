@@ -15,6 +15,8 @@ type Props = {
   /** Visual hint for the placeholder + AdSense data-ad-format. */
   shape: "horizontal" | "vertical" | "rectangle";
   className?: string;
+  /** Low-profile banner (top of page): reserves ~50–60px instead of 90px. */
+  compact?: boolean;
 };
 
 declare global {
@@ -34,7 +36,10 @@ const SHAPE_CLASS: Record<Props["shape"], string> = {
  * enabled; otherwise a dashed placeholder (only if placeholders are turned on) so the layout
  * can be checked before approval. Never renders popups or overlays.
  */
-export function AdSlot({ config, name, shape, className = "" }: Props) {
+const COMPACT_CLASS = "min-h-[50px] sm:min-h-[60px] w-full";
+
+export function AdSlot({ config, name, shape, className = "", compact = false }: Props) {
+  const sizeClass = compact ? COMPACT_CLASS : SHAPE_CLASS[shape];
   const insRef = useRef<HTMLModElement>(null);
   const live = config.enabled && Boolean(config.client) && Boolean(config.slotId);
 
@@ -51,7 +56,7 @@ export function AdSlot({ config, name, shape, className = "" }: Props) {
 
   if (live) {
     return (
-      <div className={`${SHAPE_CLASS[shape]} ${className}`} data-ad-slot-name={name}>
+      <div className={`${sizeClass} ${className}`} data-ad-slot-name={name}>
         <ins
           ref={insRef}
           className="adsbygoogle block"
@@ -69,11 +74,12 @@ export function AdSlot({ config, name, shape, className = "" }: Props) {
 
   return (
     <div
-      className={`${SHAPE_CLASS[shape]} ${className} grid place-items-center rounded-xl border-2 border-dashed border-ad-placeholder text-xs text-muted`}
+      className={`${sizeClass} ${className} flex ${compact ? "flex-row gap-2" : "flex-col gap-1"} items-center justify-center rounded-lg border border-dashed border-ad-placeholder bg-subtle text-center`}
       data-ad-slot-name={name}
       aria-hidden="true"
     >
-      광고 자리 · {name}
+      <span className="text-[11px] font-medium tracking-wider text-muted uppercase">Ad</span>
+      <span className="text-xs text-muted">광고 영역 · {name}</span>
     </div>
   );
 }

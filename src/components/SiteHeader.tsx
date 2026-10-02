@@ -1,30 +1,32 @@
 import Link from "next/link";
+import { QrMarkIcon } from "./icons";
+
+const NAV = [
+  { href: "/guide", label: "사용법" },
+  { href: "/about", label: "소개" },
+  { href: "/privacy", label: "개인정보" },
+];
 
 export function SiteHeader({ siteName }: { siteName: string }) {
   return (
-    <header className="border-b border-border bg-card/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="grid size-8 place-items-center rounded-lg bg-accent text-accent-foreground">
-            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM18 18h3v3h-3z" />
-            </svg>
+    <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-md supports-[backdrop-filter]:bg-card/80">
+      <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6">
+        <Link href="/" className="-mx-1.5 flex min-w-0 items-center gap-2.5 rounded-md px-1.5 py-1 text-[15px] font-semibold tracking-tight text-foreground">
+          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-foreground text-white">
+            <QrMarkIcon className="size-4" />
           </span>
-          <span>{siteName}</span>
+          <span className="truncate">{siteName}</span>
         </Link>
-        <nav className="flex items-center gap-4 text-sm text-muted">
-          <Link href="/guide" className="hover:text-foreground">
-            사용법
-          </Link>
-          <Link href="/about" className="hover:text-foreground">
-            소개
-          </Link>
-          <Link href="/privacy" className="hover:text-foreground">
-            개인정보
-          </Link>
+        <nav aria-label="주요 메뉴" className="flex shrink-0 items-center gap-0.5 text-sm">
+          {NAV.map((n) => (
+            <Link
+              key={n.href}
+              href={n.href}
+              className="rounded-md px-2.5 py-1.5 text-muted transition-colors hover:bg-surface hover:text-foreground sm:px-3"
+            >
+              {n.label}
+            </Link>
+          ))}
         </nav>
       </div>
     </header>

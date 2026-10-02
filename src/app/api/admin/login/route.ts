@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { writeAudit } from "@/lib/audit";
 import {
+  LOCK_WINDOW_SEC,
   SESSION_COOKIE,
   clearLoginFailures,
   createSessionToken,
@@ -16,7 +17,10 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   const meta = getRequestMeta(req);
   if (isLockedOut(meta.ip)) {
-    return NextResponse.json({ ok: false, error: "locked" }, { status: 429 });
+    return NextResponse.json(
+      { ok: false, error: "locked" },
+      { status: 429, headers: { "Retry-After": String(LOCK_WINDOW_SEC) } },
+    );
   }
 
   let password = "";

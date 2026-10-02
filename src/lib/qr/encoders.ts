@@ -14,10 +14,14 @@ function normalizePhone(value: string): string {
   return value.replace(/[^\d+]/g, "");
 }
 
+// Schemes a scanner may legitimately open. Script/data URIs are refused outright.
+const ALLOWED_URL_SCHEMES = new Set(["http", "https", "mailto", "tel", "sms", "geo", "ftp", "market", "itms-apps"]);
+
 export function encodeUrl(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) return "";
-  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return trimmed;
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(trimmed);
+  if (scheme) return ALLOWED_URL_SCHEMES.has(scheme[1].toLowerCase()) ? trimmed : "";
   return `https://${trimmed}`;
 }
 
@@ -38,9 +42,9 @@ export function encodeVCard(p: VCardPayload): string {
   lines.push(`FN:${escapeText(fullName)}`);
   if (p.org) lines.push(`ORG:${escapeText(p.org)}`);
   if (p.title) lines.push(`TITLE:${escapeText(p.title)}`);
-  if (p.phone) lines.push(`TEL;TYPE=WORK,VOICE:${p.phone.trim()}`);
-  if (p.mobile) lines.push(`TEL;TYPE=CELL:${p.mobile.trim()}`);
-  if (p.email) lines.push(`EMAIL;TYPE=INTERNET:${p.email.trim()}`);
+  if (p.phone) lines.push(`TEL;TYPE=WORK,VOICE:${escapeText(p.phone.trim())}`);
+  if (p.mobile) lines.push(`TEL;TYPE=CELL:${escapeText(p.mobile.trim())}`);
+  if (p.email) lines.push(`EMAIL;TYPE=INTERNET:${escapeText(p.email.trim())}`);
   if (p.website) lines.push(`URL:${encodeUrl(p.website)}`);
   if (p.address) lines.push(`ADR;TYPE=WORK:;;${escapeText(p.address)};;;;`);
   if (p.note) lines.push(`NOTE:${escapeText(p.note)}`);
@@ -83,6 +87,13 @@ function toIcalUtc(local: string): string | null {
   return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 }
 
+/** "20261002" → "20261003" (UTC arithmetic on a date-only value). */
+function nextDay(ical: string): string {
+  const d = new Date(`${ical.slice(0, 4)}-${ical.slice(4, 6)}-${ical.slice(6, 8)}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
 /** datetime-local or date → iCal DATE ("20261002"). */
 function toIcalDate(local: string): string | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(local);
@@ -97,7 +108,9 @@ export function encodeEvent(p: EventPayload): string {
     const start = toIcalDate(p.start);
     if (!start) return "";
     lines.push(`DTSTART;VALUE=DATE:${start}`);
-    const end = toIcalDate(p.end || p.start);
+    // DTEND for all-day events is exclusive (RFC 5545). With no end given, the event is one
+    // day long, so DTEND must be the day after DTSTART.
+    const end = p.end ? toIcalDate(p.end) : nextDay(start);
     if (end) lines.push(`DTEND;VALUE=DATE:${end}`);
   } else {
     const start = toIcalUtc(p.start);
