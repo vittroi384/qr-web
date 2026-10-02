@@ -17,9 +17,6 @@ export function SiteFooter({ siteName, notice }: { siteName: string; notice: str
           </p>
         </div>
         <nav aria-label="하단 메뉴" className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]">
-          <Link href="/guide" className="text-muted transition-colors hover:text-foreground">
-            사용법
-          </Link>
           <Link href="/about" className="text-muted transition-colors hover:text-foreground">
             소개
           </Link>

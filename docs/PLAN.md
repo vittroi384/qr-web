@@ -22,7 +22,6 @@ QR-Web-jjook924/
 │  ├─ app/
 │  │  ├─ layout.tsx               # 공통 레이아웃, 헤더/푸터, AdSense 스크립트(next/script)
 │  │  ├─ page.tsx                 # 메인 QR 생성기 (광고 레이아웃 포함)
-│  │  ├─ guide/page.tsx           # 사용법 (AdSense 승인용 콘텐츠)
 │  │  ├─ about/page.tsx
 │  │  ├─ privacy/page.tsx         # 개인정보처리방침 — "입력값이 서버에 저장됨" 명시 (AdSense 필수)
 │  │  ├─ ads.txt/route.ts         # settings의 pub ID로 ads.txt 동적 생성
@@ -128,7 +127,7 @@ settings 키 (기본값 포함): `site_name`, `site_url`, `site_description`, `a
 ┌──────────────── [top: 728x90 / 반응형 가로] ────────────────┐
 │ [left 160x600]  │   QR 생성기 (탭+폼+미리보기)   │ [right 300x600] │
 │   (lg 이상)     │   [incontent: 반응형 사각형]    │    (xl 이상)    │
-│                 │   사용법/FAQ 콘텍스트 콘텐츠   │                 │
+│                 │   종류 소개/FAQ 콘텍스트 콘텐츠 │                 │
 └──────────────── [bottom: 반응형 가로] ─────────────────────┘
 ```
 - 모바일: top / incontent / bottom 3개만 노출 (사이드바 숨김) → 최소 3개 보장.
@@ -153,7 +152,7 @@ settings 키 (기본값 포함): `site_name`, `site_url`, `site_description`, `a
 5. `/api/log` + 클라이언트 디바운스 전송 + rate limit.
 6. 광고: `AdSenseScript`, `AdSlot`, 메인 페이지 5슬롯 레이아웃, `ads.txt`.
 7. 관리자: auth/middleware → 로그인 → 대시보드 → 로그 테이블/CSV → 설정(감사로그 포함) → 감사로그 페이지.
-8. 콘텐츠 페이지(guide/about/privacy), robots/sitemap/OG 메타.
+8. 콘텐츠 페이지(about/privacy — 사용법 페이지는 소유자 결정으로 제거), robots/sitemap/OG 메타.
 9. Dockerfile, compose, Caddyfile, deploy.sh, .env.example, README.
 10. 첫 커밋.
 

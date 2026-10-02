@@ -8,14 +8,18 @@
  * Spacing follows a 4/8/12/16/24/32/48 scale; radius 8px for controls, 12px for containers.
  */
 :root {
-  --background: #f8f9fb;
-  --foreground: #18181b;
+  /* Neutrals are tinted toward the accent hue so the page reads as "cool light", not flat white. */
+  --background: #eef2f9;
+  --foreground: #16213a;
   --card: #ffffff;
-  --surface: #f4f4f5;
-  --subtle: #fafafa;
-  --muted: #5c5f66;
-  --border: #e4e4e7;
-  --border-strong: #cfd0d5;
+  --surface: #eaf0fa;
+  --subtle: #f4f7fc;
+  --muted: #55607a;
+  --border: #d9e1f0;
+  --border-strong: #c3cee3;
+  --wash-a: rgba(36, 87, 214, 0.14);
+  --wash-b: rgba(20, 184, 166, 0.12);
+  --wash-c: rgba(244, 114, 182, 0.08);
   --accent: #2457d6;
   --accent-hover: #1d47b8;
   --accent-soft: #eef3fd;
@@ -67,8 +71,15 @@
   }
 
   body {
-    background: var(--background);
     color: var(--foreground);
+    background-color: var(--background);
+    /* Fixed colour washes: indigo top-left, teal top-right, a faint rose low-left. */
+    background-image:
+      radial-gradient(900px 520px at -8% -10%, var(--wash-a), transparent 70%),
+      radial-gradient(760px 480px at 108% -6%, var(--wash-b), transparent 70%),
+      radial-gradient(700px 500px at 10% 110%, var(--wash-c), transparent 70%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     font-family: var(--font-sans);
     word-break: keep-all;
     overflow-wrap: anywhere;

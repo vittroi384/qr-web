@@ -2,7 +2,6 @@ import Link from "next/link";
 import { QrMarkIcon } from "./icons";
 
 const NAV = [
-  { href: "/guide", label: "사용법" },
   { href: "/about", label: "소개" },
   { href: "/privacy", label: "개인정보" },
 ];

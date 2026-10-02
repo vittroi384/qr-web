@@ -78,13 +78,6 @@ export default function HomePage() {
               <h2 id="faq-heading" className="section-title">
                 자주 묻는 질문
               </h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted">
-                더 자세한 내용은{" "}
-                <Link href="/guide" className="link">
-                  사용법
-                </Link>
-                에서 볼 수 있습니다.
-              </p>
             </div>
             <dl className="divide-y divide-border border-y border-border">
               <div className="py-5">
