@@ -178,3 +178,12 @@ settings 키 (기본값 포함): `site_name`, `site_url`, `site_description`, `a
 4. **일괄 생성** (`/batch`, `/en/batch`) — 줄 단위 입력(최대 200, `라벨,내용` 형식 지원) → 오프스크린 캔버스 렌더 → 의존성 없는 STORE ZIP(`src/components/batch/zip.ts`) + `index.csv`. 이벤트 `batch` 1회 기록(건수·샘플).
 
 소유자 결정: QR 읽기(스캐너) 기능은 생성 전용 방향에 맞지 않아 보류. 사용법 페이지(`/guide`)는 제거.
+
+## 8. 타입별 SEO 랜딩 페이지 (2026-10-02)
+
+소유자 결정: 동적 QR·구독 BM은 하지 않음(정적 QR 유지). 수익은 AdSense, 레버는 검색 유입 → 타입마다 검색어에 맞는 랜딩 페이지.
+
+- 라우트 `src/app/[slug]/page.tsx`(en), `src/app/ko/[slug]/page.tsx`(ko). slug 매핑은 `src/lib/i18n/landing.*.ts`.
+- 구성: H1 + 타입이 미리 선택된 생성기 + 타입별 고유 콘텐츠(동작 원리·활용·팁·FAQ) + 다른 생성기 링크. 광고 5슬롯은 메인과 동일.
+- 메타: 타입별 title/description, hreflang, FAQPage·SoftwareApplication JSON-LD, sitemap 등록.
+- 내부 링크: 메인 "지원하는 형식" 타일 → 랜딩, 푸터 "Generators" 열.

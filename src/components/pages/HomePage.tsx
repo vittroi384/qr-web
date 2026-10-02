@@ -3,9 +3,9 @@ import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
 import { FaqList } from "@/components/FaqList";
 import { adConfig } from "@/components/ads/adConfig";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
-import { TypeIcon } from "@/components/icons";
+import { ArrowRightIcon, TypeIcon } from "@/components/icons";
 import { QrGenerator } from "@/components/qr/QrGenerator";
-import { getDict, localePath, type Locale } from "@/lib/i18n";
+import { getDict, localePath, typeToSlug, type Locale } from "@/lib/i18n";
 import { QR_TYPES } from "@/lib/qr/types";
 import { getSettings } from "@/lib/settings";
 
@@ -58,13 +58,20 @@ export function HomePage({ locale }: { locale: Locale }) {
                   <p className="mt-2 text-sm leading-relaxed text-muted">{t.home.typesDesc}</p>
                 </div>
                 <ul className="mt-6 grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-2">
+                  {/* Each tile opens that type's landing page (generator preselected + guide). */}
                   {QR_TYPES.map((type) => (
-                    <li key={type} className="flex gap-3 bg-card p-5 md:last:odd:col-span-2">
-                      <TypeIcon type={type} className="mt-0.5 size-5 shrink-0 text-muted" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground">{t.types.labels[type]}</p>
-                        <p className="mt-1 text-[13px] leading-relaxed text-muted">{t.types.descriptions[type]}</p>
-                      </div>
+                    <li key={type} className="flex bg-card md:last:odd:col-span-2">
+                      <Link
+                        href={localePath(locale, `/${typeToSlug(type)}`)}
+                        className="group flex w-full gap-3 p-5 transition-colors hover:bg-subtle focus-visible:-outline-offset-2"
+                      >
+                        <TypeIcon type={type} className="mt-0.5 size-5 shrink-0 text-muted transition-colors group-hover:text-accent" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium text-foreground">{t.types.labels[type]}</span>
+                          <span className="mt-1 block text-[13px] leading-relaxed text-muted">{t.types.descriptions[type]}</span>
+                        </span>
+                        <ArrowRightIcon className="mt-0.5 size-4 shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
+                      </Link>
                     </li>
                   ))}
                 </ul>

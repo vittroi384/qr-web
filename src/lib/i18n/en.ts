@@ -22,6 +22,7 @@ export const en: Dict = {
     navLabel: "Footer menu",
     about: "About",
     privacy: "Privacy Policy",
+    generators: "Generators",
     defaultNotice: "What you enter may be stored on our server to improve the service.",
   },
 
@@ -34,6 +35,13 @@ export const en: Dict = {
       { title: "Add content", body: "The preview updates as you type" },
       { title: "Save", body: "PNG, SVG or a print sheet" },
     ],
+  },
+
+  landing: {
+    otherTitle: "Other QR code generators",
+    otherDesc: "Pick a type to open its generator.",
+    faqTitle: "Questions",
+    appName: (site: string) => `${site} QR Code Generator`,
   },
 
   generator: {

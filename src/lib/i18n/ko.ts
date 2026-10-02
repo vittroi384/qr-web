@@ -24,6 +24,7 @@ export const ko = {
     navLabel: "하단 메뉴",
     about: "소개",
     privacy: "개인정보처리방침",
+    generators: "QR 코드 종류",
     /** Shown on English pages only while the admin footer notice is still the default text. */
     defaultNotice: "입력하신 내용은 서비스 품질 개선을 위해 서버에 저장될 수 있습니다.",
   },
@@ -37,6 +38,13 @@ export const ko = {
       { title: "내용 입력", body: "입력하면 미리보기가 바로 바뀝니다" },
       { title: "저장", body: "PNG, SVG, 인쇄용 안내판" },
     ],
+  },
+
+  landing: {
+    otherTitle: "다른 QR 코드 만들기",
+    otherDesc: "필요한 형식을 고르면 해당 생성기가 바로 열립니다.",
+    faqTitle: "자주 묻는 질문",
+    appName: (site: string) => `${site} QR 코드 생성기`,
   },
 
   generator: {

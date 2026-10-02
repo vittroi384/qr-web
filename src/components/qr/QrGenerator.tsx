@@ -32,9 +32,17 @@ function sheetDefaults(type: QrType, payloads: QrPayloadMap, encoded: string, t:
   return { headline, subline };
 }
 
-export function QrGenerator() {
+export function QrGenerator({
+  initialType = "url",
+  heading,
+}: {
+  /** Type selected on first render (landing pages); visitors can still switch. */
+  initialType?: QrType;
+  /** Replaces the default H1 and tagline (landing pages use their own). */
+  heading?: { title: string; subtitle: string };
+} = {}) {
   const { t } = useI18n();
-  const [type, setType] = useState<QrType>("url");
+  const [type, setType] = useState<QrType>(initialType);
   const [payloads, setPayloads] = useState<QrPayloadMap>(DEFAULT_PAYLOADS);
   const [style, setStyle] = useState<QrStyleOptions>(DEFAULT_STYLE);
 
@@ -44,7 +52,8 @@ export function QrGenerator() {
   const logAction = useQrLogger({ type, payload, options: style, encoded });
   // Step guide state: which content was last saved (download, copy or print).
   const [savedFor, setSavedFor] = useState<string | null>(null);
-  const [typePicked, setTypePicked] = useState(false);
+  // A landing page has already chosen the type, so step 1 starts done there.
+  const [typePicked, setTypePicked] = useState(initialType !== "url");
   const onAction = (event: Parameters<typeof logAction>[0]) => {
     logAction(event);
     setSavedFor(encoded);
@@ -59,9 +68,9 @@ export function QrGenerator() {
     <section aria-labelledby="generator-heading">
       <header className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
         <h1 id="generator-heading" className="text-2xl font-semibold tracking-tight text-foreground">
-          {t.generator.title}
+          {heading?.title ?? t.generator.title}
         </h1>
-        <p className="text-sm text-muted">{t.generator.tagline}</p>
+        <p className="text-sm text-muted">{heading?.subtitle ?? t.generator.tagline}</p>
       </header>
 
       <StepGuide
