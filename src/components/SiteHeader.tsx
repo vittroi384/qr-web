@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDict, localePath, type Locale } from "@/lib/i18n";
 import { LocaleSwitch } from "./i18n/LocaleSwitch";
-import { QrMarkIcon } from "./icons";
+import { BrandMark } from "./BrandMark";
 
 export function SiteHeader({ siteName, locale }: { siteName: string; locale: Locale }) {
   const t = getDict(locale).header;
@@ -18,9 +18,7 @@ export function SiteHeader({ siteName, locale }: { siteName: string; locale: Loc
           href={localePath(locale, "/")}
           className="-mx-1.5 flex min-w-0 items-center gap-2.5 rounded-md px-1.5 py-1 text-[15px] font-semibold tracking-tight text-foreground"
         >
-          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-accent text-white shadow-[0_2px_8px_rgb(2_132_199/0.35)]">
-            <QrMarkIcon className="size-4" />
-          </span>
+          <BrandMark className="size-7 shrink-0 drop-shadow-[0_2px_6px_rgba(2,132,199,0.35)]" />
           <span className="truncate">{siteName}</span>
         </Link>
         <div className="flex shrink-0 items-center gap-1">
