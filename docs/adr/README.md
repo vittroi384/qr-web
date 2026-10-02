@@ -10,3 +10,4 @@
 | [ADR-004](004-mask-secrets-before-storage.md) | 민감값(Wi-Fi 비밀번호)은 클라이언트와 서버 양쪽에서 저장 전 마스킹한다 | 채택 |
 | [ADR-005](005-path-based-i18n-english-default.md) | 경로 기반 i18n, 영어를 기본 언어로 둔다 | 채택 |
 | [ADR-006](006-postgresql-drizzle.md) | 데이터 계층을 SQLite에서 PostgreSQL + Drizzle ORM으로 전환한다 | 채택 |
+| [ADR-007](007-self-hosted-cookieless-analytics.md) | 방문 분석은 쿠키 없는 Umami를 자체 호스팅하고, 대시보드는 외부에 열지 않는다 | 채택 |

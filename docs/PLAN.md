@@ -203,3 +203,21 @@ settings 키 (기본값 포함): `site_name`, `site_url`, `site_description`, `a
 - **Compose**: `db` 서비스(포트 미공개, `pgdata` 볼륨, `pg_isready` healthcheck) → app은 `service_healthy` 이후 기동. 로컬 개발용 `docker-compose.local.yml`(localhost:5432).
 - **백업**: `scripts/backup.sh` — `pg_dump | gzip` → `backups/qr-YYYY-MM-DD.sql.gz`, 30일 보관(cron).
 - 기존 SQLite 파일(`data/qr.db`)의 데이터 이관 스크립트는 포함하지 않음. 새 DB는 빈 상태에서 시작(설정은 기본값).
+
+## 10. 다국어 7개 추가 → 9개 언어 (2026-10-02)
+
+- 언어 목록은 `src/lib/i18n/locales.ts` 한 곳(`LOCALE_CODES`, `LOCALE_NAMES`, `localeFromPath`). proxy는 이 파일만 import(사전 미포함).
+- 언어 추가 절차: `src/lib/i18n/<code>.ts`(`Dict` 타입 강제) + `landing.<code>.ts`(19종) + `src/app/<code>/{page,[slug],about,batch,privacy}` 래퍼 복사 → hreflang·sitemap·언어 메뉴 자동.
+- 번역은 언어별 에이전트 7개 병렬. 현지 검색어·전화번호·통화·법규 반영(Pix·UPI·QRIS "아님" 명시, LINE, QRコード 상표). 금액 입력은 소수점 `.`만 허용되는 점을 각 언어에서 안내(추후 로케일 파서 개선 여지).
+- 검증: tsc(누락 키 검출), E2E에 언어별 `lang`/hreflang 테스트 7건 추가, sitemap 207 URL.
+
+## 11. 분석 · 관리자 UX · 광고 자리 (2026-10-02)
+
+- **qr_logs**에 `locale`·`page`(동일 출처 referer에서 파생, `src/lib/analytics.ts`). **funnel_daily**(day, locale, qr_type, step) 카운터 — `POST /api/funnel`(select/preview, 1KB, IP당 60/분, allow-list 검증), save는 `/api/log`에서 집계. 마이그레이션 `drizzle/0001_analytics.sql`.
+- **통계 탭** `/admin/stats`(`src/lib/stats.ts`, KST 30일): 일별·언어별·페이지별·종류×저장 방식·시간대·퍼널.
+- **입력 기록**: `?n=`(100~2000) 누적 + `InfiniteScroll`(IntersectionObserver → `router.replace`, 필터 변경 시 key로 재마운트), 종류 팝오버 필터·기간 프리셋(`LogFilters.tsx`), 자동 분류·요약(`src/lib/qr/summarize.ts`, 전화번호 마스킹, 배치 payload 처리). 감사 로그 동일. 삭제 상한 2000.
+- **Umami**: compose 서비스(3.4.0, role/DB `umami`, `127.0.0.1:3001`), Caddy `/umami/script.js`·`/umami/api/send`만 프록시, 설정 키 `analytics_script_url`(https+.js)·`analytics_website_id`(UUID), `UmamiScript`(관리자 제외), 개인정보처리방침 9개 언어 문구. `deploy.sh`가 시크릿·DB 멱등 생성, 백업에 umami 포함, 모든 컨테이너 json-file 로그 10m×5. ([ADR-007](adr/007-self-hosted-cookieless-analytics.md))
+- **오류 수집**: `POST /api/client-error`(8KB, IP당 10/분, 노이즈 제외) → `logEvent("error","client.error")`, `ClientErrorReporter`(페이지당 3건).
+- **관리자 푸터**: proxy가 `/admin/*`에만 `x-admin: <SESSION_SECRET 파생 마커>`를 붙이고 공개 경로·404 rewrite에서는 제거 → 루트 레이아웃이 한 줄 푸터로 전환. 대시보드 추이 막대 높이 px 고정(% 높이 접힘 버그).
+- **광고**: `ad_slot_inarticle`(fluid in-article) — 메인은 종류 안내와 FAQ 사이, 랜딩은 첫 설명 글 뒤; 일괄 상단 compact, 소개 하단. 다운로드 버튼 근처·개인정보 페이지는 제외. 운영 시작은 4슬롯만.
+- **리뷰 7·8차**: Umami 대시보드 공개 금지, 기존 볼륨 DB 자동 생성, InfiniteScroll 고착(필터 변경) key 재마운트, x-admin 위조, 로그 로테이션, 스크립트 URL https 제한, 쿼리 중복 제거, maskPhone 수정, .env 개행 보호 → 모두 반영 후 통과.
