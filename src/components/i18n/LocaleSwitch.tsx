@@ -1,34 +1,103 @@
 "use client";
 
+import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LOCALES, LOCALE_NAMES, localePath, stripLocale, type Locale } from "@/lib/i18n";
 
 /**
- * Language menu that jumps to the same page in another locale. A full navigation on purpose:
- * the root layout (html lang, header, footer) is locale-specific and must re-render.
+ * Language menu: a pill showing the current language that opens a popover listing every locale
+ * by its native name. Items are plain <a> links on purpose — switching locale must be a full
+ * navigation because the root layout (html lang, header, footer) is locale-specific.
  */
 export function LocaleSwitch({ locale, label }: { locale: Locale; label: string }) {
   const pathname = usePathname() ?? "/";
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+
+  // Close on outside click / Escape. Listeners are only attached while the menu is open.
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   if (pathname.startsWith("/admin")) return null;
   const base = stripLocale(pathname);
+
   return (
-    <span className="ml-1 inline-flex items-center gap-1.5 text-muted">
-      <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
-      </svg>
-      <select
-        aria-label={label}
-        value={locale}
-        onChange={(e) => window.location.assign(localePath(e.target.value as Locale, base))}
-        className="min-h-7 cursor-pointer rounded-md border border-border bg-card py-1 pr-6 pl-2 text-xs font-medium text-foreground"
+    <div ref={root} className="relative ml-1">
+      <button
+        type="button"
+        aria-label={`${label}: ${LOCALE_NAMES[locale].full}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => setOpen((v) => !v)}
+        className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold tracking-wide transition-colors ${
+          open
+            ? "border-border-strong bg-surface text-foreground"
+            : "border-border bg-card text-muted hover:border-border-strong hover:bg-surface hover:text-foreground"
+        }`}
       >
-        {LOCALES.map((l) => (
-          <option key={l} value={l} lang={l}>
-            {LOCALE_NAMES[l].full}
-          </option>
-        ))}
-      </select>
-    </span>
+        <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+        </svg>
+        <span>{LOCALE_NAMES[locale].short}</span>
+        <svg viewBox="0 0 20 20" className={`size-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 8l4 4 4-4" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          id={menuId}
+          role="menu"
+          aria-label={label}
+          className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-[0_12px_32px_-8px_rgba(2,132,199,0.25),0_2px_8px_rgba(15,34,55,0.08)]"
+        >
+          <p className="px-2.5 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</p>
+          <ul className="grid grid-cols-1 gap-0.5">
+            {LOCALES.map((l) => {
+              const active = l === locale;
+              return (
+                <li key={l}>
+                  <a
+                    role="menuitemradio"
+                    aria-checked={active}
+                    href={localePath(l, base)}
+                    hrefLang={l}
+                    lang={l}
+                    className={`flex items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors ${
+                      active ? "bg-accent-soft font-medium text-accent" : "text-foreground hover:bg-surface"
+                    }`}
+                  >
+                    <span className="truncate">{LOCALE_NAMES[l].full}</span>
+                    {active ? (
+                      <svg viewBox="0 0 20 20" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M4 10.5l4 4 8-9" />
+                      </svg>
+                    ) : (
+                      <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted">{LOCALE_NAMES[l].short}</span>
+                    )}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
