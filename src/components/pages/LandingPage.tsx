@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
 import { adConfig } from "@/components/ads/adConfig";
 import { FaqList } from "@/components/FaqList";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
-import { TypeIcon } from "@/components/icons";
 import { QrGenerator } from "@/components/qr/QrGenerator";
 import { alternatesFor, getDict, getLanding, localePath, slugToType, typeToSlug, type Locale } from "@/lib/i18n";
-import { QR_TYPES, type QrType } from "@/lib/qr/types";
+import type { QrType } from "@/lib/qr/types";
 import { getSettings } from "@/lib/settings";
 
 /** Copy may mark formats with backticks (`WIFI:T:WPA;…`); render those as inline code. */
@@ -103,7 +101,6 @@ export function LandingPage({ locale, type }: { locale: Locale; type: QrType }) 
     },
   ];
 
-  const others = QR_TYPES.filter((x) => x !== type);
 
   return (
     <main className="mx-auto w-full max-w-[1400px] px-4 pt-4 pb-16 sm:px-6 sm:pt-5">
@@ -191,25 +188,6 @@ export function LandingPage({ locale, type }: { locale: Locale; type: QrType }) 
                 </div>
               </section>
 
-              <section className="mt-16" aria-labelledby="others-heading">
-                <h2 id="others-heading" className="section-title">
-                  {t.landing.otherTitle}
-                </h2>
-                <p className="mt-2 text-sm text-muted">{t.landing.otherDesc}</p>
-                <ul className="mt-4 flex flex-wrap gap-2">
-                  {others.map((x) => (
-                    <li key={x}>
-                      <Link
-                        href={localePath(locale, `/${typeToSlug(x)}`)}
-                        className="group inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-card py-1.5 pr-3.5 pl-2.5 text-[13px] font-medium text-foreground transition-colors hover:border-accent/50 hover:bg-accent-soft hover:text-accent"
-                      >
-                        <TypeIcon type={x} className="size-4 shrink-0 text-muted group-hover:text-accent" />
-                        {t.types.labels[x]}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
             </div>
 
             {/* 4. 오른쪽 세로 광고 (xl 이상) — starts below the generator card */}
