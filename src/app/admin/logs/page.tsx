@@ -86,7 +86,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
       </form>
 
       <form action={deleteLogsAction} className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="overflow-x-auto">
+        <div className="table-scroll [--table-offset:27rem]">
         <table className="table">
           <thead>
             <tr>

@@ -26,7 +26,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         감사 로그 <span className="ml-1 text-sm font-normal tracking-normal text-muted tabular-nums">관리자 활동 {total.toLocaleString()}건</span>
       </h1>
       <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="overflow-x-auto">
+        <div className="table-scroll">
           <table className="table">
             <thead>
               <tr>

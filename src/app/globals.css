@@ -221,6 +221,15 @@
   .table tbody tr {
     @apply border-t border-border transition-colors first:border-t-0 hover:bg-subtle;
   }
+  /* Long admin tables scroll inside the card (header row pinned) instead of growing the page. */
+  .table-scroll {
+    @apply overflow-auto overscroll-contain;
+    /* --table-offset: everything above/below the card (nav, title, filters, footer). */
+    max-height: max(20rem, calc(100dvh - var(--table-offset, 21rem)));
+  }
+  .table-scroll thead th {
+    @apply sticky top-0 z-10 bg-subtle shadow-[inset_0_-1px_0_var(--border)];
+  }
 }
 
 /*
