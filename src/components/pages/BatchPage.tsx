@@ -4,13 +4,14 @@ import { BatchTool } from "@/components/batch/BatchTool";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { getDict, type Locale } from "@/lib/i18n";
 
-export type BatchAds = { left: AdSlotConfig; right: AdSlotConfig; incontent: AdSlotConfig };
+export type BatchAds = { left: AdSlotConfig; right: AdSlotConfig; incontent: AdSlotConfig; bottom: AdSlotConfig };
 
 const sideVisible = (c: AdSlotConfig) => Boolean((c.enabled && c.client && c.slotId) || c.showPlaceholder);
 
 /**
  * Two sticky sidebars (left lg+, right xl+) beside the tool, mirroring each other, plus the
- * in-content rectangle and FAQ below the tool. Phones show only the in-content unit.
+ * in-content rectangle and FAQ below the tool, and a bottom banner under the FAQ (same as home).
+ * Phones show the in-content and bottom units.
  */
 export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
   const t = getDict(locale).batch;
@@ -50,6 +51,8 @@ export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
                 <FaqList items={t.faq} />
               </div>
             </section>
+            {/* 하단 가로 광고 — FAQ 아래 */}
+            <AdSlot config={ads.bottom} name="하단" shape="horizontal" className="mt-16" />
           </div>
         </div>
 

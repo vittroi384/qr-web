@@ -16,6 +16,7 @@ export default function Page() {
     left: adConfig(s.ad_slot_left),
     right: adConfig(s.ad_slot_right),
     incontent: adConfig(s.ad_slot_incontent),
+    bottom: adConfig(s.ad_slot_bottom),
   };
   return <BatchPage locale="ko" ads={ads} />;
 }
