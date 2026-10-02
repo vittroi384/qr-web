@@ -12,5 +12,10 @@ export const metadata: Metadata = {
 
 export default function Page() {
   const s = getSettings();
-  return <BatchPage locale="ko" ad={adConfig(s.ad_slot_incontent)} />;
+  const ads = {
+    left: adConfig(s.ad_slot_left),
+    right: adConfig(s.ad_slot_right),
+    incontent: adConfig(s.ad_slot_incontent),
+  };
+  return <BatchPage locale="ko" ads={ads} />;
 }

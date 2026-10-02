@@ -23,7 +23,9 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
   const p = t.preview;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  // One confirmation line for every save action; replaces the tip for two seconds.
+  const [feedback, setFeedback] = useState<"saved" | "copied" | null>(null);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   /** Output resolution of the saved PNG. The on-screen preview always scales to fit its frame. */
@@ -60,10 +62,21 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
     };
   }, [encoded, style, p.tooLong]);
 
+  useEffect(() => () => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+  }, []);
+
+  const confirm = (kind: "saved" | "copied") => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    setFeedback(kind);
+    feedbackTimer.current = setTimeout(() => setFeedback(null), 2000);
+  };
+
   const downloadPng = () => {
     const canvas = canvasRef.current;
     if (!canvas || !encoded) return;
     triggerDownload(canvas.toDataURL("image/png"), `${fileBase}.png`);
+    confirm("saved");
     onAction("download_png");
   };
 
@@ -73,6 +86,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
     triggerDownload(url, `${fileBase}.svg`);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    confirm("saved");
     onAction("download_svg");
   };
 
@@ -83,8 +97,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("blob");
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      confirm("copied");
       onAction("copy");
     } catch {
       setError(p.copyUnsupported);
@@ -125,10 +138,9 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
             <span className="grid size-11 place-items-center rounded-lg border border-dashed border-border-strong text-zinc-400">
               <QrMarkIcon className="size-5" />
             </span>
-            <p className="text-[13px] leading-relaxed text-muted">
-              {p.emptyLine1}
-              <br />
-              {p.emptyLine2}
+            <p className="text-[13px] leading-relaxed text-balance text-muted">
+              <span className="hidden lg:inline">{p.emptyDesktop}</span>
+              <span className="lg:hidden">{p.emptyMobile}</span>
             </p>
           </div>
         ) : null}
@@ -168,8 +180,8 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
           {p.svg}
         </button>
         <button type="button" className="btn" onClick={copyPng} disabled={disabled}>
-          {copied ? <CheckIcon className="text-success" /> : <CopyIcon />}
-          {copied ? p.copied : p.copy}
+          <CopyIcon />
+          {p.copy}
         </button>
         <button type="button" className="btn col-span-2" onClick={() => setSheetOpen(true)} disabled={disabled} aria-haspopup="dialog">
           <PrinterIcon />
@@ -177,7 +189,15 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
         </button>
       </div>
 
-      <p className="mt-3 text-xs leading-relaxed text-muted">{p.tip}</p>
+      <div aria-live="polite">
+        {feedback ? (
+          <p className="mt-3 flex items-start gap-1.5 text-xs leading-relaxed font-medium text-success">
+            <CheckIcon className="mt-px size-3.5 shrink-0" />
+            {feedback === "copied" ? p.copiedToast : p.savedToast}
+          </p>
+        ) : null}
+      </div>
+      {feedback ? null : <p className="mt-3 text-xs leading-relaxed text-muted">{encoded ? p.tip : p.disabledWhy}</p>}
 
       {encoded ? (
         <details className="mt-3 border-t border-border pt-2 text-xs text-muted">

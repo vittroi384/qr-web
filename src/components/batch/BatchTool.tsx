@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import type { QrStyleOptions } from "@/lib/qr/types";
-import { ArchiveIcon, CheckIcon, ChevronDownIcon, PlusIcon, TrashIcon, WarningIcon } from "../icons";
+import { StepGuide } from "../StepGuide";
+import { ArchiveIcon, CheckIcon, ChevronDownIcon, ClipboardIcon, DownloadIcon, EyeIcon, PlusIcon, TrashIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
 import { ColorSwatches } from "../qr/ColorSwatches";
 import { CODE_COLORS, OUTPUT_SIZES, TRANSPARENT } from "../qr/presets";
@@ -268,255 +269,281 @@ export function BatchTool() {
   const backgroundName = lightColor === TRANSPARENT ? b.backgrounds.transparent : b.backgrounds.white;
   const advancedChanged = size !== 512 || darkColor !== CODE_COLORS[0].value || lightColor !== WHITE;
 
+  // Guide follows the real state: a valid row finishes step 1, a saved ZIP finishes all three.
+  const completedSteps = result?.ok ? 3 : validCount > 0 ? 1 : 0;
+  const stepIcons = [<ClipboardIcon key="paste" />, <EyeIcon key="check" />, <DownloadIcon key="save" />];
+
   return (
-    <div className="rounded-xl border border-border bg-card shadow-panel">
-      {/* 목록 */}
-      <div className="p-4 sm:px-6 sm:py-5">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-[15px] font-semibold text-foreground">{b.listTitle}</h2>
-          <button
-            type="button"
-            className="btn"
-            aria-expanded={pasteOpen}
-            aria-controls={pasteId}
-            onClick={() => {
-              if (!pasteOpen) pendingFocus.current = `${pasteId}-text`;
-              setPasteOpen(!pasteOpen);
-            }}
-          >
-            {b.pasteOpen}
-          </button>
-        </div>
+    <>
+      <StepGuide
+        live
+        completed={completedSteps}
+        label={b.stepsLabel}
+        doneLabel={t.steps.done}
+        currentLabel={t.steps.current}
+        steps={b.steps.map((step, i) => ({ ...step, icon: stepIcons[i] }))}
+      />
+      <p className="mt-2 mb-5 text-xs text-muted">{b.limitNote(MAX_ROWS)}</p>
 
-        {pasteOpen ? (
-          <div id={pasteId} className="mb-5 rounded-lg border border-border bg-subtle p-3 sm:p-4">
-            <label htmlFor={`${pasteId}-text`} className="label">
-              {b.pasteLabel}
-            </label>
-            <textarea
-              id={`${pasteId}-text`}
-              className="input min-h-32 font-mono text-[13px] sm:text-[13px]"
-              spellCheck={false}
-              autoCapitalize="none"
-              autoCorrect="off"
-              wrap="off"
-              placeholder={b.pastePlaceholder}
-              value={pasteText}
-              onChange={(e) => setPasteText(e.target.value)}
-            />
-            <p className="hint">{b.pasteHint}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" className="btn" onClick={applyPaste} disabled={!pasteText.trim()}>
-                {b.pasteApply}
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => {
-                  setPasteOpen(false);
-                  setPasteText("");
-                }}
-              >
-                {b.pasteCancel}
-              </button>
-            </div>
+      <div className="rounded-xl border border-border bg-card shadow-panel">
+        {/* 목록 */}
+        <div className="p-4 sm:px-6 sm:py-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-[15px] font-semibold text-foreground">{b.listTitle}</h2>
+            <button
+              type="button"
+              className="btn w-full sm:w-auto"
+              aria-expanded={pasteOpen}
+              aria-controls={pasteId}
+              onClick={() => {
+                if (!pasteOpen) pendingFocus.current = `${pasteId}-text`;
+                setPasteOpen(!pasteOpen);
+              }}
+            >
+              {b.pasteOpen}
+            </button>
           </div>
-        ) : null}
 
-        {/* Column titles (wide screens). Phones rely on the placeholders. */}
-        <div className="hidden items-end gap-3 px-2 pb-1.5 text-xs font-medium text-muted sm:flex" aria-hidden="true">
-          <span className="w-6 shrink-0" />
-          <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,12rem)_minmax(0,1fr)] gap-2">
-            <span>{b.colName}</span>
-            <span>{b.colContent}</span>
-          </span>
-          <span className="w-[100px] shrink-0" />
-        </div>
+          {pasteOpen ? (
+            <div id={pasteId} className="mb-5 rounded-lg border border-border bg-subtle p-3 sm:p-4">
+              <label htmlFor={`${pasteId}-text`} className="label">
+                {b.pasteLabel}
+              </label>
+              <textarea
+                id={`${pasteId}-text`}
+                className="input min-h-32 font-mono text-[13px] sm:text-[13px]"
+                spellCheck={false}
+                autoCapitalize="none"
+                autoCorrect="off"
+                wrap="off"
+                placeholder={b.pastePlaceholder}
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+              />
+              <p className="hint">{b.pasteHint}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" className="btn" onClick={applyPaste} disabled={!pasteText.trim()}>
+                  {b.pasteApply}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    setPasteOpen(false);
+                    setPasteText("");
+                  }}
+                >
+                  {b.pasteCancel}
+                </button>
+              </div>
+            </div>
+          ) : null}
 
-        <ol className="space-y-1.5 sm:space-y-1">
-          {rows.map((row, index) => {
-            const check = checks[index];
-            const invalid = check.state === "invalid";
-            const errorId = `${baseId}-${row.id}-error`;
-            const n = index + 1;
-            return (
-              <li
-                key={row.id}
-                className={`flex items-start gap-2 rounded-lg border p-2 transition-colors sm:gap-3 sm:p-1.5 ${
-                  invalid ? "border-danger/50 bg-danger-soft" : "border-border sm:border-transparent"
-                }`}
-              >
-                <span className="hidden w-6 shrink-0 pt-3 text-right font-mono text-xs text-muted tabular-nums sm:block" aria-hidden="true">
-                  {n}
-                </span>
-                <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
-                  <input
-                    id={fieldId(row, "name")}
-                    className="input"
-                    aria-label={b.rowName(n)}
-                    placeholder={b.colName}
-                    maxLength={80}
-                    value={row.name}
-                    onChange={(e) => update(row.id, { name: e.target.value })}
-                    onKeyDown={onKeyDown(index, "name")}
-                    onPaste={onPaste(index)}
-                  />
-                  <div className="relative min-w-0">
+          {/* Column titles (wide screens). Phones rely on the placeholders. */}
+          <div className="hidden items-end gap-3 px-2 pb-1.5 text-xs font-medium text-muted sm:flex" aria-hidden="true">
+            <span className="w-6 shrink-0" />
+            <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,12rem)_minmax(0,1fr)] gap-2">
+              <span>{b.colName}</span>
+              <span>{b.colContent}</span>
+            </span>
+            <span className="w-[100px] shrink-0" />
+          </div>
+
+          {filledCount === 0 ? (
+            <p className="mb-2 px-1 text-xs text-muted sm:px-2">
+              {b.exampleLabel} <span className="text-foreground/70">{b.exampleName}</span>
+              <span className="mx-1.5 text-border-strong" aria-hidden="true">
+                /
+              </span>
+              <span className="font-mono text-foreground/70">{b.exampleUrl}</span>
+            </p>
+          ) : null}
+
+          <ol className="space-y-1.5 sm:space-y-1">
+            {rows.map((row, index) => {
+              const check = checks[index];
+              const invalid = check.state === "invalid";
+              const errorId = `${baseId}-${row.id}-error`;
+              const n = index + 1;
+              return (
+                <li
+                  key={row.id}
+                  className={`flex items-start gap-2 rounded-lg border p-2 transition-colors sm:gap-3 sm:p-1.5 ${
+                    invalid ? "border-danger/50 bg-danger-soft" : "border-border sm:border-transparent"
+                  }`}
+                >
+                  <span className="hidden w-6 shrink-0 pt-3 text-right font-mono text-xs text-muted tabular-nums sm:block" aria-hidden="true">
+                    {n}
+                  </span>
+                  <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
                     <input
-                      id={fieldId(row, "content")}
-                      className={`input pr-16 ${invalid ? "border-danger/60" : ""}`}
-                      aria-label={b.rowContent(n)}
-                      aria-invalid={invalid || undefined}
-                      aria-describedby={invalid ? errorId : undefined}
-                      placeholder={b.contentPlaceholder}
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      value={row.content}
-                      onChange={(e) => update(row.id, { content: e.target.value })}
-                      onKeyDown={onKeyDown(index, "content")}
+                      id={fieldId(row, "name")}
+                      className="input"
+                      aria-label={b.rowName(n)}
+                      placeholder={b.colName}
+                      maxLength={80}
+                      value={row.name}
+                      onChange={(e) => update(row.id, { name: e.target.value })}
+                      onKeyDown={onKeyDown(index, "name")}
                       onPaste={onPaste(index)}
                     />
-                    {check.state === "ok" ? (
-                      <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded bg-surface px-1.5 py-0.5 text-[11px] leading-none font-medium text-muted">
-                        {check.kind === "url" ? b.kindUrl : b.kindText}
-                      </span>
+                    <div className="relative min-w-0">
+                      <input
+                        id={fieldId(row, "content")}
+                        className={`input pr-16 ${invalid ? "border-danger/60" : ""}`}
+                        aria-label={b.rowContent(n)}
+                        aria-invalid={invalid || undefined}
+                        aria-describedby={invalid ? errorId : undefined}
+                        placeholder={b.contentPlaceholder}
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        value={row.content}
+                        onChange={(e) => update(row.id, { content: e.target.value })}
+                        onKeyDown={onKeyDown(index, "content")}
+                        onPaste={onPaste(index)}
+                      />
+                      {check.state === "ok" ? (
+                        <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded bg-surface px-1.5 py-0.5 text-[11px] leading-none font-medium text-muted">
+                          {check.kind === "url" ? b.kindUrl : b.kindText}
+                        </span>
+                      ) : null}
+                    </div>
+                    {invalid ? (
+                      <p id={errorId} className="text-xs font-medium text-danger sm:col-start-2">
+                        {reason(check)}
+                      </p>
                     ) : null}
                   </div>
-                  {invalid ? (
-                    <p id={errorId} className="text-xs font-medium text-danger sm:col-start-2">
-                      {reason(check)}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="flex shrink-0 flex-col items-center gap-1 sm:flex-row sm:gap-3">
-                  <Thumb check={check} look={look} label={b.rowPreview(n)} />
-                  <button
-                    type="button"
-                    className="btn btn-ghost size-11 px-0"
-                    aria-label={b.rowDelete(n)}
-                    title={b.rowDelete(n)}
-                    onClick={() => removeRow(index)}
-                    disabled={rows.length === 1 && isBlank(row)}
-                  >
-                    <TrashIcon />
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+                  <div className="flex shrink-0 flex-col items-center gap-1 sm:flex-row sm:gap-3">
+                    <Thumb check={check} look={look} label={b.rowPreview(n)} />
+                    <button
+                      type="button"
+                      className="btn btn-ghost size-11 px-0"
+                      aria-label={b.rowDelete(n)}
+                      title={b.rowDelete(n)}
+                      onClick={() => removeRow(index)}
+                      disabled={rows.length === 1 && isBlank(row)}
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
 
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <button type="button" className="btn btn-ghost -ml-2" onClick={addRow} disabled={rows.length >= MAX_ROWS}>
-            <PlusIcon />
-            {b.addRow}
-          </button>
-          <span className="font-mono text-xs text-muted tabular-nums">{b.count(filledCount, MAX_ROWS)}</span>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <button type="button" className="btn btn-ghost -ml-2" onClick={addRow} disabled={rows.length >= MAX_ROWS}>
+              <PlusIcon />
+              {b.addRow}
+            </button>
+            <span className="font-mono text-xs text-muted tabular-nums">{b.count(filledCount, MAX_ROWS)}</span>
+          </div>
+          {notice ? (
+            <p role="status" className="mt-1 text-xs font-medium text-warning">
+              {notice}
+            </p>
+          ) : null}
+          <p className="hint">{b.tableHint}</p>
         </div>
-        {notice ? (
-          <p role="status" className="mt-1 text-xs font-medium text-warning">
-            {notice}
-          </p>
-        ) : null}
-        <p className="hint">{b.tableHint}</p>
-      </div>
 
-      {/* 고급 설정 — defaults are fine for almost everyone. */}
-      <div className="border-t border-border p-4 sm:px-6 sm:py-4">
-        <details className="group">
-          <summary className="-m-2 flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors select-none hover:bg-subtle">
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-foreground">{b.advanced}</span>
-              <span className="mt-0.5 block text-xs text-muted">
-                {size}px · {colorName} · {backgroundName}
+        {/* 고급 설정 — defaults are fine for almost everyone. */}
+        <div className="border-t border-border p-4 sm:px-6 sm:py-4">
+          <details className="group">
+            <summary className="-m-2 flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors select-none hover:bg-subtle">
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium text-foreground">{b.advanced}</span>
+                <span className="mt-0.5 block text-xs text-muted">
+                  {size}px · {colorName} · {backgroundName}
+                </span>
               </span>
-            </span>
-            {advancedChanged ? (
-              <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.style.changed}</span>
-            ) : null}
-            <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            <div role="group" aria-label={b.size} className="sm:col-span-2">
-              <p className="label">{b.size}</p>
-              <Segmented label={b.size} options={sizeOptions} selected={size} onSelect={setSize} />
-            </div>
-            <div role="group" aria-label={b.color}>
-              <p className="label">{b.color}</p>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <ColorSwatches value={darkColor} onChange={setDarkColor} />
+              {advancedChanged ? (
+                <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.style.changed}</span>
+              ) : null}
+              <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <div role="group" aria-label={b.size} className="sm:col-span-2">
+                <p className="label">{b.size}</p>
+                <Segmented label={b.size} options={sizeOptions} selected={size} onSelect={setSize} />
+              </div>
+              <div role="group" aria-label={b.color}>
+                <p className="label">{b.color}</p>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <ColorSwatches value={darkColor} onChange={setDarkColor} />
+                </div>
+              </div>
+              <div role="group" aria-label={b.background}>
+                <p className="label">{b.background}</p>
+                <Segmented
+                  label={b.background}
+                  options={[
+                    { name: b.backgrounds.white, value: WHITE },
+                    { name: b.backgrounds.transparent, value: TRANSPARENT },
+                  ]}
+                  selected={lightColor}
+                  onSelect={setLightColor}
+                />
               </div>
             </div>
-            <div role="group" aria-label={b.background}>
-              <p className="label">{b.background}</p>
-              <Segmented
-                label={b.background}
-                options={[
-                  { name: b.backgrounds.white, value: WHITE },
-                  { name: b.backgrounds.transparent, value: TRANSPARENT },
-                ]}
-                selected={lightColor}
-                onSelect={setLightColor}
+          </details>
+        </div>
+
+        {/* 내려받기 */}
+        <div className="rounded-b-xl border-t border-border bg-subtle p-4 sm:px-6 sm:py-5">
+          <button type="button" className="btn btn-primary min-h-12 w-full text-[15px]" onClick={run} disabled={running || validCount === 0}>
+            <ArchiveIcon />
+            {progress ? b.working(progress.done, progress.total) : b.download(validCount)}
+          </button>
+          {progress ? (
+            <div
+              className="mt-3 h-1 w-full overflow-hidden rounded-full bg-surface"
+              role="progressbar"
+              aria-label={b.download(progress.total)}
+              aria-valuemin={0}
+              aria-valuemax={progress.total}
+              aria-valuenow={progress.done}
+            >
+              <div
+                className="h-full rounded-full bg-accent transition-[width]"
+                style={{ width: `${(progress.done / Math.max(progress.total, 1)) * 100}%` }}
               />
             </div>
-          </div>
-        </details>
-      </div>
+          ) : null}
 
-      {/* 내려받기 */}
-      <div className="rounded-b-xl border-t border-border bg-subtle p-4 sm:px-6 sm:py-5">
-        <button type="button" className="btn btn-primary min-h-12 w-full text-[15px]" onClick={run} disabled={running || validCount === 0}>
-          <ArchiveIcon />
-          {progress ? b.working(progress.done, progress.total) : b.download(validCount)}
-        </button>
-        {progress ? (
-          <div
-            className="mt-3 h-1 w-full overflow-hidden rounded-full bg-surface"
-            role="progressbar"
-            aria-label={b.download(progress.total)}
-            aria-valuemin={0}
-            aria-valuemax={progress.total}
-            aria-valuenow={progress.done}
-          >
-            <div
-              className="h-full rounded-full bg-accent transition-[width]"
-              style={{ width: `${(progress.done / Math.max(progress.total, 1)) * 100}%` }}
-            />
-          </div>
-        ) : null}
-
-        <div aria-live="polite">
-          {result?.ok ? (
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <p className="flex items-center gap-1.5 text-sm font-medium text-success">
-                <CheckIcon className="size-4" />
-                {b.done(result.count)}
-              </p>
-              <div className="flex gap-2">
-                <button type="button" className="btn" onClick={run}>
-                  {b.again}
-                </button>
-                <button type="button" className="btn btn-ghost" onClick={clearAll}>
-                  {b.clear}
-                </button>
+          <div aria-live="polite">
+            {result?.ok ? (
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-success">
+                  <CheckIcon className="size-4" />
+                  {b.done(result.count)}
+                </p>
+                <div className="flex gap-2">
+                  <button type="button" className="btn" onClick={run}>
+                    {b.again}
+                  </button>
+                  <button type="button" className="btn btn-ghost" onClick={clearAll}>
+                    {b.clear}
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : result ? (
-            <p className="mt-3 text-sm font-medium text-danger">{b.failed}</p>
+            ) : result ? (
+              <p className="mt-3 text-sm font-medium text-danger">{b.failed}</p>
+            ) : null}
+          </div>
+
+          {!result?.ok ? (
+            <p className="mt-2.5 text-xs leading-relaxed text-muted">{validCount > 0 ? b.downloadNote(validCount) : b.downloadIdle}</p>
+          ) : null}
+          {skippedCount > 0 ? (
+            <p className="mt-1.5 flex items-start gap-1.5 text-xs leading-relaxed font-medium text-danger">
+              <WarningIcon className="mt-px size-3.5 shrink-0" />
+              {b.skipped(skippedCount)}
+            </p>
           ) : null}
         </div>
-
-        {!result?.ok ? (
-          <p className="mt-2.5 text-xs leading-relaxed text-muted">{validCount > 0 ? b.downloadNote(validCount) : b.downloadIdle}</p>
-        ) : null}
-        {skippedCount > 0 ? (
-          <p className="mt-1.5 flex items-start gap-1.5 text-xs leading-relaxed font-medium text-danger">
-            <WarningIcon className="mt-px size-3.5 shrink-0" />
-            {b.skipped(skippedCount)}
-          </p>
-        ) : null}
       </div>
-    </div>
+    </>
   );
 }

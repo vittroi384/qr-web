@@ -1,40 +1,47 @@
 import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
 import { BatchTool } from "@/components/batch/BatchTool";
-import { MAX_ROWS } from "@/components/batch/parse";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { getDict, type Locale } from "@/lib/i18n";
 
-export function BatchPage({ locale, ad }: { locale: Locale; ad: AdSlotConfig }) {
+export type BatchAds = { left: AdSlotConfig; right: AdSlotConfig; incontent: AdSlotConfig };
+
+const sideVisible = (c: AdSlotConfig) => Boolean((c.enabled && c.client && c.slotId) || c.showPlaceholder);
+
+export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
   const t = getDict(locale).batch;
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 pt-6 pb-16 sm:px-6 sm:pt-8">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.title}</h1>
-        <p className="mt-1 text-sm text-muted">{t.tagline}</p>
-      </header>
+    <main className="mx-auto w-full max-w-[1400px] px-4 pt-6 pb-16 sm:px-6 sm:pt-8">
+      <div className="mx-auto max-w-4xl">
+        <header className="mb-5">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.title}</h1>
+          <p className="mt-1 text-sm text-muted">{t.tagline}</p>
+        </header>
 
-      {/* Three-step orientation: numbers only, no icons. */}
-      <ol aria-label={t.stepsLabel} className="mt-5 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
-        {t.steps.map((step, i) => (
-          <li key={step.title} className="flex gap-3 bg-card px-4 py-3">
-            <span className="shrink-0 pt-px font-mono text-xs font-medium whitespace-nowrap text-muted tabular-nums" aria-hidden="true">
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-medium text-foreground">{step.title}</span>
-              <span className="mt-0.5 block text-[13px] leading-snug text-muted">{step.body}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
-      <p className="mt-2 mb-5 text-xs text-muted">{t.limitNote(MAX_ROWS)}</p>
+        <I18nProvider locale={locale}>
+          <BatchTool />
+        </I18nProvider>
+      </div>
 
-      <I18nProvider locale={locale}>
-        <BatchTool />
-      </I18nProvider>
-
-      {/* Below the whole tool, never beside the download button (AdSense accidental-click policy). */}
-      <AdSlot config={ad} name="본문 중간" shape="rectangle" className="mt-16" />
+      {/*
+        Every ad starts below the tool — none sits beside it — and the band begins 128px under the
+        download button (mt-20 + pt-12), as on the home page (AdSense accidental-click policy).
+        Side slots are vertical units shown from lg (left) and xl (right); phones see only the middle.
+      */}
+      <div className="mt-20 flex gap-6 border-t border-border pt-12 xl:gap-8">
+        {sideVisible(ads.left) ? (
+          <aside className="hidden w-40 shrink-0 lg:block">
+            <AdSlot config={ads.left} name="왼쪽" shape="vertical" />
+          </aside>
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <AdSlot config={ads.incontent} name="본문 중간" shape="rectangle" />
+        </div>
+        {sideVisible(ads.right) ? (
+          <aside className="hidden w-[300px] shrink-0 xl:block">
+            <AdSlot config={ads.right} name="오른쪽" shape="vertical" />
+          </aside>
+        ) : null}
+      </div>
     </main>
   );
 }

@@ -11,10 +11,16 @@ type FormProps<T extends QrType> = {
   onChange: (next: QrPayloadMap[T]) => void;
 };
 
-function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: ReactNode }) {
+function Field({ label, children, hint, required }: { label: string; children: ReactNode; hint?: ReactNode; required?: boolean }) {
+  const { t } = useI18n();
   return (
     <label className="block min-w-0">
-      <span className="label">{label}</span>
+      <span className="label flex items-center gap-1.5">
+        {label}
+        {required ? (
+          <span className="rounded bg-surface px-1.5 py-px text-[11px] leading-4 font-medium text-muted">{t.forms.required}</span>
+        ) : null}
+      </span>
       {children}
       {hint ? <span className="hint">{hint}</span> : null}
     </label>
@@ -24,7 +30,7 @@ function Field({ label, children, hint }: { label: string; children: ReactNode; 
 function UrlForm({ value, onChange }: FormProps<"url">) {
   const t = useI18n().t.forms.url;
   return (
-    <Field label={t.label} hint={t.hint}>
+    <Field label={t.label} hint={t.hint} required>
       <input
         className="input"
         type="url"
@@ -55,6 +61,7 @@ function SocialForm({ value, onChange }: FormProps<"social">) {
       </Field>
       <Field
         label={t.handle}
+        required
         hint={
           <>
             {t.hint}
@@ -85,7 +92,7 @@ function SocialForm({ value, onChange }: FormProps<"social">) {
 function TextForm({ value, onChange }: FormProps<"text">) {
   const t = useI18n().t.forms.text;
   return (
-    <Field label={t.label} hint={t.count(value.text.length)}>
+    <Field label={t.label} hint={t.count(value.text.length)} required>
       <textarea
         className="input min-h-28"
         placeholder={t.placeholder}
@@ -102,8 +109,8 @@ function WifiForm({ value, onChange }: FormProps<"wifi">) {
   const set = <K extends keyof QrPayloadMap["wifi"]>(k: K, v: QrPayloadMap["wifi"][K]) => onChange({ ...value, [k]: v });
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label={t.ssid}>
-        <input className="input" value={value.ssid} onChange={(e) => set("ssid", e.target.value)} />
+      <Field label={t.ssid} required>
+        <input className="input" placeholder={t.ssidPlaceholder} value={value.ssid} onChange={(e) => set("ssid", e.target.value)} />
       </Field>
       <Field label={t.encryption}>
         <select className="input" value={value.encryption} onChange={(e) => set("encryption", e.target.value as QrPayloadMap["wifi"]["encryption"])}>
@@ -114,7 +121,7 @@ function WifiForm({ value, onChange }: FormProps<"wifi">) {
       </Field>
       {value.encryption !== "nopass" ? (
         <Field label={t.password}>
-          <input className="input" type="text" autoComplete="off" value={value.password} onChange={(e) => set("password", e.target.value)} />
+          <input className="input" type="text" autoComplete="off" placeholder={t.passwordPlaceholder} value={value.password} onChange={(e) => set("password", e.target.value)} />
         </Field>
       ) : null}
       <label className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg border border-border-strong bg-card px-3 text-sm text-foreground shadow-xs transition-colors hover:border-zinc-400 hover:bg-subtle self-end">
@@ -131,38 +138,39 @@ function VCardForm({ value, onChange }: FormProps<"vcard">) {
   const t = useI18n().t.forms.vcard;
   return (
     <div className="grid gap-4 sm:grid-cols-2">
+      <p className="-mt-1 text-xs leading-relaxed text-muted sm:col-span-2">{t.requiredHint}</p>
       <Field label={t.lastName}>
-        <input className="input" value={value.lastName} onChange={set("lastName")} />
+        <input className="input" placeholder={t.ph.lastName} value={value.lastName} onChange={set("lastName")} />
       </Field>
       <Field label={t.firstName}>
-        <input className="input" value={value.firstName} onChange={set("firstName")} />
+        <input className="input" placeholder={t.ph.firstName} value={value.firstName} onChange={set("firstName")} />
       </Field>
       <Field label={t.org}>
-        <input className="input" value={value.org} onChange={set("org")} />
+        <input className="input" placeholder={t.ph.org} value={value.org} onChange={set("org")} />
       </Field>
       <Field label={t.title}>
-        <input className="input" value={value.title} onChange={set("title")} />
+        <input className="input" placeholder={t.ph.title} value={value.title} onChange={set("title")} />
       </Field>
       <Field label={t.mobile}>
-        <input className="input" type="tel" value={value.mobile} onChange={set("mobile")} />
+        <input className="input" type="tel" placeholder={t.ph.mobile} value={value.mobile} onChange={set("mobile")} />
       </Field>
       <Field label={t.phone}>
-        <input className="input" type="tel" value={value.phone} onChange={set("phone")} />
+        <input className="input" type="tel" placeholder={t.ph.phone} value={value.phone} onChange={set("phone")} />
       </Field>
       <Field label={t.email}>
-        <input className="input" type="email" value={value.email} onChange={set("email")} />
+        <input className="input" type="email" placeholder={t.ph.email} value={value.email} onChange={set("email")} />
       </Field>
       <Field label={t.website}>
-        <input className="input" type="url" value={value.website} onChange={set("website")} />
+        <input className="input" type="url" placeholder={t.ph.website} value={value.website} onChange={set("website")} />
       </Field>
       <div className="sm:col-span-2">
         <Field label={t.address}>
-          <input className="input" value={value.address} onChange={set("address")} />
+          <input className="input" placeholder={t.ph.address} value={value.address} onChange={set("address")} />
         </Field>
       </div>
       <div className="sm:col-span-2">
         <Field label={t.note}>
-          <textarea className="input min-h-16" value={value.note} onChange={set("note")} />
+          <textarea className="input min-h-16" placeholder={t.ph.note} value={value.note} onChange={set("note")} />
         </Field>
       </div>
     </div>
@@ -173,14 +181,14 @@ function EmailForm({ value, onChange }: FormProps<"email">) {
   const t = useI18n().t.forms.email;
   return (
     <div className="grid gap-4">
-      <Field label={t.to}>
-        <input className="input" type="email" placeholder="name@example.com" value={value.to} onChange={(e) => onChange({ ...value, to: e.target.value })} />
+      <Field label={t.to} required>
+        <input className="input" type="email" placeholder={t.toPlaceholder} value={value.to} onChange={(e) => onChange({ ...value, to: e.target.value })} />
       </Field>
       <Field label={t.subject}>
-        <input className="input" value={value.subject} onChange={(e) => onChange({ ...value, subject: e.target.value })} />
+        <input className="input" placeholder={t.subjectPlaceholder} value={value.subject} onChange={(e) => onChange({ ...value, subject: e.target.value })} />
       </Field>
       <Field label={t.body}>
-        <textarea className="input min-h-24" value={value.body} onChange={(e) => onChange({ ...value, body: e.target.value })} />
+        <textarea className="input min-h-24" placeholder={t.bodyPlaceholder} value={value.body} onChange={(e) => onChange({ ...value, body: e.target.value })} />
       </Field>
     </div>
   );
@@ -190,11 +198,11 @@ function SmsForm({ value, onChange }: FormProps<"sms">) {
   const t = useI18n().t.forms.sms;
   return (
     <div className="grid gap-4">
-      <Field label={t.phone}>
-        <input className="input" type="tel" placeholder="010-1234-5678" value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} />
+      <Field label={t.phone} required>
+        <input className="input" type="tel" placeholder={t.phonePlaceholder} value={value.phone} onChange={(e) => onChange({ ...value, phone: e.target.value })} />
       </Field>
       <Field label={t.message}>
-        <textarea className="input min-h-24" value={value.message} onChange={(e) => onChange({ ...value, message: e.target.value })} />
+        <textarea className="input min-h-24" placeholder={t.messagePlaceholder} value={value.message} onChange={(e) => onChange({ ...value, message: e.target.value })} />
       </Field>
     </div>
   );
@@ -203,8 +211,8 @@ function SmsForm({ value, onChange }: FormProps<"sms">) {
 function PhoneForm({ value, onChange }: FormProps<"phone">) {
   const t = useI18n().t.forms.phone;
   return (
-    <Field label={t.label} hint={t.hint}>
-      <input className="input" type="tel" placeholder="010-1234-5678" value={value.phone} onChange={(e) => onChange({ phone: e.target.value })} />
+    <Field label={t.label} hint={t.hint} required>
+      <input className="input" type="tel" placeholder={t.placeholder} value={value.phone} onChange={(e) => onChange({ phone: e.target.value })} />
     </Field>
   );
 }
@@ -218,10 +226,10 @@ function GeoForm({ value, onChange }: FormProps<"geo">) {
   };
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-      <Field label={t.lat}>
+      <Field label={t.lat} required>
         <input className="input" inputMode="decimal" placeholder="37.5665" value={value.lat} onChange={(e) => onChange({ ...value, lat: e.target.value })} />
       </Field>
-      <Field label={t.lng}>
+      <Field label={t.lng} required>
         <input className="input" inputMode="decimal" placeholder="126.9780" value={value.lng} onChange={(e) => onChange({ ...value, lng: e.target.value })} />
       </Field>
       <button type="button" className="btn" onClick={locate}>
@@ -239,11 +247,11 @@ function EventForm({ value, onChange }: FormProps<"event">) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
-        <Field label={t.title}>
-          <input className="input" value={value.title} onChange={(e) => set("title", e.target.value)} />
+        <Field label={t.title} required>
+          <input className="input" placeholder={t.titlePlaceholder} value={value.title} onChange={(e) => set("title", e.target.value)} />
         </Field>
       </div>
-      <Field label={t.start}>
+      <Field label={t.start} required>
         <input className="input" type={inputType} value={value.start} onChange={(e) => set("start", e.target.value)} />
       </Field>
       <Field label={t.end}>
@@ -254,10 +262,10 @@ function EventForm({ value, onChange }: FormProps<"event">) {
         {t.allDay}
       </label>
       <Field label={t.location}>
-        <input className="input" value={value.location} onChange={(e) => set("location", e.target.value)} />
+        <input className="input" placeholder={t.locationPlaceholder} value={value.location} onChange={(e) => set("location", e.target.value)} />
       </Field>
       <Field label={t.description}>
-        <input className="input" value={value.description} onChange={(e) => set("description", e.target.value)} />
+        <input className="input" placeholder={t.descriptionPlaceholder} value={value.description} onChange={(e) => set("description", e.target.value)} />
       </Field>
     </div>
   );

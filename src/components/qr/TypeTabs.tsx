@@ -21,14 +21,17 @@ export function TypeTabs({ value, onChange }: { value: QrType; onChange: (t: QrT
               type="button"
               aria-pressed={active}
               onClick={() => onChange(type)}
-              className={`flex min-h-11 min-w-0 items-center gap-2 rounded-lg border px-3 py-2 text-left text-[13px] leading-tight font-medium transition-colors ${
+              className={`flex min-h-14 min-w-0 items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors ${
                 active
                   ? "border-foreground bg-card text-foreground shadow-[0_0_0_1px_var(--foreground)]"
                   : "border-border bg-card text-muted hover:border-border-strong hover:bg-subtle hover:text-foreground"
               }`}
             >
               <TypeIcon type={type} className={`size-[18px] shrink-0 ${active ? "text-accent" : ""}`} />
-              <span className="min-w-0">{t.types.labels[type]}</span>
+              <span className="min-w-0">
+                <span className="block text-[13px] leading-tight font-medium">{t.types.labels[type]}</span>
+                <span className={`mt-0.5 block text-[11px] leading-tight ${active ? "text-muted" : "text-muted/90"}`}>{t.types.hints[type]}</span>
+              </span>
             </button>
           );
         })}

@@ -1,4 +1,4 @@
-import { QR_TYPE_DESCRIPTIONS, QR_TYPE_LABELS } from "@/lib/qr/types";
+import { QR_TYPE_DESCRIPTIONS, QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
 
 /**
  * Korean UI copy — the source dictionary. Its shape defines `Dict`; every other locale must
@@ -13,6 +13,7 @@ export const ko = {
 
   header: {
     navLabel: "주요 메뉴",
+    create: "QR 만들기",
     batch: "일괄 생성",
     about: "소개",
     privacy: "개인정보",
@@ -27,6 +28,13 @@ export const ko = {
     defaultNotice: "입력하신 내용은 서비스 품질 개선을 위해 서버에 저장될 수 있습니다.",
   },
 
+  steps: {
+    done: "완료",
+    current: "현재 단계",
+    label: "사용 순서",
+    generator: ["종류 고르기", "내용 입력", "저장"],
+  },
+
   generator: {
     title: "QR 코드 만들기",
     tagline: "회원가입 없이 무료 · 만료되지 않는 QR",
@@ -38,9 +46,23 @@ export const ko = {
   types: {
     labels: QR_TYPE_LABELS,
     descriptions: QR_TYPE_DESCRIPTIONS,
+    /** One short line under each type button: what scanning does. */
+    hints: {
+      url: "웹사이트 열기",
+      social: "프로필 열기",
+      text: "글 보여주기",
+      wifi: "자동 접속",
+      vcard: "연락처 저장",
+      email: "메일 쓰기",
+      sms: "문자 쓰기",
+      phone: "전화 걸기",
+      geo: "지도 열기",
+      event: "일정 추가",
+    } as Record<QrType, string>,
   },
 
   forms: {
+    required: "필수",
     url: {
       label: "웹사이트 주소",
       hint: "https:// 를 생략하면 자동으로 붙습니다.",
@@ -69,6 +91,8 @@ export const ko = {
       encNone: "없음 (개방형)",
       password: "비밀번호",
       hidden: "숨겨진 네트워크",
+      ssidPlaceholder: "예: MyHome_5G",
+      passwordPlaceholder: "Wi-Fi 비밀번호",
     },
     vcard: {
       lastName: "성",
@@ -81,19 +105,38 @@ export const ko = {
       website: "웹사이트",
       address: "주소",
       note: "메모",
+      requiredHint: "이름, 전화번호, 이메일 중 하나는 꼭 입력하세요.",
+      ph: {
+        lastName: "홍",
+        firstName: "길동",
+        org: "예: 주식회사 큐알",
+        title: "예: 매니저",
+        mobile: "010-1234-5678",
+        phone: "02-123-4567",
+        email: "name@example.com",
+        website: "example.com",
+        address: "예: 서울특별시 중구 세종대로 110",
+        note: "예: 평일 9시–6시 통화 가능",
+      },
     },
     email: {
       to: "받는 사람",
       subject: "제목",
       body: "본문",
+      toPlaceholder: "name@example.com",
+      subjectPlaceholder: "예: 문의드립니다",
+      bodyPlaceholder: "예: 안녕하세요, 예약 관련해 여쭤볼 것이 있습니다.",
     },
     sms: {
       phone: "받는 번호",
       message: "메시지",
+      phonePlaceholder: "010-1234-5678",
+      messagePlaceholder: "예: 예약 확인 부탁드립니다",
     },
     phone: {
       label: "전화번호",
       hint: "국제번호는 +82-10-1234-5678 형식으로 입력하세요.",
+      placeholder: "010-1234-5678",
     },
     geo: {
       lat: "위도 (latitude)",
@@ -107,6 +150,9 @@ export const ko = {
       allDay: "하루 종일",
       location: "장소",
       description: "설명",
+      titlePlaceholder: "예: 신제품 설명회",
+      locationPlaceholder: "예: 본사 3층 회의실",
+      descriptionPlaceholder: "예: 노트북을 지참해 주세요",
     },
   },
 
@@ -116,8 +162,8 @@ export const ko = {
     badgeLive: "실시간 반영",
     badgeIdle: "입력 대기",
     canvasLabel: "생성된 QR 코드 미리보기",
-    emptyLine1: "내용을 입력하면",
-    emptyLine2: "QR 코드가 바로 나타납니다.",
+    emptyDesktop: "왼쪽에 내용을 입력하면 여기에 QR 코드가 나타납니다.",
+    emptyMobile: "위에 내용을 입력하면 여기에 QR 코드가 나타납니다.",
     tooLong: "내용이 너무 길어 QR에 담을 수 없습니다. 내용을 줄이거나 꾸미기의 복원력을 “기본”으로 바꿔 보세요.",
     copyUnsupported: "이 브라우저에서는 이미지 복사를 지원하지 않습니다. PNG 다운로드를 이용해 주세요.",
     size: "크기",
@@ -127,18 +173,20 @@ export const ko = {
     margins: { standard: "표준", wide: "넓게" },
     summaryPrefix: "저장 크기",
     summaryMargin: (n: number) => `여백 ${n}칸`,
-    downloadPng: "PNG 다운로드",
-    svg: "SVG",
-    copy: "이미지 복사",
-    copied: "복사됨",
-    printSheet: "인쇄용 안내판",
+    downloadPng: "이미지로 저장 (PNG)",
+    svg: "인쇄용 파일 (SVG)",
+    copy: "복사해서 붙여넣기",
+    printSheet: "안내판 인쇄 / PDF",
+    savedToast: "저장됨 · 휴대폰 카메라로 스캔해 보세요",
+    copiedToast: "복사됨 · 붙여 넣은 뒤 휴대폰 카메라로 스캔해 보세요",
+    disabledWhy: "내용을 입력하면 저장 버튼을 누를 수 있습니다.",
     tip: "인쇄물에는 확대해도 선명한 SVG를 권장합니다. 사용 전에 휴대폰 카메라로 스캔해 확인하세요.",
     showData: "QR에 담긴 실제 데이터 보기",
   },
 
   style: {
     title: "꾸미기",
-    summary: "색상 · 배경 · 복원력 · 로고 (선택)",
+    summary: "선택 사항 · 색상 · 배경 · 복원력 · 로고",
     changed: "변경됨",
     codeColor: "코드 색상",
     colors: {
@@ -309,6 +357,9 @@ export const ko = {
     errEmpty: "링크나 내용을 입력하세요",
     addRow: "줄 추가",
     count: (n: number, max: number) => `${n} / ${max}`,
+    exampleLabel: "예:",
+    exampleName: "메뉴판",
+    exampleUrl: "https://내가게.com/menu",
     tableHint: "표에 바로 붙여 넣어도 줄마다 나뉘어 들어갑니다.",
     pasteOpen: "여러 개를 한 번에 붙여 넣기",
     pasteLabel: "붙여 넣을 목록",

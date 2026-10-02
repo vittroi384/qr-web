@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { encodePayload } from "@/lib/qr/encoders";
 import type { Dict } from "@/lib/i18n";
 import { DEFAULT_PAYLOADS, DEFAULT_STYLE, type QrPayloadMap, type QrStyleOptions, type QrType } from "@/lib/qr/types";
-import { ResetIcon } from "../icons";
+import { StepGuide } from "../StepGuide";
+import { DownloadIcon, GridIcon, PencilIcon, ResetIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
 import { PayloadForm } from "./PayloadForm";
 import { SectionHeading } from "./SectionHeading";
@@ -52,6 +53,19 @@ export function QrGenerator() {
         </h1>
         <p className="text-sm text-muted">{t.generator.tagline}</p>
       </header>
+
+      <StepGuide
+        compact
+        className="mb-3"
+        label={t.steps.label}
+        doneLabel={t.steps.done}
+        currentLabel={t.steps.current}
+        steps={[
+          { title: t.steps.generator[0], icon: <GridIcon /> },
+          { title: t.steps.generator[1], icon: <PencilIcon /> },
+          { title: t.steps.generator[2], icon: <DownloadIcon /> },
+        ]}
+      />
 
       <div className="grid rounded-xl border border-border bg-card shadow-panel lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)] lg:grid-rows-[auto_1fr]">
         {/* 01 종류 · 02 내용 */}
