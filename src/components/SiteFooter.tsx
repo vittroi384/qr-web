@@ -18,13 +18,13 @@ export function SiteFooter({
 }) {
   const d = getDict(locale);
   const t = d.footer;
-  // Chip rows that wrap across the full footer width instead of a tall two-column list.
-  const chip = "inline-flex min-h-8 items-center rounded-md border border-border bg-subtle/60 px-2.5 text-[13px] text-muted transition-colors hover:border-border-strong hover:bg-subtle hover:text-foreground";
+  // Plain text links laid out in columns across the full footer width (no tall two-column list).
+  const link = "block truncate text-[13px] leading-6 text-muted transition-colors hover:text-foreground";
   const generatorLinks = (
-    <ul className="flex flex-wrap gap-1.5">
+    <ul className="grid grid-cols-2 gap-x-6 sm:grid-cols-4 lg:grid-cols-7">
       {QR_TYPES.map((type) => (
-        <li key={type}>
-          <Link href={localePath(locale, `/${typeToSlug(type)}`)} className={chip}>
+        <li key={type} className="min-w-0">
+          <Link href={localePath(locale, `/${typeToSlug(type)}`)} className={link}>
             {d.types.labels[type]}
           </Link>
         </li>
@@ -33,11 +33,11 @@ export function SiteFooter({
   );
   const useCaseLinks = (
     <>
-      <p className="mt-4 mb-2 text-xs font-medium text-muted">{t.useCases}</p>
-      <ul className="flex flex-wrap gap-1.5">
+      <p className="mt-4 mb-1 text-xs font-medium text-muted">{t.useCases}</p>
+      <ul className="grid grid-cols-2 gap-x-6 sm:grid-cols-4 lg:grid-cols-7">
         {USE_CASES.map((u) => (
-          <li key={u.id}>
-            <Link href={localePath(locale, `/${u.slug}`)} className={chip}>
+          <li key={u.id} className="min-w-0">
+            <Link href={localePath(locale, `/${u.slug}`)} className={link}>
               {t.useCaseLabels[u.id]}
             </Link>
           </li>
@@ -93,7 +93,7 @@ export function SiteFooter({
             </div>
           </details>
           <div className="hidden sm:block">
-            <p className="mb-3 text-[13px] font-medium text-foreground">{t.generators}</p>
+            <p className="mb-1 text-[13px] font-medium text-foreground">{t.generators}</p>
             {generatorLinks}
             {useCaseLinks}
           </div>
