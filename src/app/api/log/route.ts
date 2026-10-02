@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { pageContextFromReferer } from "@/lib/analytics";
 import { getRequestMeta } from "@/lib/ip";
 import { AUDIT_RETENTION_DAYS, insertLog, pruneOldAudit, pruneOldLogs } from "@/lib/logs";
 import {
@@ -12,6 +13,7 @@ import {
 import { errorFields, logEvent } from "@/lib/log";
 import { rateLimit } from "@/lib/rateLimit";
 import { getSettings, isOn } from "@/lib/settings";
+import { incrementFunnel } from "@/lib/stats";
 
 export const runtime = "nodejs";
 
@@ -64,18 +66,29 @@ export async function POST(req: NextRequest) {
   const encodedPreview =
     typeof body.encoded === "string" ? maskEncodedSecrets(body.type, body.encoded).slice(0, 200) : null;
 
+  // Which page (and UI language) the save happened on — only trusted from a same-origin Referer.
+  const context = pageContextFromReferer(meta.referer, req.headers.get("x-forwarded-host") ?? req.headers.get("host"));
+
   try {
-  await insertLog({
-    qrType: body.type,
-    event: body.event,
-    payload,
-    encodedPreview,
-    options,
-    ...meta,
-  });
+    await insertLog({
+      qrType: body.type,
+      event: body.event,
+      payload,
+      encodedPreview,
+      options,
+      ...meta,
+      ...context,
+    });
   } catch (err) {
     logEvent("error", "log.insert_failed", { ip: meta.ip, type: body.type, ...errorFields(err) });
     return NextResponse.json({ ok: false, error: "storage" }, { status: 500 });
+  }
+
+  // Funnel "save" step, counted here so it always matches qr_logs. A failure must not fail the save.
+  try {
+    await incrementFunnel("save", body.type, context.locale);
+  } catch (err) {
+    logEvent("error", "funnel.increment_failed", { type: body.type, ...errorFields(err) });
   }
 
   // Opportunistic retention cleanup instead of a cron job.

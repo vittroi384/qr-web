@@ -442,6 +442,7 @@ export const ja: Dict = {
     s1WifiMask: " Wi-Fiのパスワードは保存前に必ず伏せ字にされるため、元のパスワードが記録されることはありません。",
     s1AccessTerm: "接続情報",
     s1Access: "IPアドレス、ブラウザの種類（User-Agent）、参照元ページ（Referer）、言語設定、アクセス日時。",
+    s1Analytics: "Cookieを使わず、個人を特定しない形で、ページ・国・端末の種類などの集計された訪問統計を収集する場合があります。",
     s2Title: "2. 利用目的",
     s2Items: [
       "本サービスの利用状況を把握し、改善するため",

@@ -22,7 +22,7 @@ export async function deleteLogsAction(formData: FormData) {
     .getAll("ids")
     .map((v) => Number.parseInt(String(v), 10))
     .filter((n) => Number.isInteger(n) && n > 0 && n <= 2_147_483_647) // int4 range
-    .slice(0, 500); // safety cap: one page shows 50 rows, so this never limits a real selection
+    .slice(0, 2000); // safety cap: the list shows at most 2000 rows, so this never limits a real selection
   if (ids.length === 0) return;
   const deleted = await deleteLogs(ids);
   const meta = getRequestMetaFromHeaders(await headers());

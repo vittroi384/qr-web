@@ -442,6 +442,7 @@ export const en: Dict = {
     s1WifiMask: " Wi-Fi passwords are always masked before storage, so the original is never recorded.",
     s1AccessTerm: "Connection information",
     s1Access: "IP address, browser type (User-Agent), referring page (Referer), language settings and time of access.",
+    s1Analytics: "Aggregated, cookieless visit statistics (page, country, device type) may be collected without identifying you.",
     s2Title: "2. Why we collect it",
     s2Items: [
       "To understand how the Service is used and improve it",

@@ -22,6 +22,8 @@ export const SETTING_KEYS = [
   "affiliate_print_label",
   "affiliate_print_note",
   "donate_url",
+  "analytics_script_url",
+  "analytics_website_id",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -48,6 +50,9 @@ export const DEFAULT_SETTINGS: Settings = {
   affiliate_print_label: "Print stickers & table tents",
   affiliate_print_note: "Affiliate link — we may earn a commission at no extra cost to you.",
   donate_url: "",
+  // Umami visitor analytics: both empty = no script injected.
+  analytics_script_url: "",
+  analytics_website_id: "",
 };
 
 export const SETTING_LABELS: Record<SettingKey, string> = {
@@ -70,6 +75,8 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   affiliate_print_label: "인쇄 제휴 링크 문구",
   affiliate_print_note: "인쇄 제휴 고지 문구",
   donate_url: "후원 링크 URL (Buy Me a Coffee 등, 비우면 숨김)",
+  analytics_script_url: "Umami 스크립트 URL (https://example.com/umami/script.js)",
+  analytics_website_id: "Umami 웹사이트 ID (UUID)",
 };
 
 export const BOOLEAN_SETTINGS: SettingKey[] = ["ads_enabled", "ad_placeholders", "logging_enabled"];

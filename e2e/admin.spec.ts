@@ -50,6 +50,13 @@ test.describe("admin area", () => {
     await expect(table).not.toContainText(plain);
     expect(await page.content()).not.toContain(plain);
 
+    // Stats page: heading and all six sections render.
+    expect((await page.goto("/admin/stats"))?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1, name: /통계/ })).toBeVisible();
+    for (const name of ["일별 저장 수", "언어별 저장 수", "페이지별 저장 수", "종류 × 저장 방식", "시간대 분포", "퍼널"]) {
+      await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^${name}`) })).toBeVisible();
+    }
+
     // CSV export (cookies are shared with page.request).
     const csv = await page.request.get(`/api/admin/logs/export?q=${encodeURIComponent(marker)}`);
     expect(csv.status()).toBe(200);
@@ -58,6 +65,7 @@ test.describe("admin area", () => {
     expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]); // UTF-8 BOM
     const text = bytes.toString("utf8");
     expect(text).toContain("created_at_kst");
+    expect(text).toContain("accept_language,locale,page");
     expect(text).toContain(marker);
     expect(text).not.toContain(plain);
 

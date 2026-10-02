@@ -26,6 +26,12 @@ const GROUPS: { title: string; description?: string; keys: SettingKey[] }[] = [
     description: "방문자가 QR로 만든 내용과 접속 정보를 서버 DB에 저장할지 결정합니다. Wi-Fi 비밀번호는 설정과 무관하게 항상 마스킹(****)되어 저장됩니다. 보관 일수가 지난 기록은 자동 삭제됩니다.",
     keys: ["logging_enabled", "log_retention_days"],
   },
+  {
+    title: "방문 분석 (Umami)",
+    description:
+      "직접 운영하는 Umami로 페이지뷰·국가·기기 같은 방문 통계를 모읍니다. 쿠키를 쓰지 않고 개인을 식별하지 않으므로 동의 배너가 필요 없습니다. Umami 대시보드(서버 루프백 전용, SSH 터널로 접속 — README 참고)에서 웹사이트를 추가한 뒤 웹사이트 ID를 넣고, 스크립트 URL은 https://도메인/umami/script.js 로 넣으세요(추적 요청은 같은 도메인의 /umami/api/send 로 갑니다). 두 칸 중 하나라도 비우면 아무것도 삽입되지 않으며, 관리자 페이지에는 항상 넣지 않습니다.",
+    keys: ["analytics_script_url", "analytics_website_id"],
+  },
 ];
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -34,6 +40,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   ad_slot: "광고 슬롯 ID는 숫자 5~20자리여야 합니다. 비워 두면 해당 자리는 표시되지 않습니다. (다른 변경도 함께 저장되지 않았습니다)",
   log_retention_days: "기록 보관 일수는 0 이상의 정수여야 합니다. (다른 변경도 함께 저장되지 않았습니다)",
   monetize_url: "제휴·후원 링크는 http:// 또는 https:// 로 시작하는 주소여야 합니다. (다른 변경도 함께 저장되지 않았습니다)",
+  analytics_script_url: "Umami 스크립트 URL은 http:// 또는 https:// 로 시작하는 주소여야 합니다. 예: https://<도메인>/umami/script.js (다른 변경도 함께 저장되지 않았습니다)",
+  analytics_website_id: "Umami 웹사이트 ID는 UUID 형식이어야 합니다. 예: 3f8c2a1e-5b7d-4c9a-8e21-0d6f4b9a7c13 (다른 변경도 함께 저장되지 않았습니다)",
 };
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {

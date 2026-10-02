@@ -442,6 +442,7 @@ export const fr: Dict = {
     s1WifiMask: " Les mots de passe Wi-Fi sont toujours masqués avant stockage : l'original n'est jamais enregistré.",
     s1AccessTerm: "Informations de connexion",
     s1Access: "Adresse IP, type de navigateur (User-Agent), page de provenance (Referer), paramètres de langue et heure d'accès.",
+    s1Analytics: "Des statistiques de visite agrégées et sans cookies (page, pays, type d'appareil) peuvent être collectées sans vous identifier.",
     s2Title: "2. Finalités de la collecte",
     s2Items: [
       "Comprendre l'utilisation du Service et l'améliorer",

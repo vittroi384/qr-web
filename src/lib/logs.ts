@@ -28,6 +28,8 @@ export type QrLogRow = {
   user_agent: string | null;
   referer: string | null;
   accept_language: string | null;
+  locale: string | null;
+  page: string | null;
 };
 
 function toRow(r: QrLog): QrLogRow {
@@ -43,6 +45,8 @@ function toRow(r: QrLog): QrLogRow {
     user_agent: r.userAgent,
     referer: r.referer,
     accept_language: r.acceptLanguage,
+    locale: r.locale,
+    page: r.page,
   };
 }
 
@@ -77,6 +81,8 @@ export async function insertLog(entry: {
   userAgent: string | null;
   referer: string | null;
   acceptLanguage: string | null;
+  locale: string | null;
+  page: string | null;
 }): Promise<void> {
   await db.insert(qrLogs).values({
     qrType: entry.qrType,
@@ -88,6 +94,8 @@ export async function insertLog(entry: {
     userAgent: entry.userAgent,
     referer: entry.referer,
     acceptLanguage: entry.acceptLanguage,
+    locale: entry.locale,
+    page: entry.page,
   });
 }
 

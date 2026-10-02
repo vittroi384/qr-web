@@ -14,7 +14,7 @@ import type { SheetText } from "./PrintSheet";
 import { QrPreview } from "./QrPreview";
 import { StyleOptions } from "./StyleOptions";
 import { TypeTabs } from "./TypeTabs";
-import { useQrLogger } from "./useQrLogger";
+import { useFunnel, useQrLogger } from "./useQrLogger";
 
 /** Starting headline and sub-line for the print sheet. Everything stays editable in the dialog. */
 function sheetDefaults(type: QrType, payloads: QrPayloadMap, encoded: string, t: Dict["print"]): SheetText {
@@ -48,7 +48,7 @@ export function QrGenerator({
   /** Print-partner slot shown inside the print-sheet dialog; omitted when not configured. */
   affiliate?: AffiliateInfo | null;
 } = {}) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [type, setType] = useState<QrType>(initialType);
   const [payloads, setPayloads] = useState<QrPayloadMap>(() => ({ ...DEFAULT_PAYLOADS, ...initialPayload }));
   const [style, setStyle] = useState<QrStyleOptions>(DEFAULT_STYLE);
@@ -57,6 +57,8 @@ export function QrGenerator({
   const encoded = useMemo(() => encodePayload(type, payload), [type, payload]);
   // Logs only on download, copy and print — typing and previewing never reach the server.
   const logAction = useQrLogger({ type, payload, options: style, encoded });
+  // Anonymous select → preview counters (once per type per session); no content is sent.
+  useFunnel(type, Boolean(encoded), locale);
   // Step guide state: which content was last saved (download, copy or print).
   const [savedFor, setSavedFor] = useState<string | null>(null);
   // A landing page has already chosen the type, so step 1 starts done there.

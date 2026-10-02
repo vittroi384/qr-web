@@ -1,9 +1,11 @@
-import Link from "next/link";
+import { InfiniteScroll } from "@/components/admin/InfiniteScroll";
 import { formatDate } from "@/components/admin/ui";
 import { listAudit } from "@/lib/audit";
 import { SETTING_LABELS, type SettingKey } from "@/lib/settings";
 
-const PAGE_SIZE = 50;
+/** Rows are appended ("더 불러오기") instead of paged; the table scrolls inside its card. */
+const PAGE_STEP = 100;
+const MAX_ROWS = 2000;
 
 const ACTION_LABELS: Record<string, string> = {
   login: "로그인",
@@ -16,9 +18,9 @@ const ACTION_LABELS: Record<string, string> = {
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
-  const page = Math.max(1, Number.parseInt(typeof sp.page === "string" ? sp.page : "1", 10) || 1);
-  const { rows, total } = await listAudit(page, PAGE_SIZE);
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const wanted = Number.parseInt(typeof sp.n === "string" ? sp.n : "", 10);
+  const n = Math.min(MAX_ROWS, Math.max(PAGE_STEP, Number.isFinite(wanted) ? wanted : PAGE_STEP));
+  const { rows, total } = await listAudit(1, n);
 
   return (
     <div className="space-y-4">
@@ -60,21 +62,17 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
             ) : null}
           </tbody>
           </table>
+          {rows.length > 0 ? (
+            <InfiniteScroll
+              nextHref={rows.length < total && n < MAX_ROWS ? `/admin/audit?n=${Math.min(MAX_ROWS, n + PAGE_STEP)}` : null}
+              loadedLabel={rows.length < total ? `최대 ${MAX_ROWS.toLocaleString()}건까지 표시` : "모두 불러왔습니다"}
+            />
+          ) : null}
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-border bg-subtle px-4 py-3 text-sm text-muted">
-          {page > 1 ? (
-            <Link href={`/admin/audit?page=${page - 1}`} className="btn btn-sm">
-              이전
-            </Link>
-          ) : null}
-          <span className="px-1 tabular-nums">
-            {page} / {pages}
+        <div className="flex items-center justify-end gap-3 border-t border-border bg-subtle px-4 py-3 text-sm text-muted">
+          <span className="tabular-nums">
+            {total.toLocaleString()}건 중 {Math.min(rows.length, total).toLocaleString()}건 표시 · 아래로 내리면 자동으로 더 불러옵니다
           </span>
-          {page < pages ? (
-            <Link href={`/admin/audit?page=${page + 1}`} className="btn btn-sm">
-              다음
-            </Link>
-          ) : null}
         </div>
       </div>
     </div>

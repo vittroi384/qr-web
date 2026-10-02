@@ -1,3 +1,10 @@
+# Docker's json-file logs grow without bound by default: rotate every service at 10 MB × 5.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   db:
     image: postgres:16-alpine
@@ -6,14 +13,19 @@ services:
       POSTGRES_USER: qr
       POSTGRES_DB: qr
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      # Read by scripts/db-init/01-umami.sh (Umami's own role + database).
+      UMAMI_DB_PASSWORD: ${UMAMI_DB_PASSWORD:?Set UMAMI_DB_PASSWORD in .env (openssl rand -hex 24)}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    # Not published: only the app container on the compose network can reach Postgres.
+      # Runs automatically only on a fresh, empty volume; deploy.sh re-runs it on every deploy (idempotent).
+      - ./scripts/db-init:/docker-entrypoint-initdb.d:ro
+    # Not published: only containers on the compose network can reach Postgres.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U qr -d qr"]
       interval: 5s
       timeout: 5s
       retries: 10
+    logging: *default-logging
 
   app:
     build: .
@@ -31,12 +43,33 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    logging: *default-logging
+
+  # Self-hosted, cookieless visitor analytics (own role + database "umami" in the same Postgres).
+  # Dashboard: loopback only, open it through an SSH tunnel (see README). Caddy proxies just the
+  # tracker (/umami/script.js, /umami/api/send) to umami:3000 on the compose network.
+  umami:
+    image: ghcr.io/umami-software/umami:3.4.0
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?Set UMAMI_APP_SECRET in .env (openssl rand -hex 32)}
+      DISABLE_TELEMETRY: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "3000"
+    ports:
+      - "127.0.0.1:3001:3000"
+    logging: *default-logging
 
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
     depends_on:
       - app
+      - umami
     ports:
       - "80:80"
       - "443:443"
@@ -48,6 +81,7 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    logging: *default-logging
 
 volumes:
   pgdata:

@@ -442,6 +442,7 @@ export const id: Dict = {
     s1WifiMask: " Kata sandi WiFi selalu disamarkan sebelum disimpan, sehingga aslinya tidak pernah tercatat.",
     s1AccessTerm: "Informasi koneksi",
     s1Access: "Alamat IP, jenis browser (User-Agent), halaman asal (Referer), pengaturan bahasa, dan waktu akses.",
+    s1Analytics: "Statistik kunjungan gabungan tanpa cookie (halaman, negara, jenis perangkat) dapat dikumpulkan tanpa mengidentifikasi Anda.",
     s2Title: "2. Mengapa kami mengumpulkannya",
     s2Items: [
       "Untuk memahami cara Layanan digunakan dan meningkatkannya",

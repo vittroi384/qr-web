@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Dumps the production PostgreSQL database to backups/qr-YYYY-MM-DD.sql.gz and keeps 30 days.
+# Dumps the production PostgreSQL databases to backups/qr-YYYY-MM-DD.sql.gz (app) and
+# backups/umami-YYYY-MM-DD.sql.gz (analytics, when that database exists) and keeps 30 days.
 # Run from cron on the server, e.g.  30 4 * * * /home/ubuntu/qr-web/scripts/backup.sh
 # Restore:  gunzip -c backups/qr-2026-10-02.sql.gz | docker compose exec -T db psql -U qr -d qr
+#           gunzip -c backups/umami-2026-10-02.sql.gz | docker compose exec -T db psql -U qr -d umami
 set -uo pipefail
 # Dumps contain visitor IPs and inputs: readable by the owner account only.
 umask 077
@@ -25,15 +27,25 @@ fail() {
 }
 
 mkdir -p backups
-out="backups/qr-$(date +%F).sql.gz"
-tmp="${out}.partial"
 
-# Write to a temp file first so a failed dump never replaces a good backup.
-docker compose exec -T db pg_dump -U qr --no-owner --clean --if-exists qr | gzip > "$tmp" || fail "pg_dump exited with status $?"
-[ -s "$tmp" ] || fail "dump file is empty"
-mv "$tmp" "$out" || fail "could not move dump into place"
-find backups -name 'qr-*.sql.gz' -mtime +"$KEEP_DAYS" -delete
+# dump <database> <output file>. Writes to a temp file first so a failed dump never replaces a good backup.
+dump() {
+  out="$2"
+  tmp="${out}.partial"
+  docker compose exec -T db pg_dump -U qr --no-owner --clean --if-exists "$1" | gzip > "$tmp" || fail "pg_dump $1 exited with status $?"
+  [ -s "$tmp" ] || fail "$1 dump file is empty"
+  mv "$tmp" "$out" || fail "could not move $1 dump into place"
+  tmp=""
+  echo "$(date '+%F %T') backup written: $out ($(du -h "$out" | cut -f1))"
+}
 
-size=$(du -h "$out" | cut -f1)
-echo "$(date '+%F %T') backup written: $out ($size)"
-notify "QR Maker backup OK on $(hostname): $out ($size)"
+dump qr "backups/qr-$(date +%F).sql.gz"
+summary="backups/qr-$(date +%F).sql.gz ($(du -h "backups/qr-$(date +%F).sql.gz" | cut -f1))"
+# Umami analytics: only once its database exists (see README).
+if [ "$(docker compose exec -T db psql -U qr -d qr -tAc "SELECT 1 FROM pg_database WHERE datname = 'umami'")" = "1" ]; then
+  dump umami "backups/umami-$(date +%F).sql.gz"
+  summary="$summary, umami ($(du -h "backups/umami-$(date +%F).sql.gz" | cut -f1))"
+fi
+find backups \( -name 'qr-*.sql.gz' -o -name 'umami-*.sql.gz' \) -mtime +"$KEEP_DAYS" -delete
+
+notify "QR Maker backup OK on $(hostname): $summary"

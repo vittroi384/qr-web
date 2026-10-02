@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { date, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 /** Every QR a visitor saved (PNG/SVG/copy/print/batch). Secrets are masked before insert. */
 export const qrLogs = pgTable(
@@ -15,6 +15,10 @@ export const qrLogs = pgTable(
     userAgent: text("user_agent"),
     referer: text("referer"),
     acceptLanguage: text("accept_language"),
+    /** UI locale of the page the save happened on (from a same-origin Referer), e.g. "en", "ko". */
+    locale: text("locale"),
+    /** Unprefixed path of that page, e.g. "/", "/wifi-qr-code", "/batch". */
+    page: text("page"),
   },
   (t) => [index("idx_qr_logs_created").on(t.createdAt), index("idx_qr_logs_type").on(t.qrType)],
 );
@@ -40,6 +44,22 @@ export const adminAudit = pgTable(
     userAgent: text("user_agent"),
   },
   (t) => [index("idx_admin_audit_created").on(t.createdAt)],
+);
+
+/**
+ * Anonymous funnel counters: one row per KST day × locale × QR type × step ("select", "preview",
+ * "save"), incremented in place. No IP, user agent or content — only the count.
+ */
+export const funnelDaily = pgTable(
+  "funnel_daily",
+  {
+    day: date("day", { mode: "string" }).notNull(),
+    locale: text("locale").notNull(),
+    qrType: text("qr_type").notNull(),
+    step: text("step").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.locale, t.qrType, t.step] })],
 );
 
 export type QrLog = typeof qrLogs.$inferSelect;

@@ -26,6 +26,7 @@ export async function PrivacyPage({ locale }: { locale: Locale }) {
             <li>
               <strong>{t.s1AccessTerm}</strong>: {t.s1Access}
             </li>
+            <li>{t.s1Analytics}</li>
           </ul>
         </section>
 

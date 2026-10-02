@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 
 /**
@@ -86,4 +87,24 @@ export function ipAllowedForAdmin(ip: string): boolean {
   // Strip an IPv6-mapped IPv4 prefix so "::ffff:1.2.3.4" matches "1.2.3.4".
   const normalized = ip.replace(/^::ffff:/i, "");
   return rules.some((rule) => matchesRule(normalized, rule));
+}
+
+/* ---------- Admin request marker (proxy → root layout) ---------- */
+
+/** Request header the proxy sets on /admin/* so the root layout can swap in the admin footer. */
+export const ADMIN_MARKER_HEADER = "x-admin";
+
+let markerCache: string | null = null;
+
+/**
+ * Marker value: derived from SESSION_SECRET (or random per process when unset) so a client cannot
+ * spoof it on paths the proxy matcher skips. Compared with === in the layout; low stakes (footer).
+ */
+export function adminMarker(): string {
+  if (markerCache) return markerCache;
+  const secret = process.env.SESSION_SECRET?.trim();
+  markerCache = secret
+    ? createHash("sha256").update(`${secret}:admin-marker`).digest("hex").slice(0, 32)
+    : randomBytes(16).toString("hex");
+  return markerCache;
 }

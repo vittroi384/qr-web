@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import type { Locale } from "@/lib/i18n/locales";
 import type { LogEvent, QrPayload, QrStyleOptions, QrType, WifiPayload } from "@/lib/qr/types";
 
 type LogInput = {
@@ -38,16 +39,49 @@ export type LogBody = {
  * Only ever call this from an explicit user action (download, copy, print, batch export).
  */
 export function sendLog(log: LogBody) {
-  const body = JSON.stringify({ ...log, encoded: log.encoded.slice(0, 200) });
+  beacon("/api/log", JSON.stringify({ ...log, encoded: log.encoded.slice(0, 200) }));
+}
+
+/** Fire-and-forget JSON POST: sendBeacon, falling back to a keepalive fetch. Never throws. */
+function beacon(url: string, body: string) {
   try {
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: "application/json" });
-      if (navigator.sendBeacon("/api/log", blob)) return;
+      if (navigator.sendBeacon(url, blob)) return;
     }
-    void fetch("/api/log", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true });
+    fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
   } catch {
     // Logging must never affect the user experience.
   }
+}
+
+/**
+ * Anonymous funnel counter (POST /api/funnel), at most once per step × type per browser session.
+ * Sends only the step, the QR type and the UI locale — no content.
+ */
+function sendFunnelOnce(step: "select" | "preview", type: QrType, locale: Locale) {
+  const key = `qrm.funnel.${step}.${type}`;
+  try {
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+  } catch {
+    return; // No session storage → we cannot dedupe, so do not count at all.
+  }
+  beacon("/api/funnel", JSON.stringify({ step, type, locale }));
+}
+
+/**
+ * Funnel steps for the generator: "select" when a type is shown (initial type or a tile click),
+ * "preview" the first time that type renders a non-empty QR. Saves are counted by /api/log.
+ */
+export function useFunnel(type: QrType, hasPreview: boolean, locale: Locale) {
+  useEffect(() => {
+    sendFunnelOnce("select", type, locale);
+  }, [type, locale]);
+
+  useEffect(() => {
+    if (hasPreview) sendFunnelOnce("preview", type, locale);
+  }, [type, hasPreview, locale]);
 }
 
 function send(event: LogEvent, input: LogInput) {

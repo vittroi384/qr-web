@@ -442,6 +442,7 @@ export const pt: Dict = {
     s1WifiMask: " As senhas de Wi-Fi são sempre mascaradas antes do armazenamento, então o original nunca é registrado.",
     s1AccessTerm: "Informações de conexão",
     s1Access: "Endereço IP, tipo de navegador (User-Agent), página de origem (Referer), configurações de idioma e horário de acesso.",
+    s1Analytics: "Podemos coletar estatísticas de visitas agregadas e sem cookies (página, país, tipo de dispositivo) que não identificam você.",
     s2Title: "2. Por que coletamos",
     s2Items: [
       "Para entender como o Serviço é usado e melhorá-lo",

@@ -2,7 +2,7 @@
 
 PostgreSQL 16 스키마. 정의는 [`src/lib/db/schema.ts`](../src/lib/db/schema.ts)(Drizzle), 실제 DDL은 [`drizzle/`](../drizzle) 마이그레이션.
 
-세 테이블은 서로 외래 키 없이 독립적입니다. 방문자 기록(`qr_logs`), 런타임 설정(`settings`), 관리자 활동(`admin_audit`)은 수명과 보관 정책이 달라서(기록 기본 90일, 감사 로그 365일, 설정은 영구) 일부러 연결하지 않았습니다. `admin_audit.key`는 `settings_update`일 때 `settings.key` 값을 담는 논리적 참조입니다.
+네 테이블은 서로 외래 키 없이 독립적입니다. 방문자 기록(`qr_logs`), 익명 퍼널 카운터(`funnel_daily`), 런타임 설정(`settings`), 관리자 활동(`admin_audit`)은 수명과 보관 정책이 달라서(기록 기본 90일, 감사 로그 365일, 설정은 영구) 일부러 연결하지 않았습니다. `admin_audit.key`는 `settings_update`일 때 `settings.key` 값을 담는 논리적 참조입니다.
 
 ```mermaid
 erDiagram
@@ -18,6 +18,16 @@ erDiagram
         text user_agent
         text referer
         text accept_language
+        text locale "same-origin Referer UI locale: en, ko ..."
+        text page "unprefixed path: /, /wifi-qr-code, /batch"
+    }
+
+    funnel_daily {
+        date day PK "KST date"
+        text locale PK "en, ko ... / unknown"
+        text qr_type PK
+        text step PK "select, preview, save"
+        integer count "NOT NULL DEFAULT 0, upsert +1"
     }
 
     settings {
@@ -46,6 +56,9 @@ erDiagram
 |---|---|---|
 | `qr_logs` | `idx_qr_logs_created (created_at)` | 기간 필터, 대시보드 7/30일·14일 추이, 보관 기간 정리 |
 | `qr_logs` | `idx_qr_logs_type (qr_type)` | 종류 필터, 종류별 집계 |
+| `funnel_daily` | 기본 키 `(day, locale, qr_type, step)` | 하루·언어·종류·단계별 카운터 upsert(`ON CONFLICT … count + 1`) |
 | `admin_audit` | `idx_admin_audit_created (created_at)` | 365일 보관 정리 |
 
 목록·CSV는 `id DESC` 정렬(기본 키 인덱스)이며, CSV는 `id < 마지막 id` keyset 페이지로 1000행씩 읽습니다.
+
+`funnel_daily`에는 IP·브라우저·입력 내용이 없고 숫자만 쌓입니다. `select`·`preview`는 브라우저 세션당 종류별 1회(`POST /api/funnel`), `save`는 `/api/log`가 `qr_logs`에 넣을 때 함께 올립니다. `qr_logs.locale`·`page`는 같은 출처 Referer에서만 서버가 계산합니다(0001_analytics 이전 기록은 비어 있음).

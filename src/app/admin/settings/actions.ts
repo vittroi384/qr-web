@@ -64,6 +64,23 @@ export async function saveSettingsAction(formData: FormData) {
       redirect("/admin/settings?error=monetize_url");
     }
   }
+  // Umami tracker: the script URL is injected into every public page, so https and a .js path only
+  // (http would be blocked as mixed content anyway; this narrows what a stolen admin session can inject).
+  if (patch.analytics_script_url) {
+    try {
+      const u = new URL(patch.analytics_script_url);
+      if (u.protocol !== "https:" || !u.pathname.endsWith(".js") || u.search || u.hash) throw new Error("scheme");
+      patch.analytics_script_url = u.toString();
+    } catch {
+      redirect("/admin/settings?error=analytics_script_url");
+    }
+  }
+  if (patch.analytics_website_id) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(patch.analytics_website_id)) {
+      redirect("/admin/settings?error=analytics_website_id");
+    }
+    patch.analytics_website_id = patch.analytics_website_id.toLowerCase();
+  }
   for (const key of ["affiliate_print_label", "affiliate_print_note"] as const) {
     if (patch[key] !== undefined) patch[key] = patch[key]!.slice(0, 200);
   }

@@ -7,6 +7,7 @@ export const metadata = { title: "관리자", robots: { index: false, follow: fa
 
 const NAV = [
   { href: "/admin", label: "대시보드" },
+  { href: "/admin/stats", label: "통계" },
   { href: "/admin/logs", label: "입력 기록" },
   { href: "/admin/settings", label: "설정" },
   { href: "/admin/audit", label: "감사 로그" },

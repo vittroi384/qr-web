@@ -22,6 +22,8 @@ const COLUMNS = [
   "user_agent",
   "referer",
   "accept_language",
+  "locale",
+  "page",
 ] as const;
 
 /**
@@ -84,6 +86,8 @@ export async function GET(req: NextRequest) {
         row.user_agent,
         row.referer,
         row.accept_language,
+        row.locale,
+        row.page,
       ];
       controller.enqueue(encoder.encode(cells.map(csvCell).join(",") + "\r\n"));
     },

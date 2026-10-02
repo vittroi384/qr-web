@@ -42,7 +42,7 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
 - **i18n/SEO**: 경로 기반 9개 언어(hreflang, sitemap 207 URL), 타입별 랜딩 14종 + 사용 사례 5종 × 9개 언어(언어별로 새로 쓴 본문 400~600단어, `FAQPage`·`SoftwareApplication` JSON-LD)
 - **광고**: AdSense 슬롯 6곳(상단·좌·우·하단·본문 중간·글 사이 인아티클; 일괄·소개 페이지도 포함), 팝업/오버레이 없음, 다운로드 버튼과 거리 확보, `/ads.txt` 자동
 - **방문자 기록**: PNG/SVG/복사/인쇄/일괄 저장 시에만 종류·내용·IP·브라우저 기록(입력 중 전송 없음). Wi-Fi 비밀번호는 저장 전 항상 `****`. IP당 분당 30회 제한, 보관 90일 자동 정리
-- **관리자**: 대시보드(KST 집계), 기록 검색·삭제·CSV(BOM, 수식 주입 차단), 설정(사이트 URL·AdSense ID·슬롯 ID — 재배포 없이 변경), 감사 로그(변경 전/후 값)
+- **관리자**: 대시보드(KST 집계), 통계(언어·페이지·종류별 저장, 시간대, 선택→미리보기→저장 퍼널 — 개인 정보 없는 카운터), 기록 검색·삭제·CSV(BOM, 수식 주입 차단), 설정(사이트 URL·AdSense ID·슬롯 ID — 재배포 없이 변경), 감사 로그(변경 전/후 값)
 
 ## 관리자 3중 잠금
 
@@ -67,9 +67,12 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
                     │  Drizzle ORM + postgres.js (풀 10)
                     │  시작 시 scripts/migrate.mjs → drizzle/*.sql 적용
                     ▼
-                 PostgreSQL 16 (포트 미공개, 볼륨 pgdata)
+                 PostgreSQL 16 (포트 미공개, 볼륨 pgdata, DB qr + umami)
 
-OCI A1 · Docker Compose (db → app → caddy, db healthcheck 후 app 기동)
+/umami/script.js·/umami/api/send ──▶ Caddy ──▶ Umami (방문 분석, 전용 role·umami DB)
+관리자 PC ──SSH 터널──▶ 127.0.0.1:3001 Umami 대시보드 (외부 미공개)
+
+OCI A1 · Docker Compose (db → app·umami → caddy, db healthcheck 후 기동)
 배포: git pull && docker compose up -d --build (deploy.sh) · 백업: scripts/backup.sh (pg_dump)
 ```
 
@@ -155,7 +158,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 3. OTP 등록: `docker compose exec app node scripts/totp-setup.mjs` → QR을 인증 앱으로 스캔 → `.env`에 `ADMIN_TOTP_SECRET` 추가 → `docker compose up -d`
 4. 도메인 연결 시 `.env`의 `DOMAIN=`만 채우면 Caddy가 HTTPS를 자동 발급. 관리자 설정의 **사이트 URL**도 실제 도메인으로 변경
 5. 업데이트: `./deploy.sh` (git pull + 재빌드). 새 마이그레이션은 app 컨테이너가 시작하면서 자동 적용(`docker compose logs app`에 `[migrate]` 줄)
-6. 백업: `scripts/backup.sh` → `backups/qr-YYYY-MM-DD.sql.gz` (`pg_dump`, 30일 보관). cron 예: `30 4 * * * ~/qr-web/scripts/backup.sh`. 복원은 `gunzip -c backups/qr-….sql.gz | docker compose exec -T db psql -U qr -d qr`
+6. 백업: `scripts/backup.sh` → `backups/qr-YYYY-MM-DD.sql.gz` + `backups/umami-YYYY-MM-DD.sql.gz`(umami DB가 있을 때) (`pg_dump`, 30일 보관). cron 예: `30 4 * * * ~/qr-web/scripts/backup.sh`. 복원은 `gunzip -c backups/qr-….sql.gz | docker compose exec -T db psql -U qr -d qr`
 
 > `DOMAIN`을 비우면 평문 HTTP로 동작하며 세션 쿠키에 `Secure`가 붙지 않습니다(테스트 용도). HSTS에 `includeSubDomains`가 포함되어 있으니 HTTP 전용 서브도메인이 있으면 Caddyfile에서 빼세요.
 
@@ -163,7 +166,31 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 
 1. 실제 도메인으로 배포 후 AdSense에 사이트 추가 → 게시자 ID(`ca-pub-…`) 발급
 2. 관리자 → 설정 → 게시자 ID 입력 + **광고 표시** 체크 → `/ads.txt`와 스크립트가 자동 활성화 → 사이트 확인·심사
-3. 승인 후 디스플레이 광고 단위 5개 생성 → 각 `data-ad-slot`을 설정의 슬롯 ID 칸에 입력. 비어 있는 자리는 렌더되지 않음. 자동 광고는 끄기(배치 규칙이 깨짐)
+3. 승인 후 광고 단위 생성 → 각 `data-ad-slot`을 설정의 슬롯 ID 칸에 입력. 비어 있는 자리는 렌더되지 않음. 처음엔 상단·본문 중간·글 사이(인아티클 단위)·하단 4개만 켜고 보고서를 보며 조정. 자동 광고는 끄기(배치 규칙이 깨지고 실수 클릭 위험)
+4. AdSense → 개인정보 보호 및 메시지 → **EEA/UK 동의 메시지** 켜기 — 유럽 방문자에게 광고를 내보내려면 필수(구글 CMP, 코드 변경 없음). 독·프·스페인어 랜딩이 있으므로 꼭 설정
+
+### 배포 후 등록 체크리스트 (분석·유입)
+
+| 순서 | 할 일 | 비용 |
+| --- | --- | --- |
+| 1 | Google Search Console에 도메인 등록 → `https://도메인/sitemap.xml` 제출 (207 URL, 9개 언어 hreflang) | 무료 |
+| 2 | Bing Webmaster Tools — Search Console에서 가져오기 한 번 | 무료 |
+| 3 | 업타임 모니터(UptimeRobot) — `https://도메인/api/health` 5분 간격, 알림 메일/텔레그램 | 무료 |
+| 4 | Umami 방문 분석 — SSH 터널(`ssh -L 3001:127.0.0.1:3001 ubuntu@서버IP`)로 `http://localhost:3001` 접속 → 비밀번호 변경 → 사이트 추가 → 관리자 설정에 `https://도메인/umami/script.js`·웹사이트 ID 입력 (쿠키 없음, 동의 배너 불필요) | 무료(자체 호스팅) |
+| 5 | AdSense 신청 → 승인 후 슬롯 4개부터 → 1~2주 뒤 보고서로 조정 | — |
+| 6 | 관리자 → 통계 탭에서 언어별·페이지별 저장 수와 퍼널(선택→미리보기→저장)을 보고 랜딩 콘텐츠 보강 | — |
+
+## 방문 분석 (Umami, 자체 호스팅)
+
+쿠키 없는 방문 통계(페이지·국가·기기). 개인을 식별하지 않으므로 동의 배너가 필요 없습니다. `umami` 컨테이너는 같은 Postgres 인스턴스에서 **전용 role `umami`와 `umami` DB**를 씁니다(슈퍼유저 `qr` 비밀번호를 갖지 않음).
+
+- **공개되는 것은 추적기뿐**: Caddy가 본 사이트의 `/umami/script.js`와 `/umami/api/send`만 Umami로 넘기고, 그 밖의 `/umami/*`는 404. 도메인 모드와 IP 전용 모드 모두 동작하며 서브도메인·DNS 추가가 필요 없습니다.
+- **대시보드는 외부 미공개**: 서버의 `127.0.0.1:3001`에만 바인딩. 기본 계정(`admin`/`umami`)이 인터넷에 노출되지 않습니다.
+
+1. `./deploy.sh` — `.env`에 `UMAMI_APP_SECRET`·`UMAMI_DB_PASSWORD`가 없으면 생성하고, `scripts/db-init/01-umami.sh`(role·DB 생성, 멱등)를 매 배포마다 실행합니다. 새 볼륨이면 Postgres가 처음 시작할 때도 자동 실행됩니다
+2. 내 PC에서 SSH 터널: `ssh -L 3001:127.0.0.1:3001 ubuntu@<서버IP>` → 브라우저로 `http://localhost:3001`
+3. `admin` / `umami`로 로그인 → **비밀번호 즉시 변경** → Settings → Websites → Add website(도메인 입력) → 웹사이트 ID 복사
+4. 관리자 → 설정 → **방문 분석 (Umami)**: 스크립트 URL `https://<DOMAIN>/umami/script.js`(IP 모드는 `http://<서버IP>/umami/script.js`), 웹사이트 ID 입력. 추적기는 스크립트 주소에서 `/umami/api/send`를 스스로 계산합니다. 공개 페이지에만 삽입되고, 둘 중 하나라도 비우면 아무것도 삽입되지 않음
 
 ## 품질 · 운영
 
@@ -183,7 +210,9 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 **관측성**
 - `GET /api/health` — DB 핑 포함 (200 / 503). compose 헬스체크와 외부 업타임 모니터(UptimeRobot 등 무료, 5분 간격)에 이 주소를 등록
 - 앱 로그는 한 줄 JSON (`docker compose logs -f app`): `admin.login`, `admin.login_failed`, `admin.login_locked`, `log.rate_limited`, `log.insert_failed`, `health.db_down`
+- 브라우저 오류 수집 — `ClientErrorReporter`가 공개 페이지의 미처리 오류·Promise 거부를 페이지당 최대 3건 `/api/client-error`로 보내고, 서버는 `client.error` 한 줄 JSON으로만 기록(DB 저장 없음, IP당 분당 10건, 외부 서비스 없음)
 - Caddy 접근 로그 JSON, 10MB × 5 롤링 (`docker compose exec caddy cat /data/access.log`)
+- 모든 컨테이너 표준 출력 로그도 json-file 10MB × 5 로테이션 (docker-compose.yml `x-logging`)
 - 백업 실패/성공 알림 — `.env`에 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`를 넣으면 `scripts/backup.sh`가 텔레그램으로 보고
 
 **수익화 (관리자 → 설정 → 수익화)**
@@ -203,6 +232,8 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 | `ADMIN_ALLOWED_IPS` | 관리자 접근 허용 IP/CIDR 목록 (선택) |
 | `SESSION_SECRET` | 세션·게이트 쿠키 서명 키 (`openssl rand -hex 32`) |
 | `POSTGRES_PASSWORD` | DB 사용자 `qr`의 비밀번호. compose가 DB 생성과 앱의 `DATABASE_URL`에 사용 (server-setup.sh가 생성) |
+| `UMAMI_APP_SECRET` | Umami 로그인 토큰 서명 키 (`openssl rand -hex 32`, server-setup.sh·deploy.sh가 없으면 생성). compose 필수 |
+| `UMAMI_DB_PASSWORD` | Umami 전용 DB role `umami`의 비밀번호 (`openssl rand -hex 24`, 위와 같이 자동 생성). deploy.sh가 매번 role에 다시 적용 |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | 선택. 백업 결과 텔레그램 알림 |
 | `DATABASE_URL` | 로컬 개발용 접속 문자열 (`postgres://qr:qrlocal@localhost:5432/qr`). Docker에서는 compose가 `db` 서비스로 덮어씀 |
 

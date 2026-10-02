@@ -26,7 +26,8 @@ export default async function AdminDashboard() {
             {stats.byDay.length === 0 ? <p className="text-sm text-muted">데이터 없음</p> : null}
             {stats.byDay.map((d) => (
               <div key={d.day} className="flex flex-1 flex-col items-center gap-1" title={`${d.day}: ${d.c}`}>
-                <div className="w-full rounded-t-sm bg-accent/80 transition-colors hover:bg-accent" style={{ height: `${Math.max(4, (d.c / maxDay) * 100)}%` }} />
+                {/* Pixel height: a % here would resolve against the auto-height column and collapse. */}
+                <div className="w-full rounded-t-sm bg-accent/80 transition-colors hover:bg-accent" style={{ height: `${Math.max(4, Math.round((d.c / maxDay) * 112))}px` }} />
                 <span className="text-[10px] text-muted tabular-nums">{d.day.slice(5)}</span>
               </div>
             ))}

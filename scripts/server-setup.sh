@@ -26,7 +26,7 @@ if [ ! -d "$APP_DIR/.git" ]; then
 fi
 cd "$APP_DIR"
 
-echo "==> 4/5 Create .env with fresh secrets (session key, admin path, database password)"
+echo "==> 4/5 Create .env with fresh secrets (session key, admin path, database password, Umami secret)"
 if [ ! -f .env ]; then
   cp .env.example .env
   SESSION_SECRET=$(openssl rand -hex 32)
@@ -34,6 +34,8 @@ if [ ! -f .env ]; then
   ADMIN_PATH="/gate-$(openssl rand -hex 8)"
   sed -i "s|^SESSION_SECRET=.*|SESSION_SECRET=${SESSION_SECRET}|" .env
   sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${POSTGRES_PASSWORD}|" .env
+  sed -i "s|^UMAMI_APP_SECRET=.*|UMAMI_APP_SECRET=$(openssl rand -hex 32)|" .env
+  sed -i "s|^UMAMI_DB_PASSWORD=.*|UMAMI_DB_PASSWORD=$(openssl rand -hex 24)|" .env
   # The app container gets DATABASE_URL from docker-compose.yml; drop the local-dev value.
   sed -i "/^DATABASE_URL=/d" .env
   sed -i "s|^ADMIN_PATH=.*|ADMIN_PATH=${ADMIN_PATH}|" .env

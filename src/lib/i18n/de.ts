@@ -442,6 +442,7 @@ export const de: Dict = {
     s1WifiMask: " WLAN-Passwörter werden vor der Speicherung immer unkenntlich gemacht, das Original wird also nie gespeichert.",
     s1AccessTerm: "Verbindungsdaten",
     s1Access: "IP-Adresse, Browsertyp (User-Agent), verweisende Seite (Referer), Spracheinstellungen und Zugriffszeitpunkt.",
+    s1Analytics: "Ohne Cookies können zusammengefasste Besuchsstatistiken (Seite, Land, Gerätetyp) erfasst werden, die Sie nicht identifizieren.",
     s2Title: "2. Wozu wir die Daten erfassen",
     s2Items: [
       "Um zu verstehen, wie der Dienst genutzt wird, und ihn zu verbessern",

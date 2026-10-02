@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 import { AdSenseScript } from "@/components/ads/AdSenseScript";
+import { UmamiScript } from "@/components/analytics/UmamiScript";
+import { ClientErrorReporter } from "@/components/ClientErrorReporter";
+import { AdminFooter } from "@/components/admin/AdminFooter";
+import { ADMIN_MARKER_HEADER, adminMarker } from "@/lib/adminAccess";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { DEFAULT_LOCALE, getDict, isLocale, type Locale } from "@/lib/i18n";
@@ -53,16 +57,24 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const s = await getSettings();
   const locale = await requestLocale();
+  // Set by the proxy for /admin/* only; the value is a per-secret marker so it cannot be spoofed.
+  const isAdmin = (await headers()).get(ADMIN_MARKER_HEADER) === adminMarker();
   // The footer notice is admin-edited copy. Translate it only while it is the stock text.
   const notice = s.footer_notice === DEFAULT_SETTINGS.footer_notice ? getDict(locale).footer.defaultNotice : s.footer_notice;
   const adsenseClient = isOn(s.ads_enabled) ? s.adsense_client : "";
+  // Umami (cookieless) needs both values; either one empty injects nothing.
+  const analytics = s.analytics_script_url && s.analytics_website_id ? s : null;
   return (
     <html lang={locale} className="h-full antialiased">
-      <head>{adsenseClient ? <AdSenseScript client={adsenseClient} /> : null}</head>
+      <head>
+        {adsenseClient ? <AdSenseScript client={adsenseClient} /> : null}
+        {analytics ? <UmamiScript src={analytics.analytics_script_url} websiteId={analytics.analytics_website_id} /> : null}
+      </head>
       <body className="flex min-h-full flex-col">
+        <ClientErrorReporter />
         <SiteHeader siteName={s.site_name} locale={locale} />
         <div className="flex-1">{children}</div>
-        <SiteFooter siteName={s.site_name} notice={notice} locale={locale} donateUrl={s.donate_url} />
+        {isAdmin ? <AdminFooter siteName={s.site_name} /> : <SiteFooter siteName={s.site_name} notice={notice} locale={locale} donateUrl={s.donate_url} />}
       </body>
     </html>
   );
