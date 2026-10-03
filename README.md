@@ -77,7 +77,7 @@ OCI A1 · Docker Compose (db → app·umami → caddy, db healthcheck 후 기동
 ```
 
 - **단일 서버 + PostgreSQL 컨테이너**: 운영 비용 0원(무료 티어). DB 포트는 외부에 열지 않고 compose 네트워크 안에서만 접근
-- **스키마는 코드, 변경은 마이그레이션**: `src/lib/db/schema.ts`(Drizzle) → `npm run db:generate`로 SQL 생성·커밋 → 컨테이너 시작 시 자동 적용. 테이블 관계는 [`docs/ERD.md`](docs/ERD.md)
+- **스키마는 코드, 변경은 마이그레이션**: `src/lib/db/schema.ts`(Drizzle) → `npm run db:generate`로 SQL 생성·커밋 → 컨테이너 시작 시 자동 적용. 테이블 관계는 [`docs/데이터-구조.md`](docs/데이터-구조.md)
 - **시간은 `timestamptz`, 표시는 KST**: 날짜 필터·오늘·14일 추이는 KST 달력일 기준(`AT TIME ZONE 'Asia/Seoul'`)
 - **설정은 DB, 비밀은 .env**: 사이트명·URL·광고 ID는 관리자 화면, 비밀번호·키·입구 경로·DB 비밀번호는 환경변수
 - **QR 인코더는 순수 함수**: `src/lib/qr/encoders.ts` — Wi-Fi 이스케이프, vCard, VEVENT(UTC/종일 DTEND 미포함), wa.me, BIP-21 등 `node:test` 34건(KST 시간 헬퍼 포함)으로 고정
@@ -114,7 +114,7 @@ flowchart TD
   PW -- 성공 --> SES["세션 쿠키 (브라우저 지문 바인딩, 24h)"] --> ADM["대시보드 · 통계 · 기록 · 설정 · 감사 로그"]
 ```
 
-비전공자용 전체 설명(개발 과정·코드 리뷰·면접 포인트·인수인계)은 [`docs/HANDOVER.docx`](docs/HANDOVER.docx) (같은 내용의 [Markdown](docs/HANDOVER.md))에 있습니다.
+비전공자용 전체 설명(개발 과정·코드 리뷰·면접 포인트·인수인계)은 [`docs/인수인계.docx`](docs/인수인계.docx) (같은 내용의 [Markdown](docs/인수인계.md))에 있습니다.
 
 ## 구조
 
@@ -243,7 +243,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 - **기록은 저장 시점에만**: 입력 중 디바운스 전송을 없애 "타이핑마다 저장되는" 느낌을 제거. PNG/SVG/복사/인쇄/ZIP 클릭이 곧 "만든 것"
 - **민감값은 서버에 도달하기 전·후 모두 마스킹**: 클라이언트가 `****`로 보내고 서버가 다시 고정 마스킹. 설정으로 끌 수 없음
 - **관리자는 존재 자체를 숨김**: 로그인 폼을 노출하는 대신 404로 응답해 무차별 대입의 표면을 없앰
-- 전체 계획과 검증 기록은 [`docs/PLAN.md`](docs/PLAN.md)
+- 전체 계획과 검증 기록은 [`docs/계획.md`](docs/계획.md)
 
 ## 라이선스
 
