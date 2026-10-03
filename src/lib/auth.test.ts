@@ -55,9 +55,9 @@ describe("productionLoginBlocker", () => {
     assert.match(productionLoginBlocker({ ...good, ADMIN_TOTP_SECRET: "  " }) ?? "", /TOTP/);
   });
   it("refuses short or example passwords", () => {
-    assert.match(productionLoginBlocker({ ...good, ADMIN_PASSWORD: "short" }) ?? "", /12자 미만/);
+    assert.match(productionLoginBlocker({ ...good, ADMIN_PASSWORD: "short" }) ?? "", /10자 미만/);
     assert.match(productionLoginBlocker({ ...good, ADMIN_PASSWORD: "change-me-to-a-long-password" }) ?? "", /예시 값/);
-    assert.match(productionLoginBlocker({ ...good, ADMIN_PASSWORD: undefined }) ?? "", /12자 미만/);
+    assert.match(productionLoginBlocker({ ...good, ADMIN_PASSWORD: undefined }) ?? "", /10자 미만/);
   });
 });
 
