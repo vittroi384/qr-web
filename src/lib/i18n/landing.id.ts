@@ -696,6 +696,153 @@ export const landingId: Record<QrType, LandingCopy> = {
       },
     ],
   },
+
+  // TODO(i18n): localize — temporary English copy
+  pix: {
+    title: "Pix QR Code Generator",
+    subtitle: "Make a static Pix code with your Pix key, name and an optional amount that any Brazilian bank app can pay in one scan.",
+    metaTitle: "Pix QR Code Generator — Static BR Code, Free, No Sign-up",
+    metaDescription:
+      "Create a static Pix QR code (BR Code) from your Pix key, name, city and an optional amount. Follows the Banco Central standard, made in your browser. Free, no sign-up.",
+    sections: {
+      howTitle: "How a Pix QR code works",
+      how: [
+        "The code holds a BR Code: the text format defined by the Banco Central do Brasil for Pix, built on the EMV standard for merchant-presented QR codes. Every item is written as an id, a two-digit length and the value. The merchant account block carries the identifier br.gov.bcb.pix and your Pix key; then come the merchant category 0000, the currency 986 for the real, the optional amount, the country BR, your name (up to 25 letters), your city (up to 15) and the transaction id. A CRC-16 checksum closes the string, so a damaged or edited code is rejected by the bank app rather than paid to the wrong person.",
+        "This is a static code, the same kind a bank gives you to print at the till. It does not call an API or a payment service, so the transaction id is set to *** when you leave it empty, exactly as the Banco Central manual shows for static codes. If you type one (letters and digits, up to 25), it travels with the payment and appears in your statement, which helps with reconciliation.",
+        "The payer opens their bank or wallet app (Nubank, Itaú, Bradesco, Caixa, PicPay, Mercado Pago and every other Pix participant), chooses Pix and scans. The app looks up the key in the central directory and shows the account holder's registered name, not the name in the code, so the payer can confirm who receives the money. With an amount in the code it is filled in; without one, the payer types it. The same string is also the Pix copia e cola text shown under the form, which you can paste into a message.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "A street vendor or market stall prints a code with no amount, so each customer scans and types what they owe.",
+        "A small shop puts a code with a fixed price next to a product, for example a R$ 25.00 lunch plate.",
+        "A condominium or club sends a code with the monthly fee and a transaction id such as COTA2026MAR, so payments are easy to match.",
+        "A church, school fair or charity shows a donation code on a poster or on the screen of a live stream.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "Phone keys must start with +55, for example +5511912345678. Eleven plain digits are read as a CPF, which is a different key.",
+        "Keep the name and city short and without accents. The standard allows 25 and 15 characters, and accents are removed for you; bank apps show the name registered with the key anyway.",
+        "Test the code with your own bank app before printing. The app shows the registered name of the key holder; if it is not yours, the key has a typo.",
+        "For prices that change, leave the amount empty and write the price next to the code. A code with an amount has to be regenerated every time the price changes.",
+      ],
+    },
+    faq: [
+      {
+        q: "Is this an official Pix code?",
+        a: "It follows the Banco Central do Brasil's BR Code standard for static Pix codes, the same format your bank uses. Any Pix-enabled app reads it. The site is not a payment institution and does not take part in the transfer.",
+      },
+      {
+        q: "Does the code expire?",
+        a: "No. A static Pix code works for as long as the key stays registered to your account. If you delete the key or move it to another bank, make a new code.",
+      },
+      {
+        q: "Can I see who paid?",
+        a: "Payments arrive in your bank account like any Pix transfer, with the payer's name. Adding a transaction id (txid) to the code helps you tell payments from one code apart from others in your statement.",
+      },
+      {
+        q: "Why does the app show a different name from the one I typed?",
+        a: "Bank apps display the name registered with the Pix key in the central directory (DICT) and ignore the name inside the code. The name in the code is still required by the standard, so type yours; the payer will see your registered name.",
+      },
+    ],
+  },
+
+  // TODO(i18n): localize — temporary English copy
+  upi: {
+    title: "UPI QR Code Generator",
+    subtitle: "Turn your UPI ID into a payment QR code that PhonePe, Google Pay, Paytm and every other UPI app can scan.",
+    metaTitle: "UPI QR Code Generator — Free, No Sign-up",
+    metaDescription:
+      "Create a UPI payment QR code from your UPI ID and name, with an optional amount and note. Uses the NPCI upi://pay format, made in your browser. Free, no sign-up.",
+    sections: {
+      howTitle: "How a UPI QR code works",
+      how: [
+        "The code holds a UPI deep link in the format published by NPCI: upi://pay?pa=yourid@bank&pn=Your%20Name&am=250.00&cu=INR&tn=Table%204. The pa parameter is your UPI ID (also called a VPA), pn is the payee name shown to the payer, am is the optional amount, cu is always INR and tn is an optional note. Spaces and special characters in the name and note are percent-encoded, so the link is one unbroken string.",
+        "Every UPI app in India is required to understand this link, so the same code works in PhonePe, Google Pay, Paytm, BHIM, Amazon Pay and bank apps. The payer opens the app, taps Scan, and the app fills in your UPI ID, the name and the amount if one was set. The payer confirms with their UPI PIN and the money moves between bank accounts in seconds.",
+        "This is the static, merchant-presented form of the link. Fields used by payment gateways for dynamic codes, such as a transaction reference, merchant code or signature, are left out on purpose. That keeps the code simple and valid for a personal UPI ID; a registered merchant account works too, since the app only needs the ID.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "A kirana store or tea stall prints a code with no amount, so customers type what they owe after each sale.",
+        "A home baker or tailor shares a code with a fixed price in a WhatsApp message or on a flyer.",
+        "A housing society or school collects a fee with a code that has the amount and a note such as Maintenance March.",
+        "A temple, NGO or college festival displays a donation code on a banner or on screen at an event.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "Check the UPI ID character by character. Common handles include @okaxis, @oksbi, @ybl, @paytm, @ibl and @upi; a wrong letter sends money to someone else or fails.",
+        "Type the payee name as it appears in your bank, so the payer sees a name they recognize. The app shows both this name and the verified account holder name.",
+        "Leave the amount empty for shops with varying bills. For fixed charges, fill it in so the payer cannot mistype it.",
+        "Scan the finished code with two different UPI apps before printing. If one shows the wrong name or amount, fix it now rather than after a hundred copies.",
+      ],
+    },
+    faq: [
+      {
+        q: "Will this work with PhonePe, Google Pay and Paytm?",
+        a: "Yes. The code uses the standard upi://pay link that NPCI requires every UPI app to support, so it works regardless of which app the payer uses or which bank your UPI ID belongs to.",
+      },
+      {
+        q: "Do I need a merchant account?",
+        a: "No. A personal UPI ID works. Merchant codes generated by a payment provider can carry extra fields like a merchant category or a signature; this code is the plain form that needs only your UPI ID and name.",
+      },
+      {
+        q: "Does the site process or see the payments?",
+        a: "No. The code only contains the link above. The payment happens entirely inside the payer's UPI app and your bank; nothing passes through this site.",
+      },
+      {
+        q: "Can I set the currency or an amount in paise?",
+        a: "The currency is always INR, the only one UPI supports. Amounts use up to two decimal places, for example 99.50, so paise are covered.",
+      },
+    ],
+  },
+
+  // TODO(i18n): localize — temporary English copy
+  epc: {
+    title: "EPC QR Code (GiroCode) Generator",
+    subtitle: "Make a SEPA transfer QR code with your IBAN, name and an optional amount that European banking apps fill in automatically.",
+    metaTitle: "EPC QR Code / GiroCode Generator — SEPA Transfer, Free, No Sign-up",
+    metaDescription:
+      "Create an EPC QR code (GiroCode) for a SEPA credit transfer from your IBAN, name, amount and payment reference. Follows the European Payments Council guideline. Free, no sign-up.",
+    sections: {
+      howTitle: "How an EPC QR code works",
+      how: [
+        "The code holds a short text defined by the European Payments Council in its guideline EPC069-12 for SEPA credit transfers. It has up to twelve lines separated by line feeds: BCD, the version 002, the character set 1 for UTF-8, the service SCT, the optional BIC, the recipient's name (up to 70 characters), the IBAN, the amount as EUR12.50, a purpose code that is left empty, either a structured creditor reference or a free-text reference (up to 140 characters), and a note to the payer (up to 70). Empty lines at the end are dropped and the whole payload is kept within 331 bytes, as the guideline requires.",
+        "Banking apps in Germany and Austria know this format as GiroCode, in the Netherlands and Belgium as EPC QR, in Finland as the payment QR code; it is also supported in Luxembourg, Italy, Estonia, Latvia and Lithuania. The payer opens the app, chooses to scan or photograph a transfer, and the recipient, IBAN, amount and reference appear in the transfer form. The payer checks the details and approves the transfer as usual.",
+        "The IBAN is cleaned and verified before the code is built: spaces are removed, letters are capitalized, the length is checked against the country and the check digits are validated with the mod-97 algorithm. A reference that is a valid ISO 11649 creditor reference (RF followed by check digits) is placed in the structured field automatically; any other text goes into the unstructured field.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "A freelancer or small business prints the code on an invoice next to the bank details, so the customer pays without typing the IBAN.",
+        "A club or association puts a code with the yearly fee and a reference like Membership 2026 on its letter to members.",
+        "A landlord shares a rent code with tenants, with the amount and the reference the bank statement should show.",
+        "A charity or parish displays a donation code with no amount on a poster or in a newsletter.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "The BIC is optional for SEPA transfers within the EU since version 002, so leave it empty unless your bank asks for it.",
+        "Keep the reference meaningful but short: an invoice number or customer id is what you will search for in your statement later.",
+        "Use a dot or a comma for the amount; both are accepted and written as EUR49.90 in the code. Only euro amounts are possible in this format.",
+        "Scan the code with your own banking app before printing. If the IBAN or name does not match your account, fix the typo now.",
+      ],
+    },
+    faq: [
+      {
+        q: "Which banking apps can read this code?",
+        a: "Most banking apps in Germany, Austria, the Netherlands, Belgium, Finland and several other SEPA countries, including Sparkasse, Volksbank, Deutsche Bank, Commerzbank, ING, Rabobank, ABN AMRO, Erste Bank and many fintech apps. Support in France and Spain is still limited, so test with the apps your payers use.",
+      },
+      {
+        q: "Is this the same as GiroCode?",
+        a: "Yes. GiroCode is the German name for the EPC QR code described in the European Payments Council guideline. Other countries use other names for the same format.",
+      },
+      {
+        q: "Can the payer change the amount or the reference?",
+        a: "Yes. The code only pre-fills the transfer form in the payer's app; every field can still be edited before the transfer is approved.",
+      },
+      {
+        q: "Does the code work for instant payments?",
+        a: "The code describes a SEPA credit transfer. Whether it is executed as an instant payment depends on the payer's bank and the option they pick in the app, not on the code.",
+      },
+    ],
+  },
 };
 
 /** Teks Bahasa Indonesia untuk halaman contoh penggunaan (/id/restaurant-menu-qr-code, …). */

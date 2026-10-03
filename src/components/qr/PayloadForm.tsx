@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, type ReactNode } from "react";
-import { CRYPTO_COINS, PAYMENT_PROVIDERS, SOCIAL_PLATFORMS, encodePayment, encodeSocial, encodeUrl, encodeWhatsApp } from "@/lib/qr/encoders";
+import { CRYPTO_COINS, PAYMENT_PROVIDERS, SOCIAL_PLATFORMS, encodePayment, encodePix, encodeSocial, encodeUpi, encodeUrl, encodeWhatsApp } from "@/lib/qr/encoders";
 import type { QrPayloadMap, QrType } from "@/lib/qr/types";
 import { TEXT_MAX, type ValidationIssue } from "@/lib/qr/validate";
 import { CheckIcon, LocateIcon, WarningIcon } from "../icons";
@@ -44,12 +44,50 @@ function useFieldError(issue: ValidationIssue | null | undefined) {
         return t.forms.crypto.addressInvalid;
       case "cryptoAmount":
         return t.forms.crypto.amountInvalid;
+      case "amount":
+        return t.validation.amount;
+      case "pixKey":
+        return t.validation.pixKey;
+      case "pixTxid":
+        return t.validation.pixTxid;
+      case "upiVpa":
+        return t.validation.upiVpa;
+      case "epcIban":
+        return t.validation.epcIban;
+      case "epcBic":
+        return t.validation.epcBic;
+      case "epcTooLong":
+        return t.validation.epcTooLong;
     }
   };
 }
 
 /** Red border for a field whose value is present but wrong. */
 const invalidClass = (error?: string) => (error ? " border-danger/60" : "");
+
+/**
+ * Money typed with a decimal comma ("12,50") becomes "12.50", the form every encoder expects.
+ * A value that already has a dot is left alone, so "1,234.56" shows up as an error instead of
+ * silently turning into something else.
+ */
+function normalizeAmountInput(raw: string): string {
+  return raw.includes(".") ? raw : raw.replace(",", ".");
+}
+
+/** One-line "which apps read this" note at the top of the bank-transfer forms. */
+function Guide({ text }: { text: string }) {
+  return <p className="rounded-lg border border-border bg-subtle px-3 py-2.5 text-[13px] leading-relaxed text-muted sm:col-span-2">{text}</p>;
+}
+
+/** "This code is for receiving money; the site does not process payments." */
+function Disclaimer({ text }: { text: string }) {
+  return (
+    <p className="flex items-start gap-2 rounded-lg border border-border bg-subtle px-3 py-2.5 text-xs leading-relaxed text-muted sm:col-span-2">
+      <WarningIcon className="mt-px size-4 shrink-0" />
+      {text}
+    </p>
+  );
+}
 
 function Field({
   label,
@@ -283,7 +321,7 @@ function PaymentForm({ value, onChange, issue }: FormProps<"payment">) {
             placeholder={t.amountPlaceholder}
             aria-invalid={amountError ? true : undefined}
             value={value.amount}
-            onChange={(e) => set("amount", e.target.value)}
+            onChange={(e) => set("amount", normalizeAmountInput(e.target.value))}
           />
         </Field>
       ) : null}
@@ -330,7 +368,7 @@ function CryptoForm({ value, onChange, issue }: FormProps<"crypto">) {
             placeholder={t.amountPlaceholder}
             aria-invalid={amountError ? true : undefined}
             value={value.amount}
-            onChange={(e) => set("amount", e.target.value)}
+            onChange={(e) => set("amount", normalizeAmountInput(e.target.value))}
           />
         </Field>
       ) : null}
@@ -607,6 +645,203 @@ function EventForm({ value, onChange }: FormProps<"event">) {
   );
 }
 
+/* ---------- Bank-transfer codes: Pix, UPI, EPC / GiroCode ---------- */
+
+const noAutoCorrect = { autoCapitalize: "none", autoCorrect: "off", spellCheck: false } as const;
+
+function PixForm({ value, onChange, issue }: FormProps<"pix">) {
+  const t = useI18n().t.forms.pix;
+  const resultId = useId();
+  const err = useFieldError(issue);
+  const keyError = err("key");
+  const txidError = err("txid");
+  const amountError = err("amount");
+  const set = <K extends keyof QrPayloadMap["pix"]>(k: K, v: QrPayloadMap["pix"][K]) => onChange({ ...value, [k]: v });
+  const code = issue ? "" : encodePix(value);
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Guide text={t.guide} />
+      <div className="sm:col-span-2">
+        <Field
+          label={t.key}
+          required
+          error={keyError}
+          hint={
+            <>
+              {t.keyHint}
+              {code ? <ResultLine id={resultId} label={t.result} url={code} /> : null}
+            </>
+          }
+        >
+          <input
+            className={`input font-mono${invalidClass(keyError)}`}
+            {...noAutoCorrect}
+            placeholder={t.keyPlaceholder}
+            aria-describedby={code ? resultId : undefined}
+            aria-invalid={keyError ? true : undefined}
+            value={value.key}
+            onChange={(e) => set("key", e.target.value)}
+          />
+        </Field>
+      </div>
+      <Field label={t.name} required hint={t.nameHint}>
+        <input className="input" maxLength={25} placeholder={t.namePlaceholder} value={value.name} onChange={(e) => set("name", e.target.value)} />
+      </Field>
+      <Field label={t.city} required hint={t.cityHint}>
+        <input className="input" maxLength={15} placeholder={t.cityPlaceholder} value={value.city} onChange={(e) => set("city", e.target.value)} />
+      </Field>
+      <Field label={t.amount} optional hint={t.amountHint} error={amountError}>
+        <input
+          className={`input${invalidClass(amountError)}`}
+          inputMode="decimal"
+          placeholder={t.amountPlaceholder}
+          aria-invalid={amountError ? true : undefined}
+          value={value.amount}
+          onChange={(e) => set("amount", normalizeAmountInput(e.target.value))}
+        />
+      </Field>
+      <Field label={t.txid} optional hint={t.txidHint} error={txidError}>
+        <input
+          className={`input font-mono${invalidClass(txidError)}`}
+          {...noAutoCorrect}
+          maxLength={25}
+          placeholder={t.txidPlaceholder}
+          aria-invalid={txidError ? true : undefined}
+          value={value.txid}
+          onChange={(e) => set("txid", e.target.value)}
+        />
+      </Field>
+      <div className="sm:col-span-2">
+        <Field label={t.description} optional>
+          <input className="input" maxLength={72} placeholder={t.descriptionPlaceholder} value={value.description} onChange={(e) => set("description", e.target.value)} />
+        </Field>
+      </div>
+      <Disclaimer text={t.disclaimer} />
+    </div>
+  );
+}
+
+function UpiForm({ value, onChange, issue }: FormProps<"upi">) {
+  const t = useI18n().t.forms.upi;
+  const resultId = useId();
+  const err = useFieldError(issue);
+  const vpaError = err("vpa");
+  const amountError = err("amount");
+  const set = <K extends keyof QrPayloadMap["upi"]>(k: K, v: QrPayloadMap["upi"][K]) => onChange({ ...value, [k]: v });
+  const url = issue ? "" : encodeUpi(value);
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Guide text={t.guide} />
+      <Field
+        label={t.vpa}
+        required
+        error={vpaError}
+        hint={
+          <>
+            {t.vpaHint}
+            {url ? <ResultLine id={resultId} label={t.result} url={url} /> : null}
+          </>
+        }
+      >
+        <input
+          className={`input font-mono${invalidClass(vpaError)}`}
+          {...noAutoCorrect}
+          inputMode="email"
+          placeholder={t.vpaPlaceholder}
+          aria-describedby={url ? resultId : undefined}
+          aria-invalid={vpaError ? true : undefined}
+          value={value.vpa}
+          onChange={(e) => set("vpa", e.target.value)}
+        />
+      </Field>
+      <Field label={t.name} required>
+        <input className="input" maxLength={99} placeholder={t.namePlaceholder} value={value.name} onChange={(e) => set("name", e.target.value)} />
+      </Field>
+      <Field label={t.amount} optional hint={t.amountHint} error={amountError}>
+        <input
+          className={`input${invalidClass(amountError)}`}
+          inputMode="decimal"
+          placeholder={t.amountPlaceholder}
+          aria-invalid={amountError ? true : undefined}
+          value={value.amount}
+          onChange={(e) => set("amount", normalizeAmountInput(e.target.value))}
+        />
+      </Field>
+      <Field label={t.note} optional>
+        <input className="input" maxLength={80} placeholder={t.notePlaceholder} value={value.note} onChange={(e) => set("note", e.target.value)} />
+      </Field>
+      <Disclaimer text={t.disclaimer} />
+    </div>
+  );
+}
+
+function EpcForm({ value, onChange, issue }: FormProps<"epc">) {
+  const t = useI18n().t.forms.epc;
+  const err = useFieldError(issue);
+  const ibanError = err("iban");
+  const bicError = err("bic");
+  const amountError = err("amount");
+  const remittanceError = err("remittance");
+  const set = <K extends keyof QrPayloadMap["epc"]>(k: K, v: QrPayloadMap["epc"][K]) => onChange({ ...value, [k]: v });
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Guide text={t.guide} />
+      <div className="sm:col-span-2">
+        <Field label={t.name} required hint={t.nameHint}>
+          <input className="input" maxLength={70} placeholder={t.namePlaceholder} value={value.name} onChange={(e) => set("name", e.target.value)} />
+        </Field>
+      </div>
+      <Field label={t.iban} required hint={t.ibanHint} error={ibanError}>
+        <input
+          className={`input font-mono${invalidClass(ibanError)}`}
+          {...noAutoCorrect}
+          placeholder={t.ibanPlaceholder}
+          aria-invalid={ibanError ? true : undefined}
+          value={value.iban}
+          onChange={(e) => set("iban", e.target.value)}
+        />
+      </Field>
+      <Field label={t.bic} optional hint={t.bicHint} error={bicError}>
+        <input
+          className={`input font-mono${invalidClass(bicError)}`}
+          {...noAutoCorrect}
+          maxLength={11}
+          placeholder={t.bicPlaceholder}
+          aria-invalid={bicError ? true : undefined}
+          value={value.bic}
+          onChange={(e) => set("bic", e.target.value)}
+        />
+      </Field>
+      <Field label={t.amount} optional hint={t.amountHint} error={amountError}>
+        <input
+          className={`input${invalidClass(amountError)}`}
+          inputMode="decimal"
+          placeholder={t.amountPlaceholder}
+          aria-invalid={amountError ? true : undefined}
+          value={value.amount}
+          onChange={(e) => set("amount", normalizeAmountInput(e.target.value))}
+        />
+      </Field>
+      <Field label={t.info} optional hint={t.infoHint}>
+        <input className="input" maxLength={70} placeholder={t.infoPlaceholder} value={value.info} onChange={(e) => set("info", e.target.value)} />
+      </Field>
+      <div className="sm:col-span-2">
+        <Field label={t.remittance} optional hint={t.remittanceHint} error={remittanceError}>
+          <input
+            className={`input${invalidClass(remittanceError)}`}
+            maxLength={140}
+            placeholder={t.remittancePlaceholder}
+            aria-invalid={remittanceError ? true : undefined}
+            value={value.remittance}
+            onChange={(e) => set("remittance", e.target.value)}
+          />
+        </Field>
+      </div>
+      <Disclaimer text={t.disclaimer} />
+    </div>
+  );
+}
+
 export function PayloadForm<T extends QrType>({ type, value, onChange, issue }: { type: T } & FormProps<T>) {
   switch (type) {
     case "url":
@@ -637,6 +872,12 @@ export function PayloadForm<T extends QrType>({ type, value, onChange, issue }: 
       return <GeoForm value={value as QrPayloadMap["geo"]} onChange={onChange as FormProps<"geo">["onChange"]} issue={issue} />;
     case "event":
       return <EventForm value={value as QrPayloadMap["event"]} onChange={onChange as FormProps<"event">["onChange"]} />;
+    case "pix":
+      return <PixForm value={value as QrPayloadMap["pix"]} onChange={onChange as FormProps<"pix">["onChange"]} issue={issue} />;
+    case "upi":
+      return <UpiForm value={value as QrPayloadMap["upi"]} onChange={onChange as FormProps<"upi">["onChange"]} issue={issue} />;
+    case "epc":
+      return <EpcForm value={value as QrPayloadMap["epc"]} onChange={onChange as FormProps<"epc">["onChange"]} issue={issue} />;
     default:
       return null;
   }

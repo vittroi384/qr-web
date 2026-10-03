@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import type { Locale } from "@/lib/i18n/locales";
-import { maskWifiPasswords } from "@/lib/qr/sanitize";
-import type { LogEvent, QrPayload, QrStyleOptions, QrType, WifiPayload } from "@/lib/qr/types";
+import { maskIdentifier, maskPaymentIdentifiers, maskWifiPasswords } from "@/lib/qr/sanitize";
+import type { EpcPayload, LogEvent, PixPayload, QrPayload, QrStyleOptions, QrType, UpiPayload, WifiPayload } from "@/lib/qr/types";
 
 type LogInput = {
   type: QrType;
@@ -15,14 +15,31 @@ type LogInput = {
 /**
  * Never let a Wi-Fi password leave the browser in clear text. The server masks too, but this
  * keeps the plaintext off the network entirely. The encoded string is masked for every type,
- * so a WIFI: string pasted into the free-text type is covered as well.
+ * so a WIFI: string pasted into the free-text type is covered as well. Bank-transfer identifiers
+ * (Pix key, UPI ID, IBAN) leave partially masked for the same reason.
  */
 function maskSensitive(input: LogInput): Pick<LogInput, "payload" | "encoded"> {
-  const wifi = input.type === "wifi" ? (input.payload as WifiPayload) : null;
-  return {
-    payload: wifi?.password ? { ...wifi, password: "****" } : input.payload,
-    encoded: maskWifiPasswords(input.encoded),
-  };
+  const encoded = maskPaymentIdentifiers(maskWifiPasswords(input.encoded));
+  switch (input.type) {
+    case "wifi": {
+      const wifi = input.payload as WifiPayload;
+      return { payload: wifi.password ? { ...wifi, password: "****" } : wifi, encoded };
+    }
+    case "pix": {
+      const pix = input.payload as PixPayload;
+      return { payload: { ...pix, key: maskIdentifier(pix.key) }, encoded };
+    }
+    case "upi": {
+      const upi = input.payload as UpiPayload;
+      return { payload: { ...upi, vpa: maskIdentifier(upi.vpa) }, encoded };
+    }
+    case "epc": {
+      const epc = input.payload as EpcPayload;
+      return { payload: { ...epc, iban: maskIdentifier(epc.iban) }, encoded };
+    }
+    default:
+      return { payload: input.payload, encoded };
+  }
 }
 
 /** Body accepted by POST /api/log. */

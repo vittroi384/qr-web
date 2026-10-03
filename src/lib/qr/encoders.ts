@@ -1,10 +1,13 @@
 import type {
   CryptoPayload,
+  EpcPayload,
   EventPayload,
   PaymentPayload,
+  PixPayload,
   QrPayloadMap,
   QrType,
   SocialPayload,
+  UpiPayload,
   VCardPayload,
   WhatsAppPayload,
   WifiPayload,
@@ -283,6 +286,231 @@ export function encodeEvent(p: EventPayload): string {
   return lines.join("\r\n");
 }
 
+/* ---------- Regional bank-transfer QR codes: Pix (Brazil), UPI (India), EPC / GiroCode (SEPA) ---------- */
+
+/**
+ * Money amount for the three bank-transfer formats: digits with an optional decimal part of one or
+ * two places, written with "." or ",". Returns the canonical "12.50" form, or null when the text is
+ * not an amount or is zero. Pix, UPI and EPC all read the dot form with two decimals.
+ */
+export function formatAmount(raw: string): string | null {
+  const m = /^(\d{1,12})(?:[.,](\d{1,2}))?$/.exec(raw.trim());
+  if (!m) return null;
+  const value = `${m[1]}.${(m[2] ?? "").padEnd(2, "0")}`;
+  return Number(value) > 0 ? value : null;
+}
+
+/** "São Paulo" → "Sao Paulo": decomposes accented letters and drops the combining marks. */
+export function stripDiacritics(value: string): string {
+  return value.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+/**
+ * CRC-16/CCITT-FALSE as four upper-case hex digits: polynomial 0x1021, initial value 0xFFFF, no
+ * reflection, no final XOR, over the UTF-8 bytes of the input. This is the variant the BR Code
+ * manual's example and public Pix libraries use (check value for "123456789" is 29B1).
+ */
+export function crc16ccitt(input: string): string {
+  let crc = 0xffff;
+  for (const byte of new TextEncoder().encode(input)) {
+    crc ^= byte << 8;
+    for (let i = 0; i < 8; i++) {
+      crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+
+/* ----- Pix: Banco Central do Brasil "BR Code" (EMV QRCPS merchant-presented mode, TLV) ----- */
+
+const PIX_GUI = "br.gov.bcb.pix";
+
+/** EMV TLV: two-digit id, two-digit length, value. Callers keep every value under 100 characters. */
+function tlv(id: string, value: string): string {
+  return `${id}${String(value.length).padStart(2, "0")}${value}`;
+}
+
+const PIX_EVP = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const PIX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PIX_PHONE = /^\+55\d{10,11}$/;
+const PIX_CPF_CNPJ = /^(\d{11}|\d{14})$/;
+
+/**
+ * Pix keys as people type them → the form the DICT expects: a formatted CPF "123.456.789-09" or
+ * CNPJ "12.345.678/0001-95" becomes digits only, a phone keeps "+55" and its digits, e-mails and
+ * random keys (EVP) are kept as typed. Eleven bare digits are a CPF, so a phone must start with "+".
+ */
+export function normalizePixKey(raw: string): string {
+  const key = raw.trim();
+  if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(key) || /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(key)) return key.replace(/\D/g, "");
+  if (key.startsWith("+")) return `+${key.slice(1).replace(/\D/g, "")}`;
+  return key;
+}
+
+export function isValidPixKey(key: string): boolean {
+  return key.length <= 77 && (PIX_EVP.test(key) || PIX_EMAIL.test(key) || PIX_PHONE.test(key) || PIX_CPF_CNPJ.test(key));
+}
+
+/** Pix txid (EMV 62-05): letters and digits only, 1–25 characters. */
+export const PIX_TXID = /^[A-Za-z0-9]{1,25}$/;
+
+/** Name, city and description are plain ASCII in a BR Code: accents are stripped and whitespace collapsed. */
+function pixText(value: string, max: number): string {
+  return stripDiacritics(value)
+    .replace(/[^\x20-\x7e]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max)
+    .trim();
+}
+
+/**
+ * Static Pix BR Code ("Pix copia e cola"). Field order follows the BCB manual's static example:
+ * 00 format, 26 merchant account info (GUI + key + optional description), 52 MCC 0000, 53 currency
+ * 986, 54 amount (optional), 58 BR, 59 name (≤25), 60 city (≤15), 62-05 txid ("***" when none),
+ * 63 CRC over everything before it including the "6304" prefix.
+ */
+export function encodePix(p: PixPayload): string {
+  const key = normalizePixKey(p.key);
+  if (!key || !isValidPixKey(key)) return "";
+  const name = pixText(p.name, 25);
+  const city = pixText(p.city, 15);
+  if (!name || !city) return "";
+  const amount = p.amount.trim() ? formatAmount(p.amount) : null;
+  if (p.amount.trim() && !amount) return "";
+  const txid = p.txid.trim();
+  if (txid && !PIX_TXID.test(txid)) return "";
+  let account = tlv("00", PIX_GUI) + tlv("01", key);
+  // Template 26 holds at most 99 characters; the description takes whatever the key leaves over.
+  const description = pixText(p.description, 99 - account.length - 4);
+  if (description) account += tlv("02", description);
+  const body =
+    tlv("00", "01") +
+    tlv("26", account) +
+    tlv("52", "0000") +
+    tlv("53", "986") +
+    (amount ? tlv("54", amount) : "") +
+    tlv("58", "BR") +
+    tlv("59", name) +
+    tlv("60", city) +
+    tlv("62", tlv("05", txid || "***")) +
+    "6304";
+  return body + crc16ccitt(body);
+}
+
+/* ----- UPI: NPCI "UPI Linking Specification" deep link ----- */
+
+/** A UPI ID / VPA: "name@bank" — user part letters, digits, ".", "-", "_"; handle letters and digits. */
+export const UPI_VPA = /^[A-Za-z0-9][A-Za-z0-9._-]+@[A-Za-z][A-Za-z0-9]+$/;
+
+/**
+ * upi://pay?pa=…&pn=…[&am=…]&cu=INR[&tn=…] — the static form from the NPCI spec: pa and pn are
+ * mandatory, am is optional (the payer types it when absent), cu is always INR. Nothing else
+ * (tr, tid, mc, url) is added; those belong to PSP-generated dynamic codes.
+ */
+export function encodeUpi(p: UpiPayload): string {
+  const vpa = p.vpa.trim();
+  if (!UPI_VPA.test(vpa)) return "";
+  const name = p.name.replace(/\s+/g, " ").trim().slice(0, 99);
+  if (!name) return "";
+  const amount = p.amount.trim() ? formatAmount(p.amount) : null;
+  if (p.amount.trim() && !amount) return "";
+  const note = p.note.replace(/\s+/g, " ").trim().slice(0, 80);
+  const params = [`pa=${vpa}`, `pn=${encodeURIComponent(name)}`];
+  if (amount) params.push(`am=${amount}`);
+  params.push("cu=INR");
+  if (note) params.push(`tn=${encodeURIComponent(note)}`);
+  return `upi://pay?${params.join("&")}`;
+}
+
+/* ----- EPC QR / GiroCode: EPC069-12 v2 (SEPA credit transfer) ----- */
+
+/** Total payload cap from the guideline (QR version 13, error level M). */
+export const EPC_MAX_BYTES = 331;
+export const EPC_MAX_AMOUNT = 999999999.99;
+
+/** IBAN lengths of the SEPA countries (ISO 13616 registry); other countries fall back to the generic shape. */
+const IBAN_LENGTHS: Record<string, number> = {
+  AD: 24, AT: 20, BE: 16, BG: 22, CH: 21, CY: 28, CZ: 24, DE: 22, DK: 18, EE: 20, ES: 24, FI: 18, FR: 27, GB: 22, GI: 23, GR: 27,
+  HR: 21, HU: 28, IE: 22, IS: 26, IT: 27, LI: 21, LT: 20, LU: 20, LV: 21, MC: 27, MT: 31, NL: 18, NO: 15, PL: 28, PT: 25, RO: 24,
+  SE: 24, SI: 19, SK: 24, SM: 27, VA: 22,
+};
+
+/** ISO 7064 mod 97-10 over digits and letters (A=10 … Z=35), streamed so no big integers are needed. */
+function mod97(value: string): number {
+  let rest = 0;
+  for (const ch of value) {
+    const n = Number.parseInt(ch, 36);
+    rest = (rest * (n > 9 ? 100 : 10) + n) % 97;
+  }
+  return rest;
+}
+
+/** "de89 3704 0044 0532 0130 00" → "DE89370400440532013000". */
+export function normalizeIban(raw: string): string {
+  return raw.replace(/\s+/g, "").toUpperCase();
+}
+
+/** Country code, two check digits, BBAN; country-specific length when known; mod-97 remainder must be 1. */
+export function isValidIban(raw: string): boolean {
+  const iban = normalizeIban(raw);
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
+  const expected = IBAN_LENGTHS[iban.slice(0, 2)];
+  if (expected ? iban.length !== expected : iban.length < 15) return false;
+  return mod97(iban.slice(4) + iban.slice(0, 4)) === 1;
+}
+
+/** BIC / SWIFT code: 8 or 11 characters (bank, country, location, optional branch). */
+export const BIC = /^[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/;
+
+/** ISO 11649 structured creditor reference ("RF18 5390 0754 7034"); it goes in the structured remittance line. */
+export function isCreditorReference(raw: string): boolean {
+  const ref = raw.replace(/\s+/g, "").toUpperCase();
+  return /^RF\d{2}[A-Z0-9]{1,21}$/.test(ref) && mod97(ref.slice(4) + ref.slice(0, 4)) === 1;
+}
+
+/** Line feeds separate EPC elements, so a value can never contain one. */
+function oneLine(value: string, max: number): string {
+  return value.replace(/\s+/g, " ").trim().slice(0, max).trim();
+}
+
+/**
+ * EPC069-12 v2 payload: up to 12 elements separated by LF — "BCD", "002", "1" (UTF-8), "SCT", BIC
+ * (optional since v2), name (≤70), IBAN, "EUR<amount>" (optional, 0.01–999999999.99), purpose
+ * (left empty), structured reference OR unstructured text (≤140; only one of the two), then
+ * payee-to-payer information (≤70). Trailing empty elements are dropped, and the whole thing
+ * must fit in 331 bytes of UTF-8.
+ */
+export function encodeEpc(p: EpcPayload): string {
+  const name = oneLine(p.name, 70);
+  if (!name) return "";
+  const iban = normalizeIban(p.iban);
+  if (!isValidIban(iban)) return "";
+  const bic = p.bic.replace(/\s+/g, "").toUpperCase();
+  if (bic && !BIC.test(bic)) return "";
+  const amount = p.amount.trim() ? formatAmount(p.amount) : null;
+  if (p.amount.trim() && (!amount || Number(amount) > EPC_MAX_AMOUNT)) return "";
+  const remittance = oneLine(p.remittance, 140);
+  const structured = isCreditorReference(remittance);
+  const lines = [
+    "BCD",
+    "002",
+    "1",
+    "SCT",
+    bic,
+    name,
+    iban,
+    amount ? `EUR${amount}` : "",
+    "",
+    structured ? remittance.replace(/\s+/g, "").toUpperCase() : "",
+    structured ? "" : remittance,
+    oneLine(p.info, 70),
+  ];
+  while (lines.length && lines[lines.length - 1] === "") lines.pop();
+  const payload = lines.join("\n");
+  return new TextEncoder().encode(payload).length <= EPC_MAX_BYTES ? payload : "";
+}
+
 /** Build the final string that goes into the QR code. Empty string means "nothing to render". */
 export function encodePayload<T extends QrType>(type: T, payload: QrPayloadMap[T]): string {
   switch (type) {
@@ -314,6 +542,12 @@ export function encodePayload<T extends QrType>(type: T, payload: QrPayloadMap[T
       return encodeGeo(payload as QrPayloadMap["geo"]);
     case "event":
       return encodeEvent(payload as EventPayload);
+    case "pix":
+      return encodePix(payload as PixPayload);
+    case "upi":
+      return encodeUpi(payload as UpiPayload);
+    case "epc":
+      return encodeEpc(payload as EpcPayload);
     default:
       return "";
   }
