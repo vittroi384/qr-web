@@ -72,13 +72,16 @@ const MIN_PASSWORD_LENGTH = 12;
 const PLACEHOLDER_PASSWORDS = new Set(["change-me-to-a-long-password", "admin1234", "password", "changeme", "admin"]);
 
 /**
- * In production the admin login is refused outright while the deployment is unsafe: no TOTP
+ * On a deployed server the admin login is refused outright while the deployment is unsafe: no TOTP
  * secret, or a password that is short or still the example value. Returns the Korean reason shown
- * to the owner, or null when login may proceed. Development keeps the relaxed behaviour (E2E
- * tests log in with a short dev password).
+ * to the owner, or null when login may proceed.
+ *
+ * "Deployed" means APP_ENV=production, which the Dockerfile bakes into the image (not a .env
+ * toggle). `next dev`, CI and the local E2E run (`next build && next start` with the short dev
+ * password) do not set it, so they keep the relaxed behaviour.
  */
 export function productionLoginBlocker(env: NodeJS.ProcessEnv = process.env): string | null {
-  if (env.NODE_ENV !== "production") return null;
+  if (env.APP_ENV !== "production") return null;
   const problems: string[] = [];
   if (!env.ADMIN_TOTP_SECRET?.trim()) problems.push("ADMIN_TOTP_SECRET 미설정");
   const password = env.ADMIN_PASSWORD ?? "";
