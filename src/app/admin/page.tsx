@@ -1,16 +1,37 @@
 import Link from "next/link";
 import { EventBadge, PayloadSummary, StatCard, TypeBadge, formatDate } from "@/components/admin/ui";
+import { requireAdmin } from "@/lib/adminSession";
 import { getDashboardStats } from "@/lib/logs";
 import { getSettings } from "@/lib/settings";
 import { QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
 
 export default async function AdminDashboard() {
-  const stats = await getDashboardStats(Number.parseInt((await getSettings()).log_retention_days, 10) || 0);
+  await requireAdmin();
+  const settings = await getSettings();
+  const stats = await getDashboardStats(Number.parseInt(settings.log_retention_days, 10) || 0);
   const maxDay = Math.max(1, ...stats.byDay.map((d) => d.c));
+
+  // One-line reminders for settings that look unfinished on a live site.
+  const warnings: string[] = [];
+  if (/^https?:\/\/localhost(?::\d+)?/i.test(settings.site_url)) {
+    warnings.push("사이트 URL이 localhost입니다. sitemap·canonical·OG 링크가 실제 주소를 가리키도록 설정에서 바꾸세요.");
+  }
+  if (!settings.privacy_contact.trim()) {
+    warnings.push("개인정보 문의 연락처가 비어 있어 개인정보처리방침에 문의 문장이 표시되지 않습니다. 설정에서 입력하세요.");
+  }
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">대시보드</h1>
+
+      {warnings.map((w) => (
+        <p key={w} role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {w}{" "}
+          <Link href="/admin/settings" className="link">
+            설정으로
+          </Link>
+        </p>
+      ))}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="오늘" value={stats.today.toLocaleString()} />

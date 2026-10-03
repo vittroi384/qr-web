@@ -1,5 +1,6 @@
 import { InfiniteScroll } from "@/components/admin/InfiniteScroll";
 import { formatDate } from "@/components/admin/ui";
+import { requireAdmin } from "@/lib/adminSession";
 import { listAudit } from "@/lib/audit";
 import { SETTING_LABELS, type SettingKey } from "@/lib/settings";
 
@@ -17,6 +18,7 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireAdmin();
   const sp = await searchParams;
   const wanted = Number.parseInt(typeof sp.n === "string" ? sp.n : "", 10);
   const n = Math.min(MAX_ROWS, Math.max(PAGE_STEP, Number.isFinite(wanted) ? wanted : PAGE_STEP));

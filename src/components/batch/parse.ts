@@ -1,4 +1,4 @@
-import { encodeUrl } from "@/lib/qr/encoders";
+import { HOST_WITH_PORT, encodeUrl } from "@/lib/qr/encoders";
 
 export const MAX_ROWS = 200;
 /** Largest byte-mode payload a version-40 code holds at error correction M. */
@@ -37,7 +37,7 @@ export function checkRow(row: RowInput): RowCheck {
 
   let kind: RowKind = "text";
   let encoded = content;
-  if (SCHEME_URL.test(content) || OPAQUE_URL.test(content) || BARE_HOST.test(content)) {
+  if (SCHEME_URL.test(content) || OPAQUE_URL.test(content) || BARE_HOST.test(content) || HOST_WITH_PORT.test(content)) {
     kind = "url";
     encoded = encodeUrl(content);
     if (!encoded) return { state: "invalid", error: "scheme" };
@@ -48,7 +48,7 @@ export function checkRow(row: RowInput): RowCheck {
 
 function looksLikeUrl(value: string): boolean {
   const v = value.trim();
-  return SCHEME_URL.test(v) || BARE_HOST.test(v);
+  return SCHEME_URL.test(v) || BARE_HOST.test(v) || HOST_WITH_PORT.test(v);
 }
 
 /**

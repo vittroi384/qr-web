@@ -10,6 +10,8 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [totpRequired, setTotpRequired] = useState<boolean | null>(null);
+  // Production refuses login while .env is unsafe (no TOTP, weak password); the server says why.
+  const [blocked, setBlocked] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -17,7 +19,11 @@ function LoginForm() {
     let cancelled = false;
     fetch("/api/admin/login", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : { totp: false }))
-      .then((d) => !cancelled && setTotpRequired(Boolean(d.totp)))
+      .then((d) => {
+        if (cancelled) return;
+        setTotpRequired(Boolean(d.totp));
+        setBlocked(typeof d.blocked === "string" ? d.blocked : null);
+      })
       .catch(() => !cancelled && setTotpRequired(false));
     return () => {
       cancelled = true;
@@ -42,11 +48,13 @@ function LoginForm() {
       }
       const data = await res.json().catch(() => ({}));
       setError(
-        data.error === "locked"
-          ? "로그인 시도가 너무 많습니다. 10분 후 다시 시도하세요."
-          : totpRequired
-            ? "비밀번호 또는 인증 코드가 올바르지 않습니다."
-            : "비밀번호가 올바르지 않습니다.",
+        data.error === "unsafe_config" && typeof data.message === "string"
+          ? data.message
+          : data.error === "locked"
+            ? "로그인 시도가 너무 많습니다. 10분 후 다시 시도하세요."
+            : totpRequired
+              ? "비밀번호 또는 인증 코드가 올바르지 않습니다."
+              : "비밀번호가 올바르지 않습니다.",
       );
     } catch {
       setError("서버에 연결할 수 없습니다.");
@@ -91,12 +99,17 @@ function LoginForm() {
             />
           </label>
         ) : null}
+        {blocked && !error ? (
+          <p role="alert" className="rounded-lg border border-red-200 bg-danger-soft px-3 py-2.5 text-sm text-danger">
+            {blocked}
+          </p>
+        ) : null}
         {error ? (
           <p role="alert" className="rounded-lg border border-red-200 bg-danger-soft px-3 py-2.5 text-sm text-danger">
             {error}
           </p>
         ) : null}
-        <button type="submit" className="btn btn-primary w-full" disabled={busy || totpRequired === null}>
+        <button type="submit" className="btn btn-primary w-full" disabled={busy || totpRequired === null || blocked !== null}>
           {busy ? "확인 중…" : "로그인"}
         </button>
       </div>

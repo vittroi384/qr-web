@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { maskWifiPasswords } from "@/lib/qr/sanitize";
 import type { QrStyleOptions } from "@/lib/qr/types";
 import { StepGuide } from "../StepGuide";
 import { ArchiveIcon, CheckIcon, ChevronDownIcon, ClipboardIcon, DownloadIcon, EyeIcon, PlusIcon, TrashIcon, WarningIcon } from "../icons";
@@ -237,11 +238,13 @@ export function BatchTool() {
 
       const count = csvRows.length;
       const mode = kinds.size > 1 ? "mixed" : kinds.has("text") ? "text" : "url";
-      const sample = csvRows
-        .slice(0, 3)
-        .map((r) => r[2])
-        .join(" | ")
-        .slice(0, 200);
+      // A pasted WIFI: string is plain text here, so mask its password before anything is sent.
+      const sample = maskWifiPasswords(
+        csvRows
+          .slice(0, 3)
+          .map((r) => r[2])
+          .join(" | "),
+      ).slice(0, 200);
       sendLog({
         type: mode === "text" ? "text" : "url",
         event: "batch",

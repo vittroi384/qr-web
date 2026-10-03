@@ -466,8 +466,8 @@ export const pt: Dict = {
     s6Body:
       "Você pode pedir a exclusão dos seus registros. Inclua informações que nos ajudem a encontrá-los, como o horário aproximado e parte do que você digitou.",
     s7Title: "7. Contato",
-    s7Body:
-      "Para dúvidas sobre privacidade, entre em contato com o operador do Serviço. (Operadores: adicionem seus dados de contato ao texto do rodapé nas configurações de administração ou editem esta página.)",
+    s7Body: "Para dúvidas sobre privacidade, entre em contato com o operador do Serviço.",
+    contactLine: (contact: string) => `Contato para privacidade: ${contact}`,
   },
 
   batch: {
