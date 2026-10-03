@@ -103,3 +103,33 @@ describe("validatePayload: text and untouched types", () => {
     assert.equal(validatePayload("event", { ...DEFAULT_PAYLOADS.event, title: "t", start: "2026-10-02T10:00" }), null);
   });
 });
+
+describe("validatePayload: pix / upi / epc", () => {
+  it("pix: flags a bad key, a bad txid and a bad amount, in that order", () => {
+    const ok = { ...DEFAULT_PAYLOADS.pix, key: "12345678909", name: "A", city: "B" };
+    assert.equal(validatePayload("pix", ok), null);
+    assert.equal(validatePayload("pix", { ...ok, key: "123.456.789-09", amount: "12,50" }), null);
+    assert.deepEqual(validatePayload("pix", { ...ok, key: "nope" }), { field: "key", reason: "pixKey" });
+    assert.deepEqual(validatePayload("pix", { ...ok, txid: "a-b" }), { field: "txid", reason: "pixTxid" });
+    assert.deepEqual(validatePayload("pix", { ...ok, amount: "1.234" }), { field: "amount", reason: "amount" });
+    assert.deepEqual(validatePayload("pix", { ...ok, amount: "0" }), { field: "amount", reason: "amount" });
+    assert.equal(validatePayload("pix", DEFAULT_PAYLOADS.pix), null); // empty fields are not issues
+  });
+  it("upi: flags a malformed UPI ID and amount", () => {
+    assert.equal(validatePayload("upi", { ...DEFAULT_PAYLOADS.upi, vpa: "shop@okaxis", name: "S" }), null);
+    assert.deepEqual(validatePayload("upi", { ...DEFAULT_PAYLOADS.upi, vpa: "shop" }), { field: "vpa", reason: "upiVpa" });
+    assert.deepEqual(validatePayload("upi", { ...DEFAULT_PAYLOADS.upi, vpa: "shop@okaxis", amount: "x" }), { field: "amount", reason: "amount" });
+  });
+  it("epc: flags IBAN, BIC, amount range and the 331-byte cap", () => {
+    const ok = { ...DEFAULT_PAYLOADS.epc, name: "Firma", iban: "DE89 3704 0044 0532 0130 00" };
+    assert.equal(validatePayload("epc", ok), null);
+    assert.deepEqual(validatePayload("epc", { ...ok, iban: "DE89 3704 0044 0532 0130 01" }), { field: "iban", reason: "epcIban" });
+    assert.deepEqual(validatePayload("epc", { ...ok, bic: "COBA" }), { field: "bic", reason: "epcBic" });
+    assert.deepEqual(validatePayload("epc", { ...ok, amount: "1000000000" }), { field: "amount", reason: "amount" });
+    assert.equal(validatePayload("epc", { ...ok, amount: "49,90" }), null);
+    // The cap is 331 bytes of UTF-8, so a name of two-byte letters tips an otherwise full payload over.
+    const long = { ...ok, name: "ä".repeat(70), remittance: "R".repeat(140), info: "I".repeat(70) };
+    assert.deepEqual(validatePayload("epc", long), { field: "remittance", reason: "epcTooLong" });
+    assert.equal(encodePayload("epc", long), "");
+  });
+});
