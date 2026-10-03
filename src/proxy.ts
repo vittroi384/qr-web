@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ADMIN_MARKER_HEADER, GATE_COOKIE, GATE_TTL_SEC, adminEntryPath, adminMarker, createGateToken, gateSatisfied, ipAllowedForAdmin } from "@/lib/adminAccess";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { REMEMBER_TTL_SEC, SESSION_COOKIE, createSessionToken, sessionCookieOptionsFor, sessionRenewalDue, verifySessionToken } from "@/lib/auth";
 import { localeFromPath } from "@/lib/i18n/locales";
 import { getClientIpFromHeaders } from "@/lib/ip";
 
@@ -73,8 +73,20 @@ export async function proxy(req: NextRequest) {
     return withAdminHeaders(NextResponse.next({ request: { headers: adminHeaders } }));
   }
 
-  const ok = await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value, req.headers.get("user-agent"));
-  if (ok) return withAdminHeaders(NextResponse.next({ request: { headers: adminHeaders } }));
+  const sessionToken = req.cookies.get(SESSION_COOKIE)?.value;
+  const userAgent = req.headers.get("user-agent");
+  const ok = await verifySessionToken(sessionToken, userAgent);
+  if (ok) {
+    const res = NextResponse.next({ request: { headers: adminHeaders } });
+    // Sliding expiry for "remember this device": a remembered session used at least once a month
+    // never asks for the password again. The gate cookie slides with it so the entry stays open too.
+    if (await sessionRenewalDue(sessionToken)) {
+      res.cookies.set(SESSION_COOKIE, await createSessionToken(userAgent, REMEMBER_TTL_SEC), sessionCookieOptionsFor(REMEMBER_TTL_SEC));
+      const gate = await createGateToken();
+      if (gate) res.cookies.set(GATE_COOKIE, gate, { httpOnly: true, sameSite: "strict", secure: HTTPS, path: "/", maxAge: GATE_TTL_SEC });
+    }
+    return withAdminHeaders(res);
+  }
 
   const loginUrl = new URL("/admin/login", req.url);
   loginUrl.searchParams.set("next", pathname);

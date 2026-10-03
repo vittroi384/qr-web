@@ -60,3 +60,16 @@ describe("productionLoginBlocker", () => {
     assert.match(productionLoginBlocker({ ...good, ADMIN_PASSWORD: undefined }) ?? "", /12자 미만/);
   });
 });
+
+describe("remembered sessions", () => {
+  it("marks a 30-day session and reports renewal only after a day", async () => {
+    process.env.SESSION_SECRET ??= "test-secret-test-secret-test-secret-1234";
+    const { createSessionToken, sessionRenewalDue, REMEMBER_TTL_SEC, verifySessionToken } = await import("./auth");
+    const daily = await createSessionToken("UA");
+    const remembered = await createSessionToken("UA", REMEMBER_TTL_SEC);
+    assert.equal(await verifySessionToken(remembered, "UA"), true);
+    assert.equal(await sessionRenewalDue(daily), false, "daily sessions never slide");
+    assert.equal(await sessionRenewalDue(remembered), false, "fresh remembered session is not due yet");
+    assert.equal(await sessionRenewalDue("garbage"), false);
+  });
+});
