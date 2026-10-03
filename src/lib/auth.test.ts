@@ -38,12 +38,14 @@ describe("login attempt accounting", () => {
 describe("productionLoginBlocker", () => {
   const good: NodeJS.ProcessEnv = {
     NODE_ENV: "production",
+    APP_ENV: "production",
     ADMIN_TOTP_SECRET: "VKXVD3U53NZMM6FDZP5G6RINLZG6DDMQ",
     ADMIN_PASSWORD: "a-long-and-unique-password",
   };
 
-  it("is silent outside production", () => {
+  it("is silent outside a deployed image (dev, CI, local E2E production build)", () => {
     assert.equal(productionLoginBlocker({ NODE_ENV: "development", ADMIN_PASSWORD: "admin1234" }), null);
+    assert.equal(productionLoginBlocker({ NODE_ENV: "production", ADMIN_PASSWORD: "admin1234" }), null);
     assert.equal(productionLoginBlocker({ NODE_ENV: "test" }), null);
   });
   it("accepts a complete production configuration", () => {

@@ -80,7 +80,7 @@ OCI A1 · Docker Compose (db → app·umami → caddy, db healthcheck 후 기동
 - **스키마는 코드, 변경은 마이그레이션**: `src/lib/db/schema.ts`(Drizzle) → `npm run db:generate`로 SQL 생성·커밋 → 컨테이너 시작 시 자동 적용. 테이블 관계는 [`docs/데이터-구조.md`](docs/데이터-구조.md)
 - **시간은 `timestamptz`, 표시는 KST**: 날짜 필터·오늘·14일 추이는 KST 달력일 기준(`AT TIME ZONE 'Asia/Seoul'`)
 - **설정은 DB, 비밀은 .env**: 사이트명·URL·광고 ID는 관리자 화면, 비밀번호·키·입구 경로·DB 비밀번호는 환경변수
-- **QR 인코더는 순수 함수**: `src/lib/qr/encoders.ts` — Wi-Fi 이스케이프, vCard, VEVENT(UTC/종일 DTEND 미포함), wa.me, BIP-21 등 `node:test` 34건(KST 시간 헬퍼 포함)으로 고정
+- **QR 인코더는 순수 함수**: `src/lib/qr/encoders.ts` — Wi-Fi 이스케이프, vCard, VEVENT(UTC/종일 DTEND 미포함), wa.me, BIP-21 등 `node:test`로 고정(인코더·입력 검증·마스킹 테스트)
 
 ## 흐름도
 
@@ -195,11 +195,11 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 ## 품질 · 운영
 
 **테스트 (CI에서 모두 실행)**
-- 단위 34건 — QR 인코더(Wi-Fi 이스케이프, vCard, VEVENT, wa.me, BIP-21), TOTP(RFC 6238 벡터), KST 시간 헬퍼 (`npm test`)
-- E2E 17건 — Playwright: 입력→PNG 저장→`/api/log` 기록·마스킹 검증, 일괄 ZIP 구조 파싱, 관리자 게이트/OTP/CSV, SEO(hreflang·JSON-LD·sitemap·robots), 모바일 가로 넘침 0, axe 접근성 (`npm run test:e2e`)
+- 단위 102건 — QR 인코더(Wi-Fi 이스케이프, vCard, VEVENT, wa.me, BIP-21), 입력 검증, 비밀번호 마스킹, 로그인 잠금·IPv6 키, TOTP(RFC 6238 벡터), KST 시간 헬퍼 (`npm test`)
+- E2E 24건 — Playwright: 입력→PNG 저장→`/api/log` 기록·마스킹 검증, 일괄 ZIP 구조 파싱, 관리자 게이트/OTP/CSV, SEO(hreflang·JSON-LD·sitemap·robots), 모바일 가로 넘침 0, axe 접근성 (`npm run test:e2e`)
 - CI: lint → 타입 → 단위 → DB 없는 빌드 → E2E(Postgres 서비스) → Docker 이미지 빌드
 
-**Lighthouse (운영 이미지, 2026-10)**
+**Lighthouse (운영 이미지, 2026-10 · 배포 후 재측정 예정)**
 
 | 페이지 | 성능 (모바일/데스크톱) | 접근성 | 모범 사례 | SEO |
 | --- | --- | --- | --- | --- |
