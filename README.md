@@ -9,15 +9,15 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose%20%2B%20Caddy-2496ED?logo=docker&logoColor=white)
 ![Oracle Cloud](https://img.shields.io/badge/Oracle%20Cloud-Ampere%20A1-F80000?logo=oracle&logoColor=white)
 
-URL·SNS·WhatsApp·Wi-Fi·연락처·결제 링크 등 **14종 정보를 QR 코드로** 만드는 공개 웹서비스입니다.
+URL·SNS·WhatsApp·Wi-Fi·연락처·결제 링크 등 **17종 정보를 QR 코드로** 만드는 공개 웹서비스입니다.
 QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 서버에 종속되지 않습니다(경쟁 서비스의 "동적 QR + 구독" 모델을 의도적으로 배제).
-해외 사용자가 주 타깃이라 **영어가 기본**(`/`)이고 한국어·스페인어·포르투갈어·독일어·프랑스어·일본어·힌디어·인도네시아어는 `/ko` `/es` `/pt` `/de` `/fr` `/ja` `/hi` `/id` 아래에 **9개 언어**로 제공합니다. 수익은 AdSense 광고 6슬롯, 유입은 언어별 SEO 랜딩 페이지 171개(19종 × 9개 언어). 방문자가 저장한 QR 내용은 운영자 전용 관리자에서 확인합니다.
+해외 사용자가 주 타깃이라 **영어가 기본**(`/`)이고 한국어·스페인어·포르투갈어·독일어·프랑스어·일본어·힌디어·인도네시아어는 `/ko` `/es` `/pt` `/de` `/fr` `/ja` `/hi` `/id` 아래에 **9개 언어**로 제공합니다. 수익은 AdSense 광고 6슬롯, 유입은 언어별 SEO 랜딩 페이지 234개(26종 × 9개 언어). 방문자가 저장한 QR 내용은 운영자 전용 관리자에서 확인합니다.
 
 ## 스크린샷
 
 > 광고 자리는 개발 모드의 점선 placeholder입니다.
 
-**메인** — 14종 타입 선택, 실시간 미리보기, 크기·여백·꾸미기, 광고 레이아웃(최대 6슬롯)
+**메인** — 17종 타입 선택, 실시간 미리보기, 크기·여백·꾸미기, 광고 레이아웃(최대 6슬롯)
 
 ![메인](assets/main.png)
 
@@ -35,11 +35,12 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
 
 ## 주요 기능
 
-- **QR 14종**: URL · SNS/앱 링크(28개 플랫폼 프리셋, 링크 붙여 넣기 자동 인식) · WhatsApp · 텍스트 · Wi-Fi · 연락처(vCard 3.0) · 이메일 · SMS · 전화 · 위치 · 일정(iCalendar) · 결제 링크(PayPal/Venmo/Cash App… 금액 사전 입력) · 암호화폐(BIP-21/EIP-681) · PDF/파일 링크
+- **QR 17종**: URL · SNS/앱 링크(28개 플랫폼 프리셋, 링크 붙여 넣기 자동 인식) · WhatsApp · 텍스트 · Wi-Fi · 연락처(vCard 3.0) · 이메일 · SMS · 전화 · 위치 · 일정(iCalendar) · 결제 링크(PayPal/Venmo/Cash App… 금액 사전 입력) · 암호화폐(BIP-21/EIP-681) · PDF/파일 링크 · **지역 결제 QR 3종**(Pix BR Code · UPI · EPC/GiroCode — 공식 규격·CRC·IBAN 검증, 식별자는 저장 전 마스킹)
+- **프레임 + 안내 문구**: QR 둘레 테두리와 "Scan me"·"스캔하면 Wi-Fi 연결" 같은 문구 바를 PNG·SVG·인쇄 안내판에 포함(프리셋 5종 + 직접 입력, 9개 언어 기본 문구)
 - **출력**: PNG(256~2048px, 모듈 단위 정수 스케일 보정으로 픽셀 정확) · SVG · 클립보드 복사 · **인쇄용 A4 안내판**(제목/부제 편집 → 브라우저 인쇄/PDF)
 - **꾸미기**: 색 프리셋 8종 + 직접 선택, 배경(흰색/연회색/아이보리/투명), 복원력, 중앙 로고(자동 ECC H), 대비 경고
 - **일괄 생성**: 표 편집기 + 엑셀 2열 붙여 넣기, 줄별 링크/텍스트 자동 판별, 최대 200개 → `001-이름.png` ZIP + `index.csv`
-- **i18n/SEO**: 경로 기반 9개 언어(hreflang, sitemap 207 URL), 타입별 랜딩 14종 + 사용 사례 5종 × 9개 언어(언어별로 새로 쓴 본문 400~600단어, `FAQPage`·`SoftwareApplication` JSON-LD)
+- **i18n/SEO**: 경로 기반 9개 언어(hreflang, sitemap 270 URL), 타입별 랜딩 17종 + 사용 사례 9종 × 9개 언어(언어별로 새로 쓴 본문 400~600단어, `FAQPage`·`SoftwareApplication` JSON-LD)
 - **광고**: AdSense 슬롯 6곳(상단·좌·우·하단·본문 중간·글 사이 인아티클; 일괄·소개 페이지도 포함), 팝업/오버레이 없음, 다운로드 버튼과 거리 확보, `/ads.txt` 자동
 - **방문자 기록**: PNG/SVG/복사/인쇄/일괄 저장 시에만 종류·내용·IP·브라우저 기록(입력 중 전송 없음). Wi-Fi 비밀번호는 저장 전 항상 `****`. IP당 분당 30회 제한, 보관 90일 자동 정리
 - **관리자**: 대시보드(KST 집계), 통계(언어·페이지·종류별 저장, 시간대, 선택→미리보기→저장 퍼널 — 개인 정보 없는 카운터), 기록 검색·삭제·CSV(BOM, 수식 주입 차단), 설정(사이트 URL·AdSense ID·슬롯 ID — 재배포 없이 변경), 감사 로그(변경 전/후 값)
@@ -175,7 +176,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 
 | 순서 | 할 일 | 비용 |
 | --- | --- | --- |
-| 1 | Google Search Console에 도메인 등록 → `https://도메인/sitemap.xml` 제출 (207 URL, 9개 언어 hreflang) | 무료 |
+| 1 | Google Search Console에 도메인 등록 → `https://도메인/sitemap.xml` 제출 (270 URL, 9개 언어 hreflang) | 무료 |
 | 2 | Bing Webmaster Tools — Search Console에서 가져오기 한 번 | 무료 |
 | 3 | 업타임 모니터(UptimeRobot) — `https://도메인/api/health` 5분 간격, 알림 메일/텔레그램 | 무료 |
 | 4 | Umami 방문 분석 — SSH 터널(`ssh -L 3001:127.0.0.1:3001 ubuntu@서버IP`)로 `http://localhost:3001` 접속 → 비밀번호 변경 → 사이트 추가 → 관리자 설정에 `https://도메인/umami/script.js`·웹사이트 ID 입력 (쿠키 없음, 동의 배너 불필요) | 무료(자체 호스팅) |
