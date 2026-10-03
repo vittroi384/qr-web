@@ -6,7 +6,7 @@ import { ChevronDownIcon } from "@/components/icons";
 import { TypeIcon } from "@/components/icons";
 
 /**
- * Type filter as a popover menu (14 types + 전체) instead of a native <select>. Holds the value
+ * Type filter as a popover menu (every QR type + 전체) instead of a native <select>. Holds the value
  * in a hidden input so the surrounding GET form stays plain; picking an item submits at once.
  */
 export function TypeFilter({ value }: { value: QrType | "" }) {

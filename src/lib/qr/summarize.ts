@@ -137,9 +137,24 @@ export function summarizeLog(type: QrType | string, payloadJson: string | null):
       const amount = str(p.amount);
       return { primary: short || coin, secondary: [coin, amount ? `금액 ${amount}` : ""].filter(Boolean).join(" · "), platform: coin };
     }
+    // Bank-transfer codes: payee name first, then the (already masked) identifier and the amount.
+    case "pix":
+      return bankTransferSummary("Pix", str(p.name), str(p.key), str(p.amount), "R$");
+    case "upi":
+      return bankTransferSummary("UPI", str(p.name), str(p.vpa), str(p.amount), "₹");
+    case "epc":
+      return bankTransferSummary("EPC / GiroCode", str(p.name), str(p.iban), str(p.amount), "€");
     default:
       return { primary: clip(payloadJson ?? "", 80), secondary: "" };
   }
+}
+
+function bankTransferSummary(scheme: string, name: string, identifier: string, amount: string, currency: string): LogSummary {
+  return {
+    primary: name || identifier || scheme,
+    secondary: [name ? identifier : "", amount ? `금액 ${currency}${amount}` : ""].filter(Boolean).join(" · "),
+    platform: scheme,
+  };
 }
 
 /* ---------- Visitor language (Accept-Language → Korean display name) ---------- */

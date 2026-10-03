@@ -1,4 +1,17 @@
-import { CRYPTO_COINS, PAYMENT_PROVIDERS, encodeUrl } from "./encoders";
+import {
+  BIC,
+  CRYPTO_COINS,
+  EPC_MAX_AMOUNT,
+  PAYMENT_PROVIDERS,
+  PIX_TXID,
+  UPI_VPA,
+  encodeEpc,
+  encodeUrl,
+  formatAmount,
+  isValidIban,
+  isValidPixKey,
+  normalizePixKey,
+} from "./encoders";
 import type { QrPayloadMap, QrType } from "./types";
 
 /** Longest free text the generator accepts (the textarea's maxLength). */
@@ -19,7 +32,14 @@ export type ValidationReason =
   | "paymentAmount"
   | "cryptoAddress"
   | "cryptoAmount"
-  | "textMax";
+  | "textMax"
+  | "amount"
+  | "pixKey"
+  | "pixTxid"
+  | "upiVpa"
+  | "epcIban"
+  | "epcBic"
+  | "epcTooLong";
 
 export type ValidationIssue = { field?: string; reason: ValidationReason };
 
@@ -43,6 +63,13 @@ function coordIssue(value: string, field: "lat" | "lng"): ValidationIssue | null
   const limit = field === "lat" ? 90 : 180;
   if (n < -limit || n > limit) return { field, reason: field === "lat" ? "latRange" : "lngRange" };
   return null;
+}
+
+/** Pix / UPI / EPC amounts: "12", "12.5", "12,50" are fine; anything else (or zero, or over `max`) is not. */
+function amountIssue(value: string, max = Number.POSITIVE_INFINITY): ValidationIssue | null {
+  if (!value.trim()) return null;
+  const amount = formatAmount(value);
+  return amount && Number(amount) <= max ? null : { field: "amount", reason: "amount" };
 }
 
 function phoneIssue(value: string, field: string, maxDigits?: number): ValidationIssue | null {
@@ -99,6 +126,31 @@ export function validatePayload<T extends QrType>(type: T, payload: QrPayloadMap
     }
     case "text":
       return (payload as QrPayloadMap["text"]).text.length > TEXT_MAX ? { field: "text", reason: "textMax" } : null;
+    case "pix": {
+      const p = payload as QrPayloadMap["pix"];
+      const key = normalizePixKey(p.key);
+      if (key && !isValidPixKey(key)) return { field: "key", reason: "pixKey" };
+      const txid = p.txid.trim();
+      if (txid && !PIX_TXID.test(txid)) return { field: "txid", reason: "pixTxid" };
+      return amountIssue(p.amount);
+    }
+    case "upi": {
+      const p = payload as QrPayloadMap["upi"];
+      const vpa = p.vpa.trim();
+      if (vpa && !UPI_VPA.test(vpa)) return { field: "vpa", reason: "upiVpa" };
+      return amountIssue(p.amount);
+    }
+    case "epc": {
+      const p = payload as QrPayloadMap["epc"];
+      if (p.iban.trim() && !isValidIban(p.iban)) return { field: "iban", reason: "epcIban" };
+      const bic = p.bic.replace(/\s+/g, "").toUpperCase();
+      if (bic && !BIC.test(bic)) return { field: "bic", reason: "epcBic" };
+      const amount = amountIssue(p.amount, EPC_MAX_AMOUNT);
+      if (amount) return amount;
+      // Every field is individually fine, so an empty result can only mean the 331-byte cap.
+      if (p.name.trim() && p.iban.trim() && !encodeEpc(p)) return { field: "remittance", reason: "epcTooLong" };
+      return null;
+    }
     default:
       return null;
   }
