@@ -83,3 +83,19 @@ describe("summarizeLog edge cases", () => {
     assert.equal(summarizeLog("social", JSON.stringify({ platform: "instagram", handle: "https://instagram.com/brand" })).domain, "instagram.com");
   });
 });
+
+describe("summarizeLog: pix / upi / epc", () => {
+  it("shows the payee name, the stored (masked) identifier and the amount", () => {
+    const pix = summarizeLog("pix", JSON.stringify({ key: "12****09", name: "Maria Silva", city: "Sao Paulo", amount: "25.00" }));
+    assert.equal(pix.primary, "Maria Silva");
+    assert.equal(pix.secondary, "12****09 · 금액 R$25.00");
+    assert.equal(pix.platform, "Pix");
+    const upi = summarizeLog("upi", JSON.stringify({ vpa: "sh****is", name: "Shop", amount: "" }));
+    assert.equal(upi.secondary, "sh****is");
+    assert.equal(upi.platform, "UPI");
+    const epc = summarizeLog("epc", JSON.stringify({ iban: "DE****00", name: "", amount: "49.90" }));
+    assert.equal(epc.primary, "DE****00");
+    assert.equal(epc.secondary, "금액 €49.90");
+    assert.equal(epc.platform, "EPC / GiroCode");
+  });
+});

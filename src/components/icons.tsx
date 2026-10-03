@@ -119,6 +119,31 @@ const TYPE_PATHS: Record<QrType, ReactNode> = {
       <path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" />
     </>
   ),
+  // Pix: the diamond-shaped Pix mark, simplified to a rotated square with a dot.
+  pix: (
+    <>
+      <path d="M12 2.5 21.5 12 12 21.5 2.5 12Z" />
+      <path d="M12 8.5 15.5 12 12 15.5 8.5 12Z" />
+    </>
+  ),
+  // UPI: a phone handing over a coin.
+  upi: (
+    <>
+      <rect x="4" y="2.5" width="11" height="19" rx="2.5" />
+      <path d="M8 18h3" />
+      <circle cx="18" cy="12" r="3.5" />
+      <path d="M18 10.5v3M16.8 12h2.4" />
+    </>
+  ),
+  // EPC / GiroCode: a bank building.
+  epc: (
+    <>
+      <path d="m3 9 9-5.5L21 9" />
+      <path d="M4.5 9v10M9.5 9v10M14.5 9v10M19.5 9v10" />
+      <path d="M3 19h18" />
+      <path d="M12 6.5h.01" />
+    </>
+  ),
 };
 
 export function TypeIcon({ type, className }: { type: QrType; className?: string }) {

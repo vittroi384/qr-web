@@ -98,6 +98,9 @@ export const LANDING_SLUGS: Record<QrType, string> = {
   payment: "paypal-qr-code",
   crypto: "bitcoin-qr-code",
   file: "pdf-qr-code",
+  pix: "pix-qr-code",
+  upi: "upi-qr-code",
+  epc: "epc-qr-code",
 };
 
 export function typeToSlug(type: QrType): string {

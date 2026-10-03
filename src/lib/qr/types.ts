@@ -1,6 +1,6 @@
 // Order = display order. The first six are the everyday ones (phones show only these until
 // "More types"): website, Wi-Fi sign, WhatsApp chat, business card, social profile, menu/PDF.
-export const QR_TYPES = ["url", "wifi", "whatsapp", "vcard", "social", "file", "text", "email", "sms", "phone", "geo", "event", "payment", "crypto"] as const;
+export const QR_TYPES = ["url", "wifi", "whatsapp", "vcard", "social", "file", "text", "email", "sms", "phone", "geo", "event", "payment", "crypto", "pix", "upi", "epc"] as const;
 export type QrType = (typeof QR_TYPES)[number];
 
 export const QR_TYPE_LABELS: Record<QrType, string> = {
@@ -18,6 +18,9 @@ export const QR_TYPE_LABELS: Record<QrType, string> = {
   payment: "결제 링크",
   crypto: "암호화폐",
   file: "PDF / 파일 링크",
+  pix: "Pix (브라질)",
+  upi: "UPI (인도)",
+  epc: "EPC / GiroCode (유럽 SEPA)",
 };
 
 export const QR_TYPE_DESCRIPTIONS: Record<QrType, string> = {
@@ -35,6 +38,9 @@ export const QR_TYPE_DESCRIPTIONS: Record<QrType, string> = {
   payment: "PayPal·Venmo·Cash App 등 결제 페이지를 엽니다. 금액을 미리 넣을 수도 있습니다.",
   crypto: "지갑 주소와 금액을 넣으면 스캔 시 지갑 앱에 그대로 채워집니다.",
   file: "Google Drive·Dropbox 등에 올려 둔 PDF/파일 주소를 QR로 만듭니다.",
+  pix: "브라질 중앙은행 BR Code 규격의 정적 Pix QR입니다. Pix 키·수취인·금액을 담아 은행 앱이 바로 읽습니다.",
+  upi: "인도 NPCI 규격의 upi://pay 링크입니다. UPI ID·이름·금액을 담아 PhonePe·Google Pay 등이 바로 읽습니다.",
+  epc: "유럽 SEPA 송금용 EPC QR(GiroCode)입니다. IBAN·수취인·금액을 담아 독일·오스트리아 등 은행 앱이 바로 읽습니다.",
 };
 
 export type UrlPayload = { url: string };
@@ -43,6 +49,12 @@ export type WhatsAppPayload = { phone: string; message: string };
 export type PaymentPayload = { provider: string; handle: string; amount: string };
 export type CryptoPayload = { coin: string; address: string; amount: string; label: string };
 export type FilePayload = { url: string };
+/** Static Pix "BR Code" (Banco Central do Brasil). `key` is the Pix key: CPF/CNPJ, e-mail, +55 phone or EVP UUID. */
+export type PixPayload = { key: string; name: string; city: string; amount: string; description: string; txid: string };
+/** NPCI UPI deep link. `vpa` is the UPI ID ("name@bank"). */
+export type UpiPayload = { vpa: string; name: string; amount: string; note: string };
+/** EPC QR / GiroCode (SEPA credit transfer). `remittance` is the payment reference shown to the payee. */
+export type EpcPayload = { name: string; iban: string; bic: string; amount: string; remittance: string; info: string };
 export type TextPayload = { text: string };
 export type WifiPayload = {
   ssid: string;
@@ -90,6 +102,9 @@ export type QrPayloadMap = {
   payment: PaymentPayload;
   crypto: CryptoPayload;
   file: FilePayload;
+  pix: PixPayload;
+  upi: UpiPayload;
+  epc: EpcPayload;
 };
 
 export type QrPayload = QrPayloadMap[QrType];
@@ -140,6 +155,9 @@ export const DEFAULT_PAYLOADS: QrPayloadMap = {
   payment: { provider: "paypal", handle: "", amount: "" },
   crypto: { coin: "bitcoin", address: "", amount: "", label: "" },
   file: { url: "" },
+  pix: { key: "", name: "", city: "", amount: "", description: "", txid: "" },
+  upi: { vpa: "", name: "", amount: "", note: "" },
+  epc: { name: "", iban: "", bic: "", amount: "", remittance: "", info: "" },
 };
 
 export type LogEvent = "generate" | "download_png" | "download_svg" | "copy" | "print" | "batch";
