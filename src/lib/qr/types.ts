@@ -1,6 +1,8 @@
-// Order = display order. The first six are the everyday ones (phones show only these until
-// "More types"): website, Wi-Fi sign, WhatsApp chat, business card, social profile, menu/PDF.
-export const QR_TYPES = ["url", "wifi", "whatsapp", "vcard", "social", "file", "text", "email", "sms", "phone", "geo", "event", "payment", "crypto", "pix", "upi", "epc"] as const;
+// Order = display order, most-used first. The first six are the everyday ones (phones show only
+// these until "More types"): website, Wi-Fi sign, WhatsApp chat, business card, social profile,
+// menu/PDF. Then plain text and the contact channels, the regional bank-transfer codes (Pix, UPI,
+// EPC — daily use in their markets), and finally the occasional ones.
+export const QR_TYPES = ["url", "wifi", "whatsapp", "vcard", "social", "file", "text", "email", "phone", "sms", "pix", "upi", "epc", "geo", "event", "payment", "crypto"] as const;
 export type QrType = (typeof QR_TYPES)[number];
 
 export const QR_TYPE_LABELS: Record<QrType, string> = {

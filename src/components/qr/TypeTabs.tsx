@@ -7,7 +7,7 @@ import { useI18n } from "../i18n/I18nProvider";
 
 /**
  * On a phone-width column only the first six tiles show until "More types" is pressed. The order
- * is QR_TYPES itself; the bank-transfer codes (Pix, UPI, EPC) sit at the end of the extra group.
+ * is QR_TYPES itself (most-used first).
  */
 const PHONE_VISIBLE = 6;
 
