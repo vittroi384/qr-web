@@ -19,14 +19,14 @@ export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
   return (
     <main className="mx-auto w-full max-w-[1400px] px-4 pt-4 pb-16 sm:px-6 sm:pt-5">
       {/* 상단 가로 광고 — same low-profile banner as the home page */}
-      <AdSlot config={ads.top} name="상단" shape="horizontal" compact className="mb-5" />
+      <AdSlot config={ads.top} name="top" shape="horizontal" compact className="mb-5" />
 
       <div className="flex gap-6 xl:gap-8">
         {/* 왼쪽 세로 광고 (lg 이상) */}
         {sideVisible(ads.left) ? (
           <aside className="hidden w-40 shrink-0 lg:block">
             <div className="sticky top-20">
-              <AdSlot config={ads.left} name="왼쪽" shape="vertical" />
+              <AdSlot config={ads.left} name="left" shape="vertical" />
             </div>
           </aside>
         ) : null}
@@ -45,7 +45,7 @@ export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
 
           {/* Below the tool: in-content rectangle, then the FAQ. Same width as the tool card. */}
           <div className="mx-auto mt-12 max-w-4xl border-t border-border pt-12">
-            <AdSlot config={ads.incontent} name="본문 중간" shape="rectangle" />
+            <AdSlot config={ads.incontent} name="in-content" shape="rectangle" />
             <section className="mt-12" aria-labelledby="batch-faq-heading">
               <h2 id="batch-faq-heading" className="section-title">
                 {t.faqTitle}
@@ -55,7 +55,7 @@ export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
               </div>
             </section>
             {/* 하단 가로 광고 — FAQ 아래 */}
-            <AdSlot config={ads.bottom} name="하단" shape="horizontal" className="mt-16" />
+            <AdSlot config={ads.bottom} name="bottom" shape="horizontal" className="mt-16" />
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export function BatchPage({ locale, ads }: { locale: Locale; ads: BatchAds }) {
         {showRight ? (
           <aside className="hidden w-[300px] shrink-0 xl:block">
             <div className="sticky top-20">
-              <AdSlot config={ads.right} name="오른쪽" shape="vertical" />
+              <AdSlot config={ads.right} name="right" shape="vertical" />
             </div>
           </aside>
         ) : null}

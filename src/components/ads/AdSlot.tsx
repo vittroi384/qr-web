@@ -82,7 +82,7 @@ export function AdSlot({ config, name, shape, className = "", compact = false }:
       aria-hidden="true"
     >
       <span className="text-[11px] font-medium tracking-wider text-muted uppercase">Ad</span>
-      <span className="text-xs text-muted">광고 영역 · {name}</span>
+      <span className="text-xs text-muted">Ad placeholder · {name}</span>
     </div>
   );
 }

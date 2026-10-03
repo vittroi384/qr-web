@@ -118,14 +118,14 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
       ))}
 
       {/* 1. 상단 가로 광고 */}
-      <AdSlot config={ads.top} name="상단" shape="horizontal" compact className="mb-5" />
+      <AdSlot config={ads.top} name="top" shape="horizontal" compact className="mb-5" />
 
       <div className="flex gap-6 xl:gap-8">
         {/* 2. 왼쪽 세로 광고 (lg 이상) */}
         {sideVisible(ads.left) ? (
           <aside className="hidden w-40 shrink-0 lg:block">
             <div className="sticky top-20">
-              <AdSlot config={ads.left} name="왼쪽" shape="vertical" />
+              <AdSlot config={ads.left} name="left" shape="vertical" />
             </div>
           </aside>
         ) : null}
@@ -144,7 +144,7 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
           <div className="mt-12 flex gap-8 border-t border-border pt-12">
             <div className="min-w-0 flex-1">
               {/* 3. 본문 중간 광고 */}
-              <AdSlot config={ads.incontent} name="본문 중간" shape="rectangle" />
+              <AdSlot config={ads.incontent} name="in-content" shape="rectangle" />
 
               <article className="mt-16 max-w-3xl">
                 <section aria-labelledby="how-heading">
@@ -159,7 +159,7 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
                 </section>
 
                 {/* 6. 글 사이 광고 — after the first section, inside the text column */}
-                <AdSlot config={ads.inarticle} name="글 사이" shape="inarticle" className="mt-12" />
+                <AdSlot config={ads.inarticle} name="in-article" shape="inarticle" className="mt-12" />
 
                 <section className="mt-12" aria-labelledby="uses-heading">
                   <h2 id="uses-heading" className="section-title">
@@ -213,7 +213,7 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
             {sideVisible(ads.right) ? (
               <aside className="hidden w-[300px] shrink-0 xl:block">
                 <div className="sticky top-20">
-                  <AdSlot config={ads.right} name="오른쪽" shape="vertical" />
+                  <AdSlot config={ads.right} name="right" shape="vertical" />
                 </div>
               </aside>
             ) : null}
@@ -222,7 +222,7 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
       </div>
 
       {/* 5. 하단 가로 광고 */}
-      <AdSlot config={ads.bottom} name="하단" shape="horizontal" className="mt-16" />
+      <AdSlot config={ads.bottom} name="bottom" shape="horizontal" className="mt-16" />
     </main>
   );
 }

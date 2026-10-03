@@ -43,7 +43,7 @@ export async function AboutPage({ locale }: { locale: Locale }) {
       </Link>
 
       {/* 하단 가로 광고 — after all the text, same unit as the other pages */}
-      <AdSlot config={adConfig(s, s.ad_slot_bottom)} name="하단" shape="horizontal" className="mt-16" />
+      <AdSlot config={adConfig(s, s.ad_slot_bottom)} name="bottom" shape="horizontal" className="mt-16" />
     </main>
   );
 }

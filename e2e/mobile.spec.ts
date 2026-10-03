@@ -73,6 +73,6 @@ test.describe("phone layout (390×844)", () => {
     const visible = await page
       .locator("[data-ad-slot-name]")
       .evaluateAll((els) => els.filter((el) => (el as HTMLElement).offsetParent !== null).map((el) => el.getAttribute("data-ad-slot-name")));
-    expect(visible).toEqual(["상단", "본문 중간", "글 사이", "하단"]);
+    expect(visible).toEqual(["top", "in-content", "in-article", "bottom"]);
   });
 });

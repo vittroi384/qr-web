@@ -42,14 +42,14 @@ export async function HomePage({ locale }: { locale: Locale }) {
   return (
     <main className="mx-auto w-full max-w-[1400px] px-4 pt-4 pb-16 sm:px-6 sm:pt-5">
       {/* 1. 상단 가로 광고 */}
-      <AdSlot config={ads.top} name="상단" shape="horizontal" compact className="mb-5" />
+      <AdSlot config={ads.top} name="top" shape="horizontal" compact className="mb-5" />
 
       <div className="flex gap-6 xl:gap-8">
         {/* 2. 왼쪽 세로 광고 (lg 이상) */}
         {sideVisible(ads.left) ? (
           <aside className="hidden w-40 shrink-0 lg:block">
             <div className="sticky top-20">
-              <AdSlot config={ads.left} name="왼쪽" shape="vertical" />
+              <AdSlot config={ads.left} name="left" shape="vertical" />
             </div>
           </aside>
         ) : null}
@@ -66,7 +66,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
           <div className="mt-12 flex gap-8 border-t border-border pt-12">
             <div className="min-w-0 flex-1">
               {/* 3. 본문 중간 광고 */}
-              <AdSlot config={ads.incontent} name="본문 중간" shape="rectangle" />
+              <AdSlot config={ads.incontent} name="in-content" shape="rectangle" />
 
 
               <section className="mt-16" aria-labelledby="faq-heading">
@@ -77,7 +77,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
                 <div className="mt-4">
                   <FaqList items={faqItems.slice(0, FAQ_BEFORE_AD)} />
                 </div>
-                <AdSlot config={ads.inarticle} name="글 사이" shape="inarticle" className="mt-8" />
+                <AdSlot config={ads.inarticle} name="in-article" shape="inarticle" className="mt-8" />
                 {faqItems.length > FAQ_BEFORE_AD ? (
                   <div className="mt-8">
                     <FaqList items={faqItems.slice(FAQ_BEFORE_AD)} defaultOpen={-1} />
@@ -90,7 +90,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
             {sideVisible(ads.right) ? (
               <aside className="hidden w-[300px] shrink-0 xl:block">
                 <div className="sticky top-20">
-                  <AdSlot config={ads.right} name="오른쪽" shape="vertical" />
+                  <AdSlot config={ads.right} name="right" shape="vertical" />
                 </div>
               </aside>
             ) : null}
@@ -99,7 +99,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
       </div>
 
       {/* 5. 하단 가로 광고 */}
-      <AdSlot config={ads.bottom} name="하단" shape="horizontal" className="mt-16" />
+      <AdSlot config={ads.bottom} name="bottom" shape="horizontal" className="mt-16" />
     </main>
   );
 }
