@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { maskWifiPasswords } from "@/lib/qr/sanitize";
-import type { QrStyleOptions } from "@/lib/qr/types";
+import { DEFAULT_STYLE, type QrStyleOptions } from "@/lib/qr/types";
 import { StepGuide } from "../StepGuide";
 import { ArchiveIcon, CheckIcon, ChevronDownIcon, ClipboardIcon, DownloadIcon, EyeIcon, PlusIcon, TrashIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
@@ -51,7 +51,8 @@ function useDebounced<T>(value: T, ms: number): T {
 }
 
 function styleFor(size: number, look: Look): QrStyleOptions {
-  return { size, margin: MARGIN, errorCorrectionLevel: "M", logoDataUrl: null, ...look };
+  // Batch output never carries a frame (DEFAULT_STYLE has none).
+  return { ...DEFAULT_STYLE, size, margin: MARGIN, errorCorrectionLevel: "M", ...look };
 }
 
 /** Small live preview next to each row. Rendering only — nothing is logged. */

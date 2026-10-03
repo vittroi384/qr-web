@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useState, type DragEvent, type ReactNode } from "react";
-import type { QrStyleOptions } from "@/lib/qr/types";
+import { useId, useState, type DragEvent, type KeyboardEvent, type ReactNode } from "react";
+import { FRAME_TEXT_MAX } from "@/lib/qr/frame";
+import { FRAME_PRESETS, type FramePreset, type QrStyleOptions } from "@/lib/qr/types";
 import type { Dict } from "@/lib/i18n";
 import { CheckIcon, ChevronDownIcon, ImageIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
@@ -49,6 +50,42 @@ function Group({ label, hint, children, className = "" }: { label: string; hint?
   );
 }
 
+/**
+ * Frame presets as a radio group of chips (wrapping, 44px tall). Only the checked chip is in the
+ * tab order; arrow keys move the selection like native radios.
+ */
+function FrameChips({ value, onSelect, label, names }: { value: FramePreset; onSelect: (p: FramePreset) => void; label: string; names: Record<FramePreset, string> }) {
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    const next = FRAME_PRESETS[(FRAME_PRESETS.indexOf(value) + step + FRAME_PRESETS.length) % FRAME_PRESETS.length];
+    onSelect(next);
+    e.currentTarget.querySelector<HTMLButtonElement>(`[data-preset="${next}"]`)?.focus();
+  };
+  return (
+    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5" onKeyDown={onKeyDown}>
+      {FRAME_PRESETS.map((id) => {
+        const checked = id === value;
+        return (
+          <button
+            key={id}
+            type="button"
+            role="radio"
+            aria-checked={checked}
+            tabIndex={checked ? 0 : -1}
+            data-preset={id}
+            onClick={() => onSelect(id)}
+            className="min-h-11 rounded-lg border border-border-strong bg-card px-3.5 text-[13px] font-medium text-muted shadow-xs transition-colors hover:border-zinc-400 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-checked:border-foreground aria-checked:text-foreground aria-checked:ring-1 aria-checked:ring-foreground aria-checked:ring-inset"
+          >
+            {names[id]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onChange: (v: QrStyleOptions) => void }) {
   const t = useI18n().t.style;
   const [logoError, setLogoError] = useState<string | null>(null);
@@ -89,6 +126,16 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
   const presetColor = CODE_COLORS.some((c) => c.value === value.darkColor.toLowerCase());
   const warning = colorWarning(value.darkColor, value.lightColor, t);
   const hasLogo = Boolean(value.logoDataUrl);
+  const hasFrame = value.frame !== "none";
+  const edited = hasLogo || hasFrame || value.darkColor.toLowerCase() !== "#111111" || value.lightColor.toLowerCase() !== "#ffffff";
+
+  /** A preset fills the label with this language's text; editing the text afterwards makes it "custom". */
+  const selectFrame = (frame: FramePreset) => {
+    if (frame === "none") onChange({ ...value, frame, frameText: "" });
+    else if (frame === "custom") onChange({ ...value, frame });
+    else onChange({ ...value, frame, frameText: t.frameTexts[frame] });
+  };
+  const frameNames: Record<FramePreset, string> = { none: t.frameNone, ...t.framePresets };
 
   return (
     <details className="group">
@@ -97,12 +144,43 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
           <span className="block text-[15px] font-semibold text-foreground">{t.title}</span>
           <span className="mt-0.5 block text-[13px] text-muted">{t.summary}</span>
         </span>
-        {value.logoDataUrl || value.darkColor.toLowerCase() !== "#111111" || value.lightColor.toLowerCase() !== "#ffffff" ? (
-          <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span>
-        ) : null}
+        {edited ? <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span> : null}
         <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
       </summary>
     <div className="mt-6 grid gap-6 sm:grid-cols-2">
+      <Group label={t.frame} className="sm:col-span-2" hint={hasFrame ? undefined : t.frameHint}>
+        <FrameChips value={value.frame} onSelect={selectFrame} label={t.frame} names={frameNames} />
+        {hasFrame ? (
+          <div className="mt-4 grid gap-4">
+            <label className="block min-w-0">
+              <span className="label">{t.frameText}</span>
+              <input
+                className="input"
+                value={value.frameText}
+                maxLength={FRAME_TEXT_MAX}
+                placeholder={t.frameTexts.scan}
+                onChange={(e) => onChange({ ...value, frame: "custom", frameText: e.target.value })}
+              />
+              <span className="hint">{t.frameTextHint}</span>
+            </label>
+            <Group label={t.frameColor}>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  aria-pressed={value.frameColor === ""}
+                  onClick={() => onChange({ ...value, frameColor: "" })}
+                  className="btn aria-pressed:outline-2 aria-pressed:outline-offset-2 aria-pressed:outline-foreground"
+                >
+                  {t.frameSameAsCode}
+                </button>
+                <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
+                <ColorSwatches value={value.frameColor} onChange={(frameColor) => onChange({ ...value, frameColor })} />
+              </div>
+            </Group>
+          </div>
+        ) : null}
+      </Group>
+
       <Group label={t.codeColor} className="sm:col-span-2">
         <div className="flex flex-wrap items-center gap-2.5">
           <ColorSwatches value={value.darkColor} onChange={(darkColor) => onChange({ ...value, darkColor })} />

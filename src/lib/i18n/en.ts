@@ -334,8 +334,17 @@ export const en: Dict = {
 
   style: {
     title: "Style",
-    summary: "Optional · Color, background, error correction, logo",
+    summary: "Optional · Frame, color, background, error correction, logo",
     changed: "Edited",
+    frame: "Frame",
+    frameHint: "Adds a colored border and a one-line caption around the code. Included in the saved PNG, SVG and the print sheet.",
+    frameNone: "None",
+    framePresets: { scan: "Scan me", wifi: "Wi-Fi", menu: "Menu", review: "Review", pay: "Pay", custom: "Custom" },
+    frameTexts: { scan: "Scan me", wifi: "Scan to join Wi-Fi", menu: "Scan for menu", review: "Scan to leave a review", pay: "Scan to pay" },
+    frameText: "Caption",
+    frameTextHint: "Up to 40 characters · leave empty for a border only.",
+    frameColor: "Frame color",
+    frameSameAsCode: "Same as code",
     codeColor: "Code color",
     colors: {
       black: "Black",

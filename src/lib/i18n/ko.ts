@@ -302,8 +302,17 @@ export const ko = {
 
   style: {
     title: "꾸미기",
-    summary: "선택 사항 · 색상 · 배경 · 복원력 · 로고",
+    summary: "선택 사항 · 프레임 · 색상 · 배경 · 복원력 · 로고",
     changed: "변경됨",
+    frame: "프레임",
+    frameHint: "코드 둘레에 색 테두리와 한 줄 안내 문구를 넣습니다. 저장하는 PNG · SVG · 안내판에 함께 들어갑니다.",
+    frameNone: "없음",
+    framePresets: { scan: "Scan me", wifi: "Wi-Fi", menu: "메뉴", review: "리뷰", pay: "결제", custom: "직접 입력" },
+    frameTexts: { scan: "스캔하세요", wifi: "스캔하면 Wi-Fi 연결", menu: "메뉴 보기", review: "리뷰 남기기", pay: "스캔해서 결제" },
+    frameText: "안내 문구",
+    frameTextHint: "최대 40자 · 비워 두면 테두리만 표시됩니다.",
+    frameColor: "프레임 색",
+    frameSameAsCode: "코드 색과 같게",
     codeColor: "코드 색상",
     colors: {
       black: "블랙",

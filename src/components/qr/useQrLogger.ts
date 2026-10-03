@@ -86,11 +86,13 @@ export function useFunnel(type: QrType, hasPreview: boolean, locale: Locale) {
 
 function send(event: LogEvent, input: LogInput) {
   const safe = maskSensitive(input);
+  // The frame label is free text the visitor typed: report only its length (the server does the same).
+  const { frameText, ...options } = input.options;
   sendLog({
     type: input.type,
     event,
     payload: safe.payload as LogBody["payload"],
-    options: { ...input.options, logoDataUrl: input.options.logoDataUrl ? "1" : null },
+    options: { ...options, logoDataUrl: options.logoDataUrl ? "1" : null, frameTextLength: Array.from(frameText).length },
     encoded: safe.encoded,
   });
 }
