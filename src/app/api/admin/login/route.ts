@@ -6,6 +6,8 @@ import {
   SESSION_COOKIE,
   beginLoginAttempt,
   createSessionToken,
+  REMEMBER_TTL_SEC,
+  sessionCookieOptionsFor,
   endLoginAttempt,
   productionLoginBlocker,
   sessionCookieOptions,
@@ -50,11 +52,13 @@ export async function POST(req: NextRequest) {
   const declared = Number.parseInt(req.headers.get("content-length") ?? "", 10);
   const raw = Number.isFinite(declared) && declared > MAX_BODY_BYTES ? "" : await req.text();
   let password = "";
+  let remember = false;
   let code = "";
   if (raw && Buffer.byteLength(raw) <= MAX_BODY_BYTES) {
     try {
       const body = JSON.parse(raw);
       password = typeof body?.password === "string" ? body.password : "";
+      remember = body?.remember === true;
       code = typeof body?.code === "string" ? body.code : "";
     } catch {
       // fall through with empty credentials
@@ -75,11 +79,13 @@ export async function POST(req: NextRequest) {
   }
 
   endLoginAttempt(limitKey, true);
-  await writeAudit({ action: "login", ip: meta.ip, userAgent: meta.userAgent });
-  logEvent("info", "admin.login", { ip: meta.ip });
-  const token = await createSessionToken(meta.userAgent);
+  await writeAudit({ action: "login", key: remember ? "remember" : undefined, ip: meta.ip, userAgent: meta.userAgent });
+  logEvent("info", "admin.login", { ip: meta.ip, remember });
+  // "Remember this device" keeps the same UA-bound, __Host- session but for 30 days instead of 24h.
+  const ttl = remember ? REMEMBER_TTL_SEC : undefined;
+  const token = await createSessionToken(meta.userAgent, ttl);
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions);
+  res.cookies.set(SESSION_COOKIE, token, ttl ? sessionCookieOptionsFor(ttl) : sessionCookieOptions);
   res.headers.set("Cache-Control", "no-store");
   return res;
 }

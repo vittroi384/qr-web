@@ -9,6 +9,8 @@ import { createHash, timingSafeEqual } from "node:crypto";
 const HTTPS = process.env.NODE_ENV === "production" && Boolean(process.env.DOMAIN);
 export const SESSION_COOKIE = HTTPS ? "__Host-qr_admin_session" : "qr_admin_session";
 const SESSION_TTL_SEC = 60 * 60 * 24; // 24h, re-login daily
+/** "Remember this device": one password + OTP login per month on the owner's own machine. */
+export const REMEMBER_TTL_SEC = 60 * 60 * 24 * 30;
 
 function secretKey(): Uint8Array {
   const secret = process.env.SESSION_SECRET;
@@ -36,11 +38,11 @@ export function clientFingerprint(userAgent: string | null | undefined): string 
   return createHash("sha256").update(userAgent ?? "").digest("base64url").slice(0, 16);
 }
 
-export async function createSessionToken(userAgent: string | null | undefined): Promise<string> {
+export async function createSessionToken(userAgent: string | null | undefined, ttlSec: number = SESSION_TTL_SEC): Promise<string> {
   return new SignJWT({ role: "admin", fp: clientFingerprint(userAgent) })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(`${SESSION_TTL_SEC}s`)
+    .setExpirationTime(`${ttlSec}s`)
     .sign(secretKey());
 }
 
@@ -64,6 +66,11 @@ export const sessionCookieOptions = {
   path: "/",
   maxAge: SESSION_TTL_SEC,
 };
+
+/** Cookie options for a session of the given lifetime (the JWT carries the same expiry). */
+export function sessionCookieOptionsFor(ttlSec: number) {
+  return { ...sessionCookieOptions, maxAge: ttlSec };
+}
 
 /* ---------- Production configuration guard ---------- */
 

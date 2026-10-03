@@ -9,6 +9,7 @@ function LoginForm() {
   const params = useSearchParams();
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
+  const [remember, setRemember] = useState(false);
   const [totpRequired, setTotpRequired] = useState<boolean | null>(null);
   // Production refuses login while .env is unsafe (no TOTP, weak password); the server says why.
   const [blocked, setBlocked] = useState<string | null>(null);
@@ -38,7 +39,7 @@ function LoginForm() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, code }),
+        body: JSON.stringify({ password, code, remember }),
       });
       if (res.ok) {
         const next = params.get("next");
@@ -99,6 +100,10 @@ function LoginForm() {
             />
           </label>
         ) : null}
+        <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-foreground">
+          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+          이 기기에서 30일 동안 로그인 유지
+        </label>
         {blocked && !error ? (
           <p role="alert" className="rounded-lg border border-red-200 bg-danger-soft px-3 py-2.5 text-sm text-danger">
             {blocked}
