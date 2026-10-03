@@ -334,8 +334,17 @@ export const pt: Dict = {
 
   style: {
     title: "Estilo",
-    summary: "Opcional · Cor, fundo, correção de erros, logo",
+    summary: "Opcional · Moldura, cor, fundo, correção de erros, logo",
     changed: "Editado",
+    frame: "Moldura",
+    frameHint: "Adiciona uma borda colorida e um texto de uma linha ao redor do código. Entra no PNG, no SVG e no cartaz.",
+    frameNone: "Nenhuma",
+    framePresets: { scan: "Escaneie", wifi: "Wi-Fi", menu: "Cardápio", review: "Avaliação", pay: "Pagamento", custom: "Personalizado" },
+    frameTexts: { scan: "Escaneie aqui", wifi: "Escaneie para entrar no Wi-Fi", menu: "Escaneie para ver o cardápio", review: "Escaneie para avaliar", pay: "Escaneie para pagar" },
+    frameText: "Texto",
+    frameTextHint: "Até 40 caracteres · deixe vazio para só a borda.",
+    frameColor: "Cor da moldura",
+    frameSameAsCode: "Igual ao código",
     codeColor: "Cor do código",
     colors: {
       black: "Preto",

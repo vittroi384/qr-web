@@ -334,8 +334,17 @@ export const es: Dict = {
 
   style: {
     title: "Estilo",
-    summary: "Opcional · Color, fondo, corrección de errores, logotipo",
+    summary: "Opcional · Marco, color, fondo, corrección de errores, logotipo",
     changed: "Modificado",
+    frame: "Marco",
+    frameHint: "Añade un borde de color y un texto de una línea alrededor del código. Se incluye en el PNG, el SVG y el cartel.",
+    frameNone: "Ninguno",
+    framePresets: { scan: "Escanéame", wifi: "Wi-Fi", menu: "Menú", review: "Reseña", pay: "Pago", custom: "Personalizado" },
+    frameTexts: { scan: "Escanéame", wifi: "Escanea para conectarte al Wi-Fi", menu: "Escanea para ver el menú", review: "Escanea para dejar tu reseña", pay: "Escanea para pagar" },
+    frameText: "Texto",
+    frameTextHint: "Hasta 40 caracteres · déjalo vacío para solo el borde.",
+    frameColor: "Color del marco",
+    frameSameAsCode: "Igual que el código",
     codeColor: "Color del código",
     colors: {
       black: "Negro",

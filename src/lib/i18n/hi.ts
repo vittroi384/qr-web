@@ -334,8 +334,17 @@ export const hi: Dict = {
 
   style: {
     title: "स्टाइल",
-    summary: "वैकल्पिक · रंग, बैकग्राउंड, एरर करेक्शन, लोगो",
+    summary: "वैकल्पिक · फ़्रेम, रंग, बैकग्राउंड, एरर करेक्शन, लोगो",
     changed: "बदला गया",
+    frame: "फ़्रेम",
+    frameHint: "कोड के चारों ओर रंगीन बॉर्डर और एक लाइन का संदेश जोड़ता है। सेव किए गए PNG, SVG और पोस्टर में भी शामिल रहता है।",
+    frameNone: "कोई नहीं",
+    framePresets: { scan: "Scan me", wifi: "Wi-Fi", menu: "मेन्यू", review: "रिव्यू", pay: "पेमेंट", custom: "अपना टेक्स्ट" },
+    frameTexts: { scan: "स्कैन करें", wifi: "Wi-Fi के लिए स्कैन करें", menu: "मेन्यू के लिए स्कैन करें", review: "रिव्यू देने के लिए स्कैन करें", pay: "पेमेंट के लिए स्कैन करें" },
+    frameText: "संदेश",
+    frameTextHint: "अधिकतम 40 अक्षर · खाली छोड़ें तो सिर्फ़ बॉर्डर दिखेगा।",
+    frameColor: "फ़्रेम का रंग",
+    frameSameAsCode: "कोड जैसा",
     codeColor: "कोड का रंग",
     colors: {
       black: "काला",

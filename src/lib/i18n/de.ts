@@ -334,8 +334,17 @@ export const de: Dict = {
 
   style: {
     title: "Stil",
-    summary: "Optional · Farbe, Hintergrund, Fehlerkorrektur, Logo",
+    summary: "Optional · Rahmen, Farbe, Hintergrund, Fehlerkorrektur, Logo",
     changed: "Geändert",
+    frame: "Rahmen",
+    frameHint: "Setzt einen farbigen Rand mit einer einzeiligen Beschriftung um den Code. Wird in PNG, SVG und Aushang übernommen.",
+    frameNone: "Ohne",
+    framePresets: { scan: "Scan mich", wifi: "WLAN", menu: "Speisekarte", review: "Bewertung", pay: "Bezahlen", custom: "Eigener Text" },
+    frameTexts: { scan: "Scan mich", wifi: "Scannen für WLAN", menu: "Scannen für die Speisekarte", review: "Scannen und bewerten", pay: "Scannen und bezahlen" },
+    frameText: "Beschriftung",
+    frameTextHint: "Bis zu 40 Zeichen · leer lassen für nur den Rand.",
+    frameColor: "Rahmenfarbe",
+    frameSameAsCode: "Wie der Code",
     codeColor: "Codefarbe",
     colors: {
       black: "Schwarz",

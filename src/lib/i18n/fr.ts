@@ -334,8 +334,17 @@ export const fr: Dict = {
 
   style: {
     title: "Style",
-    summary: "Facultatif · Couleur, fond, correction d'erreur, logo",
+    summary: "Facultatif · Cadre, couleur, fond, correction d'erreur, logo",
     changed: "Modifié",
+    frame: "Cadre",
+    frameHint: "Ajoute une bordure colorée et une ligne de texte autour du code. Inclus dans le PNG, le SVG et l'affiche.",
+    frameNone: "Aucun",
+    framePresets: { scan: "Scannez-moi", wifi: "Wi-Fi", menu: "Menu", review: "Avis", pay: "Paiement", custom: "Personnalisé" },
+    frameTexts: { scan: "Scannez-moi", wifi: "Scannez pour le Wi-Fi", menu: "Scannez pour le menu", review: "Scannez pour laisser un avis", pay: "Scannez pour payer" },
+    frameText: "Texte",
+    frameTextHint: "40 caractères max. · laissez vide pour la bordure seule.",
+    frameColor: "Couleur du cadre",
+    frameSameAsCode: "Comme le code",
     codeColor: "Couleur du code",
     colors: {
       black: "Noir",

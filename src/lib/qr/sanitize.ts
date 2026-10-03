@@ -68,13 +68,20 @@ export function hardenSecretsForStorage(
   return out;
 }
 
-/** Strip large fields (logo image) from style options before storing. */
+/**
+ * Strip large and free-text fields from style options before storing: the logo image becomes a
+ * flag and the frame label (visitor-written text) is kept only as its length.
+ */
 export function sanitizeOptionsForStorage(options: unknown): Record<string, string | number | boolean> {
   const out: Record<string, string | number | boolean> = {};
   if (!options || typeof options !== "object") return out;
   for (const [key, value] of Object.entries(options as Record<string, unknown>)) {
     if (key === "logoDataUrl") {
       out.hasLogo = Boolean(value);
+      continue;
+    }
+    if (key === "frameText") {
+      out.frameTextLength = typeof value === "string" ? Array.from(value).length : 0;
       continue;
     }
     if (typeof value === "string") out[key] = value.slice(0, 64);
