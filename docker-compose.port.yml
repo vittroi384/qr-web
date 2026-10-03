@@ -1,0 +1,13 @@
+# Serve the site on an alternative host port (default 8080, plain HTTP) when 80/443 on this
+# server already belong to another project. Activate it from .env so deploy.sh picks it up:
+#
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.port.yml
+#   QR_HTTP_PORT=8080
+#
+# Open that port in the instance firewall and the OCI security list, then browse to
+# http://<server-ip>:8080. Once a domain exists, the other project's reverse proxy can front the
+# app directly (it listens on 127.0.0.1:3000) and this file is no longer needed.
+services:
+  caddy:
+    ports: !override
+      - "${QR_HTTP_PORT:-8080}:80"
