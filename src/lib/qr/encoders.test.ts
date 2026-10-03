@@ -14,6 +14,18 @@ describe("encodeUrl", () => {
   it("empty stays empty", () => {
     assert.equal(encodeUrl("   "), "");
   });
+  it("treats host:port as an address, not an unknown scheme", () => {
+    assert.equal(encodeUrl("example.com:8080/menu"), "https://example.com:8080/menu");
+    assert.equal(encodeUrl("localhost:3000"), "https://localhost:3000");
+    assert.equal(encodeUrl("shop.example.co.kr:8443/?x=1#top"), "https://shop.example.co.kr:8443/?x=1#top");
+  });
+  it("still refuses unknown and dangerous schemes", () => {
+    assert.equal(encodeUrl("javascript:alert(1)"), "");
+    assert.equal(encodeUrl("data:text/html,hi"), "");
+    assert.equal(encodeUrl("Note:1234"), ""); // no dot in the host → not a host:port
+    assert.equal(encodeUrl("example.com:12345678"), ""); // not a port
+    assert.equal(encodeUrl("example.com:80 80"), "");
+  });
 });
 
 describe("encodeWifi", () => {
@@ -51,6 +63,27 @@ describe("encodeVCard", () => {
     assert.ok(lines.includes("URL:https://x.kr"));
     assert.ok(lines.includes("NOTE:line1\\nline2"));
     assert.equal(lines.at(-1), "END:VCARD");
+  });
+  it("puts the given name first for Latin names", () => {
+    const v = encodeVCard({ firstName: "John", lastName: "Smith", org: "", title: "", phone: "", mobile: "", email: "", website: "", address: "", note: "" });
+    assert.ok(v.includes("N:Smith;John;;;"));
+    assert.ok(v.includes("FN:John Smith"));
+  });
+  it("keeps family name first when either part is CJK", () => {
+    const v = encodeVCard({ firstName: "太郎", lastName: "山田", org: "", title: "", phone: "", mobile: "", email: "", website: "", address: "", note: "" });
+    assert.ok(v.includes("FN:山田 太郎"));
+    const w = encodeVCard({ firstName: "Mina", lastName: "김", org: "", title: "", phone: "", mobile: "", email: "", website: "", address: "", note: "" });
+    assert.ok(w.includes("FN:김 Mina"));
+  });
+  it("never emits an empty FN: falls back to organisation, then phone, then e-mail", () => {
+    const base = { firstName: "", lastName: "", title: "", website: "", address: "", note: "" };
+    const org = encodeVCard({ ...base, org: "Acme", phone: "02-123-4567", mobile: "", email: "" });
+    assert.ok(org.includes("FN:Acme"));
+    const phone = encodeVCard({ ...base, org: "", phone: "", mobile: "010-1234-5678", email: "" });
+    assert.ok(phone.includes("FN:010-1234-5678"));
+    const email = encodeVCard({ ...base, org: "", phone: "", mobile: "", email: "a@b.c" });
+    assert.ok(email.includes("FN:a@b.c"));
+    assert.ok(!email.includes("FN:\r\n"));
   });
   it("requires at least a name or contact field", () => {
     assert.equal(

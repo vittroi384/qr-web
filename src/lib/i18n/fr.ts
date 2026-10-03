@@ -466,8 +466,8 @@ export const fr: Dict = {
     s6Body:
       "Vous pouvez nous demander de supprimer vos données. Merci d'indiquer des éléments qui nous aident à les retrouver, comme l'heure approximative et une partie de ce que vous avez saisi.",
     s7Title: "7. Contact",
-    s7Body:
-      "Pour toute question relative à la confidentialité, contactez l'exploitant du Service. (Exploitants : ajoutez vos coordonnées au texte du pied de page dans les paramètres d'administration, ou modifiez cette page.)",
+    s7Body: "Pour toute question relative à la confidentialité, contactez l'exploitant du Service.",
+    contactLine: (contact: string) => `Contact confidentialité : ${contact}`,
   },
 
   batch: {

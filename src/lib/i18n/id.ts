@@ -466,8 +466,8 @@ export const id: Dict = {
     s6Body:
       "Anda dapat meminta kami menghapus catatan Anda. Sertakan detail yang membantu kami menemukannya, seperti perkiraan waktu dan sebagian isi yang Anda masukkan.",
     s7Title: "7. Kontak",
-    s7Body:
-      "Untuk pertanyaan tentang privasi, hubungi pengelola Layanan. (Pengelola: tambahkan kontak Anda di teks footer pada pengaturan admin, atau ubah halaman ini.)",
+    s7Body: "Untuk pertanyaan tentang privasi, hubungi pengelola Layanan.",
+    contactLine: (contact: string) => `Kontak untuk pertanyaan privasi: ${contact}`,
   },
 
   batch: {

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { parseFunnelBody } from "@/lib/analytics";
-import { getClientIp } from "@/lib/ip";
+import { getClientIp, ipLimitKey } from "@/lib/ip";
 import { errorFields, logEvent } from "@/lib/log";
 import { rateLimit } from "@/lib/rateLimit";
 import { getSettings, isOn } from "@/lib/settings";
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, skipped: true });
   }
 
-  const limit = rateLimit(`funnel:${getClientIp(req)}`, RATE_LIMIT, RATE_WINDOW_MS);
+  const limit = rateLimit(`funnel:${ipLimitKey(getClientIp(req))}`, RATE_LIMIT, RATE_WINDOW_MS);
   if (!limit.ok) {
     return NextResponse.json(
       { ok: false, error: "rate_limited" },

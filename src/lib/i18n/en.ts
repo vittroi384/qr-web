@@ -466,8 +466,8 @@ export const en: Dict = {
     s6Body:
       "You can ask us to delete your records. Please include details that help us find them, such as the approximate time and part of what you entered.",
     s7Title: "7. Contact",
-    s7Body:
-      "For privacy questions, contact the operator of the Service. (Operators: add your contact details to the footer text in the admin settings, or edit this page.)",
+    s7Body: "For privacy questions, contact the operator of the Service.",
+    contactLine: (contact: string) => `Privacy contact: ${contact}`,
   },
 
   batch: {

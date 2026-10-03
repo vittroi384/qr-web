@@ -7,7 +7,7 @@ import { GATE_COOKIE, gateSatisfied, ipAllowedForAdmin } from "@/lib/adminAccess
 import { writeAudit } from "@/lib/audit";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getRequestMetaFromHeaders } from "@/lib/ip";
-import { BOOLEAN_SETTINGS, SETTING_KEYS, type Settings, updateSettings } from "@/lib/settings";
+import { BOOLEAN_SETTINGS, SETTING_KEYS, type Settings, isValidPrivacyContact, updateSettings } from "@/lib/settings";
 
 const AD_SLOT_KEYS = ["ad_slot_top", "ad_slot_left", "ad_slot_right", "ad_slot_bottom", "ad_slot_incontent", "ad_slot_inarticle"] as const;
 
@@ -86,6 +86,10 @@ export async function saveSettingsAction(formData: FormData) {
   }
   for (const key of ["site_name", "site_description", "footer_notice"] as const) {
     if (patch[key] !== undefined) patch[key] = patch[key]!.slice(0, 500);
+  }
+  // Rendered inside a sentence on the public privacy page: one line, at most 200 characters.
+  if (patch.privacy_contact !== undefined && !isValidPrivacyContact(patch.privacy_contact)) {
+    redirect("/admin/settings?error=privacy_contact");
   }
 
   const changes = await updateSettings(patch);

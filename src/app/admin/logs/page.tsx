@@ -3,6 +3,7 @@ import { InfiniteScroll } from "@/components/admin/InfiniteScroll";
 import { DatePresets, TypeFilter } from "@/components/admin/LogFilters";
 import { EVENT_LABELS, EventBadge, TypeBadge, formatDate } from "@/components/admin/ui";
 import { DownloadIcon } from "@/components/icons";
+import { requireAdmin } from "@/lib/adminSession";
 import { listLogs, type LogFilter } from "@/lib/logs";
 import { summarizeLog, topFacets, visitorLanguage } from "@/lib/qr/summarize";
 import { isQrType } from "@/lib/qr/sanitize";
@@ -48,6 +49,7 @@ function browserOf(ua: string | null): string {
 }
 
 export default async function LogsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  await requireAdmin();
   const sp = await searchParams;
   const typeParam = first(sp.type);
   const filter: LogFilter = {

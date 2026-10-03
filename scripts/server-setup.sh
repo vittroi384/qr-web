@@ -42,17 +42,23 @@ if [ ! -f .env ]; then
   sed -i "s|^DOMAIN=.*|DOMAIN=|" .env
   echo
   echo "    .env created. NOW EDIT IT:  nano .env"
-  echo "      ADMIN_PASSWORD=   (long password)"
-  echo "      DOMAIN=           (leave empty until your domain's DNS points here)"
-  echo "    Your secret admin entry path is: ${ADMIN_PATH}   <- bookmark http://<server-ip>${ADMIN_PATH}"
+  echo "      ADMIN_PASSWORD=     (at least 12 characters, unique — the example value is rejected in production)"
+  echo "      ADMIN_TOTP_SECRET=  (REQUIRED before the first login; see step 4 below)"
+  echo "      DOMAIN=             (leave empty until your domain's DNS points here)"
+  echo "    Your secret admin entry path is: ${ADMIN_PATH}   <- bookmark it"
 fi
 chmod +x deploy.sh scripts/backup.sh
 mkdir -p backups
 
 echo "==> 5/5 Done. Next:"
-echo "    1) nano .env   (set ADMIN_PASSWORD; optionally ADMIN_ALLOWED_IPS)"
+echo "    1) nano .env   (set ADMIN_PASSWORD, 12+ chars; optionally ADMIN_ALLOWED_IPS)"
 echo "    2) newgrp docker   (or log out and back in so 'docker' works without sudo)"
 echo "    3) ./deploy.sh     (builds and starts; first build takes a few minutes on A1)"
-echo "    4) Open http://<server-ip>/  and  http://<server-ip>${ADMIN_PATH:-<ADMIN_PATH>}"
-echo "    5) Daily DB backup (cron):  (crontab -l 2>/dev/null; echo \"30 4 * * * $APP_DIR/scripts/backup.sh >> $APP_DIR/backups/backup.log 2>&1\") | crontab -"
-echo "    6) Later: npm run totp-setup inside the container ->  docker compose exec app node scripts/totp-setup.mjs"
+echo "    4) TOTP is REQUIRED before the first login (production refuses to log in without it):"
+echo "         docker compose exec app node scripts/totp-setup.mjs   -> scan the QR with your authenticator app,"
+echo "         put the printed ADMIN_TOTP_SECRET into .env, then  docker compose up -d"
+echo "    5) Open the admin area. While DOMAIN is empty the site is plain HTTP, so never log in over the"
+echo "       public address — tunnel to the app port (bound to the server's loopback only) from your PC:"
+echo "         ssh -L 3000:127.0.0.1:3000 ubuntu@<server-ip>   ->   http://localhost:3000${ADMIN_PATH:-<ADMIN_PATH>}"
+echo "       Once DOMAIN is set (HTTPS), use https://<domain>${ADMIN_PATH:-<ADMIN_PATH>} directly."
+echo "    6) Daily DB backup (cron):  (crontab -l 2>/dev/null; echo \"30 4 * * * $APP_DIR/scripts/backup.sh >> $APP_DIR/backups/backup.log 2>&1\") | crontab -"

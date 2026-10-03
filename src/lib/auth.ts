@@ -65,37 +65,67 @@ export const sessionCookieOptions = {
   maxAge: SESSION_TTL_SEC,
 };
 
-// Login throttling: 5 failures per IP within 10 minutes locks that IP.
-const failures = new Map<string, { count: number; first: number }>();
+/* ---------- Production configuration guard ---------- */
+
+const MIN_PASSWORD_LENGTH = 12;
+/** Values from .env.example / local development that must never unlock a production admin. */
+const PLACEHOLDER_PASSWORDS = new Set(["change-me-to-a-long-password", "admin1234", "password", "changeme", "admin"]);
+
+/**
+ * In production the admin login is refused outright while the deployment is unsafe: no TOTP
+ * secret, or a password that is short or still the example value. Returns the Korean reason shown
+ * to the owner, or null when login may proceed. Development keeps the relaxed behaviour (E2E
+ * tests log in with a short dev password).
+ */
+export function productionLoginBlocker(env: NodeJS.ProcessEnv = process.env): string | null {
+  if (env.NODE_ENV !== "production") return null;
+  const problems: string[] = [];
+  if (!env.ADMIN_TOTP_SECRET?.trim()) problems.push("ADMIN_TOTP_SECRET 미설정");
+  const password = env.ADMIN_PASSWORD ?? "";
+  if (password.length < MIN_PASSWORD_LENGTH) problems.push(`ADMIN_PASSWORD ${MIN_PASSWORD_LENGTH}자 미만`);
+  else if (PLACEHOLDER_PASSWORDS.has(password)) problems.push("ADMIN_PASSWORD 예시 값 그대로");
+  if (problems.length === 0) return null;
+  return `운영 모드에서는 TOTP와 ${MIN_PASSWORD_LENGTH}자 이상 비밀번호가 필요합니다 (${problems.join(", ")}). .env를 고치고 컨테이너를 재시작하세요.`;
+}
+
+/* ---------- Login throttling ---------- */
+
+/**
+ * 5 failures per client key within 10 minutes lock that key. An attempt is charged *before* the
+ * credentials are read (`beginLoginAttempt`), synchronously, so a burst of concurrent requests
+ * cannot all slip past the check while one of them is still awaiting the body; a successful login
+ * then refunds the key (`endLoginAttempt`). The key is the /64-normalised IP (see ip.ts).
+ */
+type Attempts = { count: number; first: number };
+
+const attempts = new Map<string, Attempts>();
 const LOCK_WINDOW_MS = 10 * 60 * 1000;
 const MAX_FAILURES = 5;
-const MAX_TRACKED_IPS = 5000;
+const MAX_TRACKED_KEYS = 5000;
 
 export const LOCK_WINDOW_SEC = LOCK_WINDOW_MS / 1000;
 
-export function isLockedOut(ip: string): boolean {
-  const f = failures.get(ip);
-  if (!f) return false;
-  if (Date.now() - f.first > LOCK_WINDOW_MS) {
-    failures.delete(ip);
-    return false;
-  }
-  return f.count >= MAX_FAILURES;
-}
-
-export function recordLoginFailure(ip: string) {
-  const f = failures.get(ip);
-  if (!f || Date.now() - f.first > LOCK_WINDOW_MS) {
-    if (failures.size >= MAX_TRACKED_IPS) {
-      const oldest = failures.keys().next().value;
-      if (oldest !== undefined) failures.delete(oldest);
+/** Charges one attempt to the key. False = already locked out (the attempt still counts, so the lock persists). */
+export function beginLoginAttempt(key: string, now = Date.now()): boolean {
+  let a = attempts.get(key);
+  if (!a || now - a.first > LOCK_WINDOW_MS) {
+    if (!a && attempts.size >= MAX_TRACKED_KEYS) {
+      const oldest = attempts.keys().next().value;
+      if (oldest !== undefined) attempts.delete(oldest);
     }
-    failures.set(ip, { count: 1, first: Date.now() });
-  } else {
-    f.count += 1;
+    a = { count: 0, first: now };
+    attempts.set(key, a);
   }
+  a.count += 1;
+  return a.count <= MAX_FAILURES;
 }
 
-export function clearLoginFailures(ip: string) {
-  failures.delete(ip);
+/** A successful login clears the key; a failure keeps the charge already taken. */
+export function endLoginAttempt(key: string, ok: boolean) {
+  if (ok) attempts.delete(key);
+}
+
+/** Test hook. */
+export function resetLoginAttempts() {
+  attempts.clear();
 }
