@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { QrStyleOptions } from "@/lib/qr/types";
-import { CheckIcon, CodeIcon, CopyIcon, DownloadIcon, PrinterIcon, QrMarkIcon } from "../icons";
+import { CheckIcon, ChevronDownIcon, CodeIcon, CopyIcon, DownloadIcon, PrinterIcon, QrMarkIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
 import type { AffiliateInfo } from "../AffiliateCard";
 import { PrintSheetDialog, type SheetText } from "./PrintSheet";
@@ -11,6 +11,8 @@ import { Segmented } from "./Segmented";
 
 type Props = {
   encoded: string;
+  /** The form holds a value that cannot be encoded (the field explains why); `encoded` is empty then. */
+  invalid?: boolean;
   style: QrStyleOptions;
   onStyleChange: (next: QrStyleOptions) => void;
   fileBase: string;
@@ -20,15 +22,25 @@ type Props = {
   onAction: (event: "download_png" | "download_svg" | "copy" | "print") => void;
 };
 
-export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaults, affiliate, onAction }: Props) {
+/** Short-lived line under the buttons: save/copy confirmations and the non-blocking copy failure. */
+type Feedback = "saved" | "copied" | "copyFailed";
+const FEEDBACK_MS: Record<Feedback, number> = { saved: 2000, copied: 2000, copyFailed: 6000 };
+
+export function QrPreview({ encoded, invalid = false, style, onStyleChange, fileBase, sheetDefaults, affiliate, onAction }: Props) {
   const { t } = useI18n();
   const p = t.preview;
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  // Render failures only (content too long for a QR). Copy problems never land here: they must
+  // not disable the save buttons that are the way out.
   const [error, setError] = useState<string | null>(null);
-  // One confirmation line for every save action; replaces the tip for two seconds.
-  const [feedback, setFeedback] = useState<"saved" | "copied" | null>(null);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Phone layout: the preview sits below the form. True while its save buttons are still further
+  // down the page (out of view below the viewport).
+  const [actionsBelow, setActionsBelow] = useState(false);
 
   /** Output resolution of the saved PNG. The on-screen preview always scales to fit its frame. */
   const sizes = [
@@ -69,17 +81,33 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
   }, []);
 
-  const confirm = (kind: "saved" | "copied") => {
+  // Drives the phone-only save bar. It stands in for the real save buttons, so it shows exactly
+  // while those are out of view *below* the viewport (the visitor is up in the form) and goes
+  // away the moment they scroll in. Scrolling past them hides it too, so the bar never sits on
+  // top of the ads further down the page.
+  // The root is extended far upward, so "not intersecting" means precisely "below the viewport"
+  // and the observer fires on every change of that answer — including an instant jump from the
+  // page bottom back to the top, which a plain viewport root would miss (both states are
+  // non-intersecting there).
+  useEffect(() => {
+    const actions = actionsRef.current;
+    if (!actions || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setActionsBelow(!entry.isIntersecting), { rootMargin: "100000px 0px 0px 0px" });
+    observer.observe(actions);
+    return () => observer.disconnect();
+  }, []);
+
+  const notify = (kind: Feedback) => {
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
     setFeedback(kind);
-    feedbackTimer.current = setTimeout(() => setFeedback(null), 2000);
+    feedbackTimer.current = setTimeout(() => setFeedback(null), FEEDBACK_MS[kind]);
   };
 
   const downloadPng = () => {
     const canvas = canvasRef.current;
     if (!canvas || !encoded) return;
     triggerDownload(canvas.toDataURL("image/png"), `${fileBase}.png`);
-    confirm("saved");
+    notify("saved");
     onAction("download_png");
   };
 
@@ -89,7 +117,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
     triggerDownload(url, `${fileBase}.svg`);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    confirm("saved");
+    notify("saved");
     onAction("download_svg");
   };
 
@@ -97,15 +125,19 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
     const canvas = canvasRef.current;
     if (!canvas || !encoded) return;
     try {
+      // navigator.clipboard is undefined on plain-HTTP pages and ClipboardItem is missing in some
+      // browsers; both throw here and end up in the same hint.
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("blob");
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      confirm("copied");
+      notify("copied");
       onAction("copy");
     } catch {
-      setError(p.copyUnsupported);
+      notify("copyFailed");
     }
   };
+
+  const scrollToPreview = () => frameRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   // Stale errors are irrelevant once the input is cleared.
   const shownError = encoded ? error : null;
@@ -115,7 +147,9 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
     ? { text: p.badgeError, cls: "bg-danger-soft text-danger" }
     : encoded
       ? { text: p.badgeLive, cls: "bg-success-soft text-success" }
-      : { text: p.badgeIdle, cls: "bg-surface text-muted" };
+      : invalid
+        ? { text: p.badgeInvalid, cls: "bg-warning-soft text-warning" }
+        : { text: p.badgeIdle, cls: "bg-surface text-muted" };
 
   let outputPx = style.size;
   if (encoded) {
@@ -125,6 +159,8 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
       // content too long for a QR — the error state is shown elsewhere
     }
   }
+
+  const showBar = actionsBelow && !disabled;
 
   return (
     <div className="flex flex-col">
@@ -137,7 +173,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
       </div>
 
       {/* The canvas keeps its full output resolution; CSS scales it to the frame. */}
-      <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-hidden rounded-lg border border-border bg-white">
+      <div ref={frameRef} className="relative mx-auto aspect-square w-full max-w-[280px] scroll-mt-20 overflow-hidden rounded-lg border border-border bg-white">
         <canvas
           ref={canvasRef}
           role="img"
@@ -147,12 +183,18 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
         />
         {!encoded ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center">
-            <span className="grid size-11 place-items-center rounded-lg border border-dashed border-border-strong text-zinc-400">
-              <QrMarkIcon className="size-5" />
+            <span className={`grid size-11 place-items-center rounded-lg border border-dashed ${invalid ? "border-amber-300 text-warning" : "border-border-strong text-zinc-400"}`}>
+              {invalid ? <WarningIcon className="size-5" /> : <QrMarkIcon className="size-5" />}
             </span>
             <p className="text-[13px] leading-relaxed text-balance text-muted">
-              <span className="hidden lg:inline">{p.emptyDesktop}</span>
-              <span className="lg:hidden">{p.emptyMobile}</span>
+              {invalid ? (
+                p.emptyInvalid
+              ) : (
+                <>
+                  <span className="hidden lg:inline">{p.emptyDesktop}</span>
+                  <span className="lg:hidden">{p.emptyMobile}</span>
+                </>
+              )}
             </p>
           </div>
         ) : null}
@@ -182,7 +224,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
         · {p.summaryMargin(style.margin)}
       </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div ref={actionsRef} className="mt-4 grid grid-cols-2 gap-2">
         <button type="button" className="btn btn-primary col-span-2" onClick={downloadPng} disabled={disabled}>
           <DownloadIcon />
           {p.downloadPng}
@@ -203,7 +245,12 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
       </div>
 
       <div aria-live="polite">
-        {feedback ? (
+        {feedback === "copyFailed" ? (
+          <p className="mt-3 flex items-start gap-1.5 text-xs leading-relaxed font-medium text-warning">
+            <WarningIcon className="mt-px size-3.5 shrink-0" />
+            {p.copyUnsupported}
+          </p>
+        ) : feedback ? (
           <p className="mt-3 flex items-start gap-1.5 text-xs leading-relaxed font-medium text-success">
             <CheckIcon className="mt-px size-3.5 shrink-0" />
             {feedback === "copied" ? p.copiedToast : p.savedToast}
@@ -214,7 +261,7 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
 
       {encoded ? (
         <details className="mt-3 border-t border-border pt-2 text-xs text-muted">
-          <summary className="flex cursor-pointer items-center gap-1.5 rounded py-1 font-medium transition-colors hover:text-foreground">
+          <summary className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded font-medium transition-colors hover:text-foreground">
             <CodeIcon className="size-3.5" />
             {p.showData}
           </summary>
@@ -222,6 +269,38 @@ export function QrPreview({ encoded, style, onStyleChange, fileBase, sheetDefaul
             {encoded}
           </pre>
         </details>
+      ) : null}
+
+      {/*
+        Phone-only save bar (lg+ keeps the preview sticky beside the form). Appears while the code
+        is ready but the save buttons are scrolled out of view below, so saving does not need a
+        long scroll. Fixed to the bottom, under the header (z-40) and menus; padded for the home indicator.
+      */}
+      {showBar ? (
+        <div className="save-bar fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgb(2_132_199/0.25)] backdrop-blur-md lg:hidden">
+          <div className="mx-auto flex max-w-[1400px] items-center gap-2 sm:gap-3">
+            <p className="min-w-0 flex-1 truncate text-[13px] text-foreground">
+              {feedback === "saved" ? (
+                <span className="font-medium text-success">{p.savedToast}</span>
+              ) : (
+                <>
+                  <span className="font-medium text-success">{p.barReady}</span>
+                  <span className="text-muted"> · </span>
+                  <span className="font-mono tabular-nums">
+                    {outputPx}×{outputPx}
+                  </span>
+                </>
+              )}
+            </p>
+            <button type="button" className="btn btn-primary shrink-0" onClick={downloadPng}>
+              <DownloadIcon />
+              {p.barSave}
+            </button>
+            <button type="button" className="btn shrink-0 px-3" aria-label={p.barToPreview} title={p.barToPreview} onClick={scrollToPreview}>
+              <ChevronDownIcon />
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {sheetOpen && encoded ? (

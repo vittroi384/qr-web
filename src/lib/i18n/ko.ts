@@ -173,6 +173,8 @@ export const ko = {
       label: "텍스트",
       placeholder: "QR에 담을 내용을 입력하세요",
       count: (n: number) => `${n} 자 · 길어질수록 QR이 복잡해집니다.`,
+
+      max: (max: number) => `최대 ${max}자에 도달했습니다. 더 입력할 수 없습니다.`,
     },
     wifi: {
       ssid: "네트워크 이름 (SSID)",
@@ -247,16 +249,31 @@ export const ko = {
     },
   },
 
+  /** Why a filled-in field cannot become a code (see lib/qr/validate.ts). */
+  validation: {
+    urlScheme: "이 주소 형식은 QR로 만들 수 없습니다. http(s)://, mailto:, tel: 로 시작하는 주소만 가능합니다.",
+    coordNumber: "숫자로 입력하세요 (예: 37.5665).",
+    latRange: "위도는 -90에서 90 사이여야 합니다.",
+    lngRange: "경도는 -180에서 180 사이여야 합니다.",
+    phoneChars: "숫자, +, 공백, -, 괄호만 사용할 수 있습니다.",
+    phoneNoDigits: "번호에 숫자가 없습니다.",
+    phoneTooLong: "번호가 너무 깁니다. 국가 번호를 포함해 최대 15자리입니다.",
+    textMax: (max: number) => `최대 ${max}자까지 담을 수 있습니다.`,
+  },
   preview: {
     title: "미리보기",
     badgeError: "오류",
     badgeLive: "실시간 반영",
     badgeIdle: "입력 대기",
+
+    badgeInvalid: "입력 확인",
     canvasLabel: "생성된 QR 코드 미리보기",
     emptyDesktop: "왼쪽에 내용을 입력하면 여기에 QR 코드가 나타납니다.",
     emptyMobile: "위에 내용을 입력하면 여기에 QR 코드가 나타납니다.",
+
+    emptyInvalid: "표시된 입력칸을 고치면 QR 코드가 나타납니다.",
     tooLong: "내용이 너무 길어 QR에 담을 수 없습니다. 내용을 줄이거나 꾸미기의 복원력을 “기본”으로 바꿔 보세요.",
-    copyUnsupported: "이 브라우저에서는 이미지 복사를 지원하지 않습니다. PNG 다운로드를 이용해 주세요.",
+    copyUnsupported: "여기서는 이미지 복사를 쓸 수 없습니다(브라우저 미지원 또는 HTTP 접속). PNG 저장을 이용해 주세요.",
     size: "크기",
     sizeLabel: "저장 크기",
     sizes: { small: "작게", medium: "보통", large: "크게", max: "최대" },
@@ -273,6 +290,14 @@ export const ko = {
     disabledWhy: "내용을 입력하면 저장 버튼을 누를 수 있습니다.",
     tip: "인쇄물에는 확대해도 선명한 SVG를 권장합니다. 사용 전에 휴대폰 카메라로 스캔해 확인하세요.",
     showData: "QR에 담긴 실제 데이터 보기",
+
+    /** Phone-only sticky bar shown while the preview is scrolled out of view. */
+
+    barReady: "준비됨",
+
+    barSave: "PNG 저장",
+
+    barToPreview: "미리보기로 이동",
   },
 
   style: {

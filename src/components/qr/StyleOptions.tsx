@@ -109,7 +109,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
           <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
           <label
             title={t.customColor}
-            className={`relative grid size-8 cursor-pointer place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+            className={`relative grid size-11 cursor-pointer place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
               presetColor ? "" : "outline-2 outline-offset-2 outline-foreground"
             }`}
             style={{
@@ -125,7 +125,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
               value={/^#[0-9a-f]{6}$/i.test(value.darkColor) ? value.darkColor : "#111111"}
               onChange={(e) => onChange({ ...value, darkColor: e.target.value })}
             />
-            {presetColor ? null : <CheckIcon className="size-4 drop-shadow" />}
+            {presetColor ? null : <CheckIcon className="size-5 drop-shadow" />}
           </label>
           <span className="ml-1 font-mono text-xs text-muted uppercase">{value.darkColor}</span>
         </div>

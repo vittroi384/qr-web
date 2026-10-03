@@ -205,6 +205,8 @@ export const ja: Dict = {
       label: "テキスト",
       placeholder: "読み取ったときに表示するテキストを入力",
       count: (n: number) => `${n}文字 · 長いほどQRコードが細かくなります。`,
+
+      max: (max: number) => `上限の${max}文字に達しました。これ以上は入力できません。`,
     },
     wifi: {
       ssid: "ネットワーク名（SSID）",
@@ -279,16 +281,31 @@ export const ja: Dict = {
     },
   },
 
+  /** Why a filled-in field cannot become a code (see lib/qr/validate.ts). */
+  validation: {
+    urlScheme: "この形式のアドレスはQRコードにできません。http(s)://、mailto:、tel: で始まるアドレスを使ってください。",
+    coordNumber: "数値で入力してください（例: 37.5665）。",
+    latRange: "緯度は -90 から 90 の範囲で入力してください。",
+    lngRange: "経度は -180 から 180 の範囲で入力してください。",
+    phoneChars: "使えるのは数字、+、スペース、ハイフン、かっこだけです。",
+    phoneNoDigits: "番号に数字が含まれていません。",
+    phoneTooLong: "番号が長すぎます。国番号を含めて最大15桁です。",
+    textMax: (max: number) => `1つのコードに入るのは最大${max}文字です。`,
+  },
   preview: {
     title: "プレビュー",
     badgeError: "エラー",
     badgeLive: "表示中",
     badgeIdle: "入力待ち",
+
+    badgeInvalid: "入力を確認",
     canvasLabel: "QRコードのプレビュー",
     emptyDesktop: "左のフォームに入力すると、ここにQRコードが表示されます。",
     emptyMobile: "上のフォームに入力すると、ここにQRコードが表示されます。",
+
+    emptyInvalid: "赤く示された項目を直すと、ここにQRコードが表示されます。",
     tooLong: "1つのQRコードに入りきりません。内容を短くするか、「デザイン」の誤り訂正を「標準」にしてください。",
-    copyUnsupported: "このブラウザは画像のコピーに対応していません。PNGで保存してください。",
+    copyUnsupported: "ここでは画像のコピーが使えません（ブラウザ非対応またはHTTP接続）。PNGで保存してください。",
     size: "サイズ",
     sizeLabel: "出力サイズ",
     sizes: { small: "小", medium: "中", large: "大", max: "最大" },
@@ -305,6 +322,14 @@ export const ja: Dict = {
     disabledWhy: "内容を入力すると保存ボタンが使えるようになります。",
     tip: "印刷にはSVGファイルがおすすめです。どのサイズでもくっきり印刷できます。印刷前にスマホで読み取りを確認しましょう。",
     showData: "コードに含まれるデータを表示",
+
+    /** Phone-only sticky bar shown while the preview is scrolled out of view. */
+
+    barReady: "準備完了",
+
+    barSave: "PNGを保存",
+
+    barToPreview: "プレビューへ",
   },
 
   style: {

@@ -17,15 +17,16 @@ const PHONE_VISIBLE = 6;
 export function TypeTabs({ value, onChange }: { value: QrType; onChange: (t: QrType) => void }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  // Keep the grid open while the selection lives in the extra group: collapsing would hide it.
-  const expanded = open || QR_TYPES.indexOf(value) >= PHONE_VISIBLE;
-  const hiddenCount = QR_TYPES.length - PHONE_VISIBLE;
+  // A selection from the extra group stays visible as a seventh tile when the grid is collapsed,
+  // so the list can always be folded back and the chosen type is never hidden.
+  const selectedInExtra = QR_TYPES.indexOf(value) >= PHONE_VISIBLE;
+  const hiddenCount = QR_TYPES.length - PHONE_VISIBLE - (selectedInExtra ? 1 : 0);
   return (
     <div className="@container">
       <div role="group" aria-label={t.generator.typeGroupLabel} className="grid auto-rows-fr grid-cols-2 gap-2 @sm:grid-cols-3 @2xl:grid-cols-5">
         {QR_TYPES.map((type, i) => {
           const active = type === value;
-          const collapsed = !expanded && i >= PHONE_VISIBLE;
+          const collapsed = !open && i >= PHONE_VISIBLE && !active;
           return (
             <button
               key={type}
@@ -47,17 +48,10 @@ export function TypeTabs({ value, onChange }: { value: QrType; onChange: (t: QrT
           );
         })}
       </div>
-      {QR_TYPES.indexOf(value) < PHONE_VISIBLE ? (
-        <button
-          type="button"
-          aria-expanded={expanded}
-          onClick={() => setOpen(!expanded)}
-          className="btn btn-ghost btn-sm mt-2 -ml-1 @sm:hidden"
-        >
-          <ChevronDownIcon className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
-          {expanded ? t.generator.typeLess : t.generator.typeMore(hiddenCount)}
-        </button>
-      ) : null}
+      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="btn btn-ghost btn-sm mt-2 -ml-1 @sm:hidden">
+        <ChevronDownIcon className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        {open ? t.generator.typeLess : t.generator.typeMore(hiddenCount)}
+      </button>
     </div>
   );
 }
