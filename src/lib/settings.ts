@@ -74,7 +74,7 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   site_url: "사이트 URL (https://example.com)",
   site_description: "사이트 설명 (메타 태그)",
   footer_notice: "푸터 고지 문구",
-  privacy_contact: "개인정보 문의 연락처 (이메일 또는 자유 텍스트, 비우면 문의 문장 생략)",
+  privacy_contact: "개인정보 문의 연락처 (이메일)",
   adsense_client: "AdSense 게시자 ID (ca-pub-xxxxxxxxxxxxxxxx)",
   ads_enabled: "광고 표시",
   ad_placeholders: "광고 자리 점선 표시 (레이아웃 확인용)",
