@@ -85,7 +85,8 @@ export function QrGenerator({
   const reset = () => setPayloads((prev) => ({ ...prev, [type]: DEFAULT_PAYLOADS[type] }));
 
   // Landing hints run once on mount. The Style section owns its own <details>, so this only
-  // flips the native `open` flag and, if asked, scrolls to the logo field and outlines it briefly.
+  // flips the native `open` flag and, if asked, outlines the logo field briefly. No auto-scroll:
+  // the landing headline must stay in view on first paint.
   const styleRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!initialUi?.openStyle && !initialUi?.focusLogo) return;
@@ -96,7 +97,6 @@ export function QrGenerator({
     if (!initialUi.focusLogo) return;
     const field = root.querySelector('input[type="file"]')?.closest<HTMLElement>('[role="group"]');
     if (!field) return;
-    field.scrollIntoView({ block: "center", behavior: "smooth" });
     field.classList.add(...LOGO_HIGHLIGHT);
     const timer = window.setTimeout(() => field.classList.remove(...LOGO_HIGHLIGHT), 2500);
     return () => window.clearTimeout(timer);
