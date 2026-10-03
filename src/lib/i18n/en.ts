@@ -205,6 +205,8 @@ export const en: Dict = {
       label: "Text",
       placeholder: "Type the text to show when scanned",
       count: (n: number) => `${n} characters · Longer text makes a denser code.`,
+
+      max: (max: number) => `Limit of ${max} characters reached — nothing more fits.`,
     },
     wifi: {
       ssid: "Network name (SSID)",
@@ -279,16 +281,31 @@ export const en: Dict = {
     },
   },
 
+  /** Why a filled-in field cannot become a code (see lib/qr/validate.ts). */
+  validation: {
+    urlScheme: "This kind of address can't go in a QR code. Use one starting with http(s)://, mailto: or tel:.",
+    coordNumber: "Enter a number (e.g. 37.5665).",
+    latRange: "Latitude must be between -90 and 90.",
+    lngRange: "Longitude must be between -180 and 180.",
+    phoneChars: "Use digits, +, spaces, dashes or parentheses only.",
+    phoneNoDigits: "The number has no digits.",
+    phoneTooLong: "The number is too long — at most 15 digits including the country code.",
+    textMax: (max: number) => `Up to ${max} characters fit in one code.`,
+  },
   preview: {
     title: "Preview",
     badgeError: "Error",
     badgeLive: "Live",
     badgeIdle: "Waiting",
+
+    badgeInvalid: "Check input",
     canvasLabel: "Preview of your QR code",
     emptyDesktop: "Fill in the form on the left and your QR code appears here.",
     emptyMobile: "Fill in the form above and your QR code appears here.",
+
+    emptyInvalid: "Fix the highlighted field and your QR code appears here.",
     tooLong: "Too much content for one QR code. Shorten it, or set Error correction to “Standard” under Style.",
-    copyUnsupported: "This browser can't copy images. Save the PNG instead.",
+    copyUnsupported: "Copying isn't available here (unsupported browser or a plain HTTP connection). Save the PNG instead.",
     size: "Size",
     sizeLabel: "Output size",
     sizes: { small: "Small", medium: "Medium", large: "Large", max: "Max" },
@@ -305,6 +322,14 @@ export const en: Dict = {
     disabledWhy: "Add some content to turn on the save buttons.",
     tip: "For print, use the SVG file — it stays sharp at any size. Test-scan with your phone before printing.",
     showData: "Show the data inside the code",
+
+    /** Phone-only sticky bar shown while the preview is scrolled out of view. */
+
+    barReady: "Ready",
+
+    barSave: "Save PNG",
+
+    barToPreview: "Go to preview",
   },
 
   style: {

@@ -19,7 +19,10 @@ export function SiteFooter({
   const d = getDict(locale);
   const t = d.footer;
   // Plain text links laid out in columns across the full footer width (no tall two-column list).
-  const link = "block truncate text-[13px] leading-6 text-muted transition-colors hover:text-foreground";
+  // On touch screens each row grows to a 44px target; with a mouse the list stays compact.
+  const link = "block truncate text-[13px] leading-6 text-muted transition-colors pointer-coarse:py-2.5 hover:text-foreground";
+  // Top-row links: 44px tall everywhere, widened a little so short words are still easy to hit.
+  const navLink = "-mx-2 inline-flex min-h-11 items-center px-2 transition-colors hover:text-foreground";
   const generatorLinks = (
     <ul className="grid grid-cols-2 gap-x-6 sm:grid-cols-4 lg:grid-cols-7">
       {QR_TYPES.map((type) => (
@@ -59,20 +62,15 @@ export function SiteFooter({
           </p>
         </div>
 
-        <nav aria-label={t.navLabel} className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]">
-          <Link href={localePath(locale, "/about")} className="text-muted transition-colors hover:text-foreground">
+        <nav aria-label={t.navLabel} className="-my-2 flex flex-wrap items-center gap-x-7 gap-y-0 text-[13px]">
+          <Link href={localePath(locale, "/about")} className={`${navLink} text-muted`}>
             {t.about}
           </Link>
-          <Link href={localePath(locale, "/privacy")} className="font-medium text-foreground/80 transition-colors hover:text-foreground">
+          <Link href={localePath(locale, "/privacy")} className={`${navLink} font-medium text-foreground/80`}>
             {t.privacy}
           </Link>
           {donateUrl ? (
-            <a
-              href={donateUrl}
-              target="_blank"
-              rel="noopener"
-              className="inline-flex items-center gap-1.5 text-muted transition-colors hover:text-foreground"
-            >
+            <a href={donateUrl} target="_blank" rel="noopener" className={`${navLink} gap-1.5 text-muted`}>
               <CoffeeIcon className="size-4" />
               {t.donate}
             </a>

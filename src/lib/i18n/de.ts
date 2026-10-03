@@ -205,6 +205,8 @@ export const de: Dict = {
       label: "Text",
       placeholder: "Text eingeben, der beim Scannen angezeigt wird",
       count: (n: number) => `${n} Zeichen · Längerer Text ergibt einen dichteren Code.`,
+
+      max: (max: number) => `Grenze von ${max} Zeichen erreicht – mehr passt nicht hinein.`,
     },
     wifi: {
       ssid: "Netzwerkname (SSID)",
@@ -279,16 +281,31 @@ export const de: Dict = {
     },
   },
 
+  /** Why a filled-in field cannot become a code (see lib/qr/validate.ts). */
+  validation: {
+    urlScheme: "Diese Art Adresse kann nicht in einen QR-Code. Verwenden Sie eine, die mit http(s)://, mailto: oder tel: beginnt.",
+    coordNumber: "Geben Sie eine Zahl ein (z. B. 37.5665).",
+    latRange: "Der Breitengrad muss zwischen -90 und 90 liegen.",
+    lngRange: "Der Längengrad muss zwischen -180 und 180 liegen.",
+    phoneChars: "Nur Ziffern, +, Leerzeichen, Bindestriche oder Klammern verwenden.",
+    phoneNoDigits: "Die Nummer enthält keine Ziffern.",
+    phoneTooLong: "Die Nummer ist zu lang – höchstens 15 Ziffern einschließlich Ländervorwahl.",
+    textMax: (max: number) => `In einen Code passen bis zu ${max} Zeichen.`,
+  },
   preview: {
     title: "Vorschau",
     badgeError: "Fehler",
     badgeLive: "Live",
     badgeIdle: "Wartet",
+
+    badgeInvalid: "Eingabe prüfen",
     canvasLabel: "Vorschau Ihres QR-Codes",
     emptyDesktop: "Füllen Sie links das Formular aus, dann erscheint hier Ihr QR-Code.",
     emptyMobile: "Füllen Sie oben das Formular aus, dann erscheint hier Ihr QR-Code.",
+
+    emptyInvalid: "Korrigieren Sie das markierte Feld, dann erscheint der QR-Code hier.",
     tooLong: "Zu viel Inhalt für einen QR-Code. Kürzen Sie ihn oder stellen Sie unter Stil die Fehlerkorrektur auf „Standard“.",
-    copyUnsupported: "Dieser Browser kann keine Bilder kopieren. Speichern Sie stattdessen das PNG.",
+    copyUnsupported: "Kopieren ist hier nicht verfügbar (Browser ohne Unterstützung oder HTTP-Verbindung). Speichern Sie stattdessen das PNG.",
     size: "Größe",
     sizeLabel: "Ausgabegröße",
     sizes: { small: "Klein", medium: "Mittel", large: "Groß", max: "Max." },
@@ -305,6 +322,14 @@ export const de: Dict = {
     disabledWhy: "Geben Sie einen Inhalt ein, um die Speichern-Schaltflächen zu aktivieren.",
     tip: "Für den Druck die SVG-Datei verwenden — sie bleibt in jeder Größe scharf. Vor dem Druck mit dem Handy testen.",
     showData: "Inhalt des Codes anzeigen",
+
+    /** Phone-only sticky bar shown while the preview is scrolled out of view. */
+
+    barReady: "Bereit",
+
+    barSave: "PNG speichern",
+
+    barToPreview: "Zur Vorschau",
   },
 
   style: {

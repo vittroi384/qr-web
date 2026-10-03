@@ -18,9 +18,9 @@ export function HeaderNav({ locale, label, items }: { locale: Locale; label: str
             key={item.path}
             href={localePath(locale, item.path)}
             aria-current={active ? "page" : undefined}
-            className={`rounded-md px-2 py-1.5 whitespace-nowrap transition-colors sm:px-3 ${
+            className={`inline-flex min-h-11 items-center rounded-md px-2 whitespace-nowrap transition-colors sm:px-3 ${
               active ? "bg-surface font-medium text-foreground" : "text-muted hover:bg-surface hover:text-foreground"
-            } ${item.secondary ? "hidden md:block" : ""}`}
+            } ${item.secondary ? "max-md:hidden" : ""}`}
           >
             {item.label}
           </Link>

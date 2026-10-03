@@ -205,6 +205,8 @@ export const id: Dict = {
       label: "Teks",
       placeholder: "Ketik teks yang muncul saat dipindai",
       count: (n: number) => `${n} karakter · Teks yang lebih panjang membuat kode lebih rapat.`,
+
+      max: (max: number) => `Batas ${max} karakter tercapai — tidak bisa menambah lagi.`,
     },
     wifi: {
       ssid: "Nama jaringan (SSID)",
@@ -279,16 +281,31 @@ export const id: Dict = {
     },
   },
 
+  /** Why a filled-in field cannot become a code (see lib/qr/validate.ts). */
+  validation: {
+    urlScheme: "Alamat jenis ini tidak bisa dimasukkan ke kode QR. Gunakan alamat yang diawali http(s)://, mailto:, atau tel:.",
+    coordNumber: "Masukkan angka (mis. 37.5665).",
+    latRange: "Lintang harus antara -90 dan 90.",
+    lngRange: "Bujur harus antara -180 dan 180.",
+    phoneChars: "Gunakan hanya angka, +, spasi, tanda hubung, atau tanda kurung.",
+    phoneNoDigits: "Nomor tidak berisi angka.",
+    phoneTooLong: "Nomor terlalu panjang — maksimal 15 digit termasuk kode negara.",
+    textMax: (max: number) => `Satu kode memuat hingga ${max} karakter.`,
+  },
   preview: {
     title: "Pratinjau",
     badgeError: "Galat",
     badgeLive: "Langsung",
     badgeIdle: "Menunggu",
+
+    badgeInvalid: "Periksa input",
     canvasLabel: "Pratinjau QR code Anda",
     emptyDesktop: "Isi formulir di sebelah kiri, lalu QR code Anda muncul di sini.",
     emptyMobile: "Isi formulir di atas, lalu QR code Anda muncul di sini.",
+
+    emptyInvalid: "Perbaiki kolom yang ditandai, lalu kode QR akan muncul di sini.",
     tooLong: "Konten terlalu banyak untuk satu QR code. Persingkat, atau atur Koreksi kesalahan ke “Standar” di bagian Gaya.",
-    copyUnsupported: "Browser ini tidak bisa menyalin gambar. Simpan sebagai PNG saja.",
+    copyUnsupported: "Menyalin tidak tersedia di sini (browser tidak mendukung atau koneksi HTTP). Simpan sebagai PNG saja.",
     size: "Ukuran",
     sizeLabel: "Ukuran hasil",
     sizes: { small: "Kecil", medium: "Sedang", large: "Besar", max: "Maks" },
@@ -305,6 +322,14 @@ export const id: Dict = {
     disabledWhy: "Isi konten dulu untuk mengaktifkan tombol simpan.",
     tip: "Untuk cetak, gunakan file SVG — tetap tajam di ukuran berapa pun. Coba pindai dengan HP sebelum mencetak.",
     showData: "Tampilkan data di dalam kode",
+
+    /** Phone-only sticky bar shown while the preview is scrolled out of view. */
+
+    barReady: "Siap",
+
+    barSave: "Simpan PNG",
+
+    barToPreview: "Ke pratinjau",
   },
 
   style: {

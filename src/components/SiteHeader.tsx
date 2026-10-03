@@ -17,7 +17,7 @@ export function SiteHeader({ siteName, locale }: { siteName: string; locale: Loc
       <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6">
         <Link
           href={localePath(locale, "/")}
-          className="-mx-1.5 flex min-w-0 items-center gap-2.5 rounded-md px-1.5 py-1 text-[15px] font-semibold tracking-tight text-foreground"
+          className="-mx-1.5 flex min-h-11 min-w-11 items-center gap-2.5 rounded-md px-1.5 py-1 text-[15px] font-semibold tracking-tight text-foreground"
         >
           <BrandMark className="size-7 shrink-0 drop-shadow-[0_2px_6px_rgba(2,132,199,0.35)]" />
           <span className="sr-only truncate min-[480px]:not-sr-only">{siteName}</span>

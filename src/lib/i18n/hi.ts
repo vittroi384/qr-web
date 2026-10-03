@@ -205,6 +205,8 @@ export const hi: Dict = {
       label: "टेक्स्ट",
       placeholder: "स्कैन करने पर दिखने वाला टेक्स्ट लिखें",
       count: (n: number) => `${n} अक्षर · टेक्स्ट जितना लंबा, कोड उतना घना।`,
+
+      max: (max: number) => `${max} अक्षरों की सीमा पूरी हो गई — और नहीं आएगा।`,
     },
     wifi: {
       ssid: "नेटवर्क का नाम (SSID)",
@@ -279,16 +281,31 @@ export const hi: Dict = {
     },
   },
 
+  /** Why a filled-in field cannot become a code (see lib/qr/validate.ts). */
+  validation: {
+    urlScheme: "इस तरह का पता QR कोड में नहीं जा सकता। http(s)://, mailto: या tel: से शुरू होने वाला पता इस्तेमाल करें।",
+    coordNumber: "कोई संख्या लिखें (जैसे 37.5665)।",
+    latRange: "अक्षांश -90 और 90 के बीच होना चाहिए।",
+    lngRange: "देशांतर -180 और 180 के बीच होना चाहिए।",
+    phoneChars: "केवल अंक, +, स्पेस, डैश या कोष्ठक इस्तेमाल करें।",
+    phoneNoDigits: "नंबर में कोई अंक नहीं है।",
+    phoneTooLong: "नंबर बहुत लंबा है — देश कोड सहित अधिकतम 15 अंक।",
+    textMax: (max: number) => `एक कोड में अधिकतम ${max} अक्षर आ सकते हैं।`,
+  },
   preview: {
     title: "प्रीव्यू",
     badgeError: "गड़बड़ी",
     badgeLive: "लाइव",
     badgeIdle: "इंतज़ार",
+
+    badgeInvalid: "इनपुट जाँचें",
     canvasLabel: "आपके QR कोड का प्रीव्यू",
     emptyDesktop: "बाईं ओर फ़ॉर्म भरें, आपका QR कोड यहाँ दिखेगा।",
     emptyMobile: "ऊपर फ़ॉर्म भरें, आपका QR कोड यहाँ दिखेगा।",
+
+    emptyInvalid: "चिह्नित फ़ील्ड ठीक करें, फिर QR कोड यहाँ दिखेगा।",
     tooLong: "एक QR कोड के लिए जानकारी बहुत ज़्यादा है। इसे छोटा करें, या स्टाइल में एरर करेक्शन को “स्टैंडर्ड” करें।",
-    copyUnsupported: "यह ब्राउज़र इमेज कॉपी नहीं कर सकता। इसकी जगह PNG सेव करें।",
+    copyUnsupported: "यहाँ कॉपी उपलब्ध नहीं है (ब्राउज़र समर्थन नहीं करता या HTTP कनेक्शन)। इसकी जगह PNG सेव करें।",
     size: "साइज़",
     sizeLabel: "आउटपुट साइज़",
     sizes: { small: "छोटा", medium: "मीडियम", large: "बड़ा", max: "सबसे बड़ा" },
@@ -305,6 +322,14 @@ export const hi: Dict = {
     disabledWhy: "सेव बटन चालू करने के लिए कुछ जानकारी डालें।",
     tip: "प्रिंट के लिए SVG फ़ाइल इस्तेमाल करें — यह किसी भी साइज़ में साफ़ रहती है। प्रिंट से पहले फ़ोन से स्कैन करके देख लें।",
     showData: "कोड के अंदर का डेटा दिखाएँ",
+
+    /** Phone-only sticky bar shown while the preview is scrolled out of view. */
+
+    barReady: "तैयार",
+
+    barSave: "PNG सेव करें",
+
+    barToPreview: "प्रीव्यू पर जाएँ",
   },
 
   style: {

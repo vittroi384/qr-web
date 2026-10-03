@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { encodePayload } from "@/lib/qr/encoders";
+import { validatePayload } from "@/lib/qr/validate";
 import type { Dict } from "@/lib/i18n";
 import { DEFAULT_PAYLOADS, DEFAULT_STYLE, type QrPayloadMap, type QrStyleOptions, type QrType } from "@/lib/qr/types";
 import { StepGuide } from "../StepGuide";
@@ -54,7 +55,11 @@ export function QrGenerator({
   const [style, setStyle] = useState<QrStyleOptions>(DEFAULT_STYLE);
 
   const payload = payloads[type];
-  const encoded = useMemo(() => encodePayload(type, payload), [type, payload]);
+  // Why a filled-in field cannot be encoded (null when fine or still empty). A payload with an
+  // issue never reaches the encoder, so nothing half-right (a payment link minus its amount, a
+  // blocked URL scheme) can go Live and be saved.
+  const issue = useMemo(() => validatePayload(type, payload), [type, payload]);
+  const encoded = useMemo(() => (issue ? "" : encodePayload(type, payload)), [type, payload, issue]);
   // Logs only on download, copy and print — typing and previewing never reach the server.
   const logAction = useQrLogger({ type, payload, options: style, encoded });
   // Anonymous select → preview counters (once per type per session); no content is sent.
@@ -119,7 +124,7 @@ export function QrGenerator({
                 </button>
               }
             />
-            <PayloadForm key={type} type={type} value={payload} onChange={setPayload} />
+            <PayloadForm key={type} type={type} value={payload} onChange={setPayload} issue={issue} />
           </div>
         </div>
 
@@ -129,6 +134,7 @@ export function QrGenerator({
             <QrPreview
               affiliate={affiliate ?? null}
               encoded={encoded}
+              invalid={Boolean(issue)}
               style={style}
               onStyleChange={setStyle}
               fileBase={`qr-${type}`}
