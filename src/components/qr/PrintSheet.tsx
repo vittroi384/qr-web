@@ -13,13 +13,16 @@ const SHEET_QR_PX = 1024;
 
 export type SheetText = { headline: string; subline: string };
 
-type PosterProps = SheetText & { footer: string; src: string | null; alt: string };
+/** The rendered code as a data URL plus its bitmap size (taller than wide when it has a frame). */
+type PosterImage = { src: string; width: number; height: number };
+
+type PosterProps = SheetText & { footer: string; image: PosterImage | null; alt: string };
 
 /**
  * The A4 poster. Every size is in container-width units (cqw), so the same markup scales from
  * the on-screen preview to the 186 mm printable width without a second layout.
  */
-function Poster({ headline, subline, footer, src, alt }: PosterProps) {
+function Poster({ headline, subline, footer, image, alt }: PosterProps) {
   return (
     <div className="poster-frame">
       <div className="poster">
@@ -28,8 +31,17 @@ function Poster({ headline, subline, footer, src, alt }: PosterProps) {
           {subline ? <p className="poster-subline">{subline}</p> : null}
         </div>
         <div className="poster-qr">
-          {/* eslint-disable-next-line @next/next/no-img-element -- a local data URL; next/image adds nothing here */}
-          {src ? <img src={src} alt={alt} width={SHEET_QR_PX} height={SHEET_QR_PX} /> : null}
+          {image ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a local data URL; next/image adds nothing here
+            <img
+              src={image.src}
+              alt={alt}
+              width={image.width}
+              height={image.height}
+              // A framed code is taller than wide: keep its ratio and let it shrink to the slot's height.
+              style={{ aspectRatio: `${image.width} / ${image.height}`, maxHeight: "100%", objectFit: "contain" }}
+            />
+          ) : null}
         </div>
         <p className="poster-footer">{footer}</p>
       </div>
@@ -89,7 +101,7 @@ export function PrintSheetDialog({
   const [headline, setHeadline] = useState(defaults.headline);
   const [subline, setSubline] = useState(defaults.subline);
   const [footer, setFooter] = useState("");
-  const [src, setSrc] = useState<string | null>(null);
+  const [image, setImage] = useState<PosterImage | null>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -109,10 +121,10 @@ export function PrintSheetDialog({
     const canvas = document.createElement("canvas");
     drawQrToCanvas(canvas, encoded, { ...style, size: SHEET_QR_PX })
       .then(() => {
-        if (!cancelled) setSrc(canvas.toDataURL("image/png"));
+        if (!cancelled) setImage({ src: canvas.toDataURL("image/png"), width: canvas.width, height: canvas.height });
       })
       .catch(() => {
-        if (!cancelled) setSrc(null);
+        if (!cancelled) setImage(null);
       });
     return () => {
       cancelled = true;
@@ -124,7 +136,7 @@ export function PrintSheetDialog({
     window.print();
   };
 
-  const poster = { headline, subline, footer, src, alt: p.qrAlt };
+  const poster = { headline, subline, footer, image, alt: p.qrAlt };
 
   return createPortal(
     <>
@@ -168,7 +180,7 @@ export function PrintSheetDialog({
               <TextField label={p.subline} value={subline} onChange={setSubline} placeholder={p.sublinePlaceholder} optional={p.optional} />
               <TextField label={p.footer} value={footer} onChange={setFooter} placeholder={p.footerPlaceholder} optional={p.optional} />
               <div className="mt-auto pt-2">
-                <button type="button" className="btn btn-primary w-full" onClick={print} disabled={!src}>
+                <button type="button" className="btn btn-primary w-full" onClick={print} disabled={!image}>
                   <PrinterIcon />
                   {p.print}
                 </button>

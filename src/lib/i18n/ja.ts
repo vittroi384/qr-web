@@ -338,8 +338,17 @@ export const ja: Dict = {
 
   style: {
     title: "デザイン",
-    summary: "任意 · 色、背景、誤り訂正、ロゴ",
+    summary: "任意 · フレーム、色、背景、誤り訂正、ロゴ",
     changed: "変更あり",
+    frame: "フレーム",
+    frameHint: "コードの周りに色付きの枠と一行の案内文を付けます。保存するPNG・SVG・ポスターにも入ります。",
+    frameNone: "なし",
+    framePresets: { scan: "Scan me", wifi: "Wi-Fi", menu: "メニュー", review: "レビュー", pay: "支払い", custom: "自由入力" },
+    frameTexts: { scan: "スキャンしてください", wifi: "スキャンでWi-Fi接続", menu: "メニューを見る", review: "レビューを書く", pay: "スキャンして支払い" },
+    frameText: "案内文",
+    frameTextHint: "40文字まで · 空にすると枠だけになります。",
+    frameColor: "フレームの色",
+    frameSameAsCode: "コードと同じ",
     codeColor: "コードの色",
     colors: {
       black: "ブラック",
