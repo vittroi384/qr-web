@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import type { Locale } from "@/lib/i18n/locales";
+import { maskWifiPasswords } from "@/lib/qr/sanitize";
 import type { LogEvent, QrPayload, QrStyleOptions, QrType, WifiPayload } from "@/lib/qr/types";
 
 type LogInput = {
@@ -13,15 +14,14 @@ type LogInput = {
 
 /**
  * Never let a Wi-Fi password leave the browser in clear text. The server masks too, but this
- * keeps the plaintext off the network entirely.
+ * keeps the plaintext off the network entirely. The encoded string is masked for every type,
+ * so a WIFI: string pasted into the free-text type is covered as well.
  */
 function maskSensitive(input: LogInput): Pick<LogInput, "payload" | "encoded"> {
-  if (input.type !== "wifi") return { payload: input.payload, encoded: input.encoded };
-  const wifi = input.payload as WifiPayload;
+  const wifi = input.type === "wifi" ? (input.payload as WifiPayload) : null;
   return {
-    payload: wifi.password ? { ...wifi, password: "****" } : wifi,
-    // Fields are `;`-delimited and `;`/`:` inside values are backslash-escaped by the encoder.
-    encoded: input.encoded.replace(/;P:(?:\\.|[^;])*;/g, ";P:****;"),
+    payload: wifi?.password ? { ...wifi, password: "****" } : input.payload,
+    encoded: maskWifiPasswords(input.encoded),
   };
 }
 

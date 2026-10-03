@@ -1,11 +1,27 @@
 import { getDict, type Locale } from "@/lib/i18n";
-import { getSettings, isOn } from "@/lib/settings";
+import { getSettings, isEmailLike, isOn } from "@/lib/settings";
+
+/** "Privacy contact: owner@example.com" with the address linked when it is an e-mail. */
+function ContactLine({ line, contact }: { line: string; contact: string }) {
+  const at = line.indexOf(contact);
+  if (at < 0 || !isEmailLike(contact)) return <p className="mt-2">{line}</p>;
+  return (
+    <p className="mt-2">
+      {line.slice(0, at)}
+      <a href={`mailto:${contact}`} className="link">
+        {contact}
+      </a>
+      {line.slice(at + contact.length)}
+    </p>
+  );
+}
 
 export async function PrivacyPage({ locale }: { locale: Locale }) {
   const t = getDict(locale).privacy;
   const s = await getSettings();
   const logging = isOn(s.logging_enabled);
   const retention = Number.parseInt(s.log_retention_days, 10);
+  const contact = s.privacy_contact.trim();
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
@@ -70,6 +86,7 @@ export async function PrivacyPage({ locale }: { locale: Locale }) {
         <section>
           <h2>{t.s7Title}</h2>
           <p className="mt-2">{t.s7Body}</p>
+          {contact ? <ContactLine line={t.contactLine(contact)} contact={contact} /> : null}
         </section>
       </div>
     </main>

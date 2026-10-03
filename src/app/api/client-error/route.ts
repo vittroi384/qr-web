@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getRequestMeta } from "@/lib/ip";
+import { getRequestMeta, ipLimitKey } from "@/lib/ip";
 import { logEvent } from "@/lib/log";
 import { rateLimit } from "@/lib/rateLimit";
 
@@ -22,7 +22,7 @@ function str(value: unknown, max: number): string | undefined {
  */
 export async function POST(req: NextRequest) {
   const meta = getRequestMeta(req);
-  if (!rateLimit(`client-error:${meta.ip}`, RATE_LIMIT, RATE_WINDOW_MS).ok) {
+  if (!rateLimit(`client-error:${ipLimitKey(meta.ip)}`, RATE_LIMIT, RATE_WINDOW_MS).ok) {
     return new NextResponse(null, { status: 429 });
   }
 

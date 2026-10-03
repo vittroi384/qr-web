@@ -27,11 +27,21 @@ function normalizePhone(value: string): string {
 // Schemes a scanner may legitimately open. Script/data URIs are refused outright.
 const ALLOWED_URL_SCHEMES = new Set(["http", "https", "mailto", "tel", "sms", "geo", "ftp", "market", "itms-apps"]);
 
+/**
+ * "example.com:8080/menu", "localhost:3000" — a host with a port, which a scheme regex would
+ * otherwise read as the unknown scheme "example.com". Dotted hosts or localhost only, so plain
+ * text such as "Note:1234" is not turned into a link. Shared with the batch row classifier.
+ */
+export const HOST_WITH_PORT = /^(?:localhost|[\w-]+(?:\.[\w-]+)+):\d{1,5}(?:[/?#]\S*)?$/i;
+
 export function encodeUrl(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) return "";
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(trimmed);
-  if (scheme) return ALLOWED_URL_SCHEMES.has(scheme[1].toLowerCase()) ? trimmed : "";
+  if (scheme) {
+    if (ALLOWED_URL_SCHEMES.has(scheme[1].toLowerCase())) return trimmed;
+    return HOST_WITH_PORT.test(trimmed) ? `https://${trimmed}` : "";
+  }
   return `https://${trimmed}`;
 }
 
@@ -165,13 +175,27 @@ export function encodeWifi(p: WifiPayload): string {
   return parts.join("") + ";";
 }
 
+// Built at runtime: TypeScript rejects the `u` flag literal when targeting ES2017.
+const EAST_ASIAN_NAME = new RegExp("[\\p{Script=Hangul}\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}]", "u");
+
+/**
+ * Formatted name: family name first for Korean/Chinese/Japanese names ("홍 길동"), given name
+ * first otherwise ("John Smith"). FN is mandatory in vCard 3.0, so with no name at all it falls
+ * back to the organisation, then a phone number, then the e-mail — never an empty value.
+ */
+function vCardFullName(p: VCardPayload): string {
+  const first = p.firstName.trim();
+  const last = p.lastName.trim();
+  const ordered = EAST_ASIAN_NAME.test(first + last) ? [last, first] : [first, last];
+  return ordered.filter(Boolean).join(" ") || p.org.trim() || p.mobile.trim() || p.phone.trim() || p.email.trim();
+}
+
 export function encodeVCard(p: VCardPayload): string {
   const hasName = p.firstName.trim() || p.lastName.trim();
   if (!hasName && !p.phone.trim() && !p.mobile.trim() && !p.email.trim()) return "";
   const lines = ["BEGIN:VCARD", "VERSION:3.0"];
   lines.push(`N:${escapeText(p.lastName)};${escapeText(p.firstName)};;;`);
-  const fullName = [p.lastName, p.firstName].filter(Boolean).join(" ").trim() || p.org;
-  lines.push(`FN:${escapeText(fullName)}`);
+  lines.push(`FN:${escapeText(vCardFullName(p))}`);
   if (p.org) lines.push(`ORG:${escapeText(p.org)}`);
   if (p.title) lines.push(`TITLE:${escapeText(p.title)}`);
   if (p.phone) lines.push(`TEL;TYPE=WORK,VOICE:${escapeText(p.phone.trim())}`);

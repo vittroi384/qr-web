@@ -38,6 +38,11 @@ services:
         condition: service_healthy
     expose:
       - "3000"
+    # Loopback only: the owner reaches the admin area through an SSH tunnel
+    # (ssh -L 3000:127.0.0.1:3000 ubuntu@<server-ip> → http://localhost:3000) when there is no
+    # domain/HTTPS yet. The public internet still only sees Caddy on 80/443.
+    ports:
+      - "127.0.0.1:3000:3000"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s

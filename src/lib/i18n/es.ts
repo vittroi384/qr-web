@@ -466,8 +466,8 @@ export const es: Dict = {
     s6Body:
       "Puedes pedirnos que eliminemos tus registros. Incluye datos que nos ayuden a encontrarlos, como la hora aproximada y parte de lo que escribiste.",
     s7Title: "7. Contacto",
-    s7Body:
-      "Para consultas sobre privacidad, ponte en contacto con el operador del Servicio. (Operadores: añadan sus datos de contacto al texto del pie de página en la configuración de administración, o editen esta página.)",
+    s7Body: "Para consultas sobre privacidad, ponte en contacto con el operador del Servicio.",
+    contactLine: (contact: string) => `Contacto para privacidad: ${contact}`,
   },
 
   batch: {

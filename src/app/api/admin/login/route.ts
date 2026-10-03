@@ -4,14 +4,14 @@ import { writeAudit } from "@/lib/audit";
 import {
   LOCK_WINDOW_SEC,
   SESSION_COOKIE,
-  clearLoginFailures,
+  beginLoginAttempt,
   createSessionToken,
-  isLockedOut,
-  recordLoginFailure,
+  endLoginAttempt,
+  productionLoginBlocker,
   sessionCookieOptions,
   verifyPassword,
 } from "@/lib/auth";
-import { getRequestMeta, isSameOrigin } from "@/lib/ip";
+import { getRequestMeta, ipLimitKey, isSameOrigin } from "@/lib/ip";
 import { logEvent } from "@/lib/log";
 import { verifyTotp } from "@/lib/totp";
 
@@ -30,7 +30,16 @@ export async function POST(req: NextRequest) {
   if (!(await gateSatisfied(req.cookies.get(GATE_COOKIE)?.value))) return new NextResponse(null, { status: 404 });
   if (!isSameOrigin(req)) return NextResponse.json({ ok: false, error: "bad_origin" }, { status: 403 });
 
-  if (isLockedOut(meta.ip)) {
+  // Unsafe production configuration: refuse every login until .env is fixed.
+  const blocker = productionLoginBlocker();
+  if (blocker) {
+    logEvent("error", "admin.login_refused_unsafe_config", { ip: meta.ip, reason: blocker });
+    return NextResponse.json({ ok: false, error: "unsafe_config", message: blocker }, { status: 503 });
+  }
+
+  // Charge the attempt before any await so concurrent requests cannot all pass the lockout check.
+  const limitKey = ipLimitKey(meta.ip);
+  if (!beginLoginAttempt(limitKey)) {
     logEvent("warn", "admin.login_locked", { ip: meta.ip });
     return NextResponse.json(
       { ok: false, error: "locked" },
@@ -54,17 +63,18 @@ export async function POST(req: NextRequest) {
 
   const totpSecret = process.env.ADMIN_TOTP_SECRET?.trim();
   const passwordOk = Boolean(password) && verifyPassword(password);
+  // Without a secret TOTP is skipped — development only; productionLoginBlocker() refuses this in production.
   const totpOk = totpSecret ? verifyTotp(totpSecret, code) : true;
 
   if (!passwordOk || !totpOk) {
-    recordLoginFailure(meta.ip);
+    endLoginAttempt(limitKey, false);
     await writeAudit({ action: "login_failed", key: !passwordOk ? "password" : "totp", ip: meta.ip, userAgent: meta.userAgent });
     logEvent("warn", "admin.login_failed", { ip: meta.ip, reason: !passwordOk ? "password" : "totp" });
     await sleep(FAILURE_DELAY_MS);
     return NextResponse.json({ ok: false, error: "invalid" }, { status: 401 });
   }
 
-  clearLoginFailures(meta.ip);
+  endLoginAttempt(limitKey, true);
   await writeAudit({ action: "login", ip: meta.ip, userAgent: meta.userAgent });
   logEvent("info", "admin.login", { ip: meta.ip });
   const token = await createSessionToken(meta.userAgent);
@@ -74,10 +84,13 @@ export async function POST(req: NextRequest) {
   return res;
 }
 
-/** Tells the login form whether a one-time code field is required. */
+/** Tells the login form whether a one-time code field is required, and why login is refused (if it is). */
 export async function GET(req: NextRequest) {
   const meta = getRequestMeta(req);
   if (!ipAllowedForAdmin(meta.ip)) return new NextResponse(null, { status: 404 });
   if (!(await gateSatisfied(req.cookies.get(GATE_COOKIE)?.value))) return new NextResponse(null, { status: 404 });
-  return NextResponse.json({ totp: Boolean(process.env.ADMIN_TOTP_SECRET?.trim()) }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(
+    { totp: Boolean(process.env.ADMIN_TOTP_SECRET?.trim()), blocked: productionLoginBlocker() },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }

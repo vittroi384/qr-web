@@ -466,8 +466,8 @@ export const de: Dict = {
     s6Body:
       "Sie können die Löschung Ihrer Einträge verlangen. Bitte nennen Sie Angaben, die uns beim Auffinden helfen, z. B. den ungefähren Zeitpunkt und einen Teil Ihrer Eingabe.",
     s7Title: "7. Kontakt",
-    s7Body:
-      "Bei Fragen zum Datenschutz wenden Sie sich an den Betreiber des Dienstes. (Betreiber: Tragen Sie Ihre Kontaktdaten in den Fußzeilentext in den Admin-Einstellungen ein oder bearbeiten Sie diese Seite.)",
+    s7Body: "Bei Fragen zum Datenschutz wenden Sie sich an den Betreiber des Dienstes.",
+    contactLine: (contact: string) => `Kontakt für Datenschutzanfragen: ${contact}`,
   },
 
   batch: {

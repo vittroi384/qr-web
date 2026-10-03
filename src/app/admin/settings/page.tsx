@@ -1,4 +1,4 @@
-import { BOOLEAN_SETTINGS, SETTING_LABELS, type SettingKey, getSettings } from "@/lib/settings";
+import { BOOLEAN_SETTINGS, PRIVACY_CONTACT_MAX, SETTING_LABELS, type SettingKey, getSettings } from "@/lib/settings";
 import { saveSettingsAction } from "./actions";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -6,8 +6,9 @@ type SearchParams = Record<string, string | string[] | undefined>;
 const GROUPS: { title: string; description?: string; keys: SettingKey[] }[] = [
   {
     title: "사이트",
-    description: "메타 태그, sitemap, OG 정보에 사용됩니다. 도메인을 바꾸면 여기서 URL만 수정하면 됩니다.",
-    keys: ["site_name", "site_url", "site_description", "footer_notice"],
+    description:
+      "메타 태그, sitemap, OG 정보에 사용됩니다. 도메인을 바꾸면 여기서 URL만 수정하면 됩니다. 개인정보 문의 연락처는 개인정보처리방침 '문의' 절에 \"개인정보 관련 문의: …\" 형태로 표시되며(이메일이면 링크), 비워 두면 그 문장이 생략됩니다.",
+    keys: ["site_name", "site_url", "site_description", "footer_notice", "privacy_contact"],
   },
   {
     title: "광고 (Google AdSense)",
@@ -39,6 +40,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   adsense_client: "AdSense 게시자 ID 형식이 올바르지 않습니다. 예: ca-pub-1234567890123456",
   ad_slot: "광고 슬롯 ID는 숫자 5~20자리여야 합니다. 비워 두면 해당 자리는 표시되지 않습니다. (다른 변경도 함께 저장되지 않았습니다)",
   log_retention_days: "기록 보관 일수는 0 이상의 정수여야 합니다. (다른 변경도 함께 저장되지 않았습니다)",
+  privacy_contact: "개인정보 문의 연락처는 줄바꿈 없이 200자 이내로 입력하세요. (다른 변경도 함께 저장되지 않았습니다)",
   monetize_url: "제휴·후원 링크는 http:// 또는 https:// 로 시작하는 주소여야 합니다. (다른 변경도 함께 저장되지 않았습니다)",
   analytics_script_url: "Umami 스크립트 URL은 http:// 또는 https:// 로 시작하는 주소여야 합니다. 예: https://<도메인>/umami/script.js (다른 변경도 함께 저장되지 않았습니다)",
   analytics_website_id: "Umami 웹사이트 ID는 UUID 형식이어야 합니다. 예: 3f8c2a1e-5b7d-4c9a-8e21-0d6f4b9a7c13 (다른 변경도 함께 저장되지 않았습니다)",
@@ -67,6 +69,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {error ? (
         <p role="alert" className="rounded-lg border border-red-200 bg-danger-soft px-4 py-3 text-sm text-danger">
           {error}
+        </p>
+      ) : null}
+      {!s.privacy_contact.trim() ? (
+        <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          개인정보 문의 연락처가 비어 있어 개인정보처리방침에 문의 문장이 표시되지 않습니다. 아래 “사이트” 항목에서 입력하세요.
         </p>
       ) : null}
 
@@ -102,6 +109,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                       type={key === "log_retention_days" ? "number" : key.endsWith("_url") && key !== "site_url" ? "url" : "text"}
                       placeholder={key.endsWith("_url") && key !== "site_url" ? "https://" : undefined}
                       min={key === "log_retention_days" ? 0 : undefined}
+                      maxLength={key === "privacy_contact" ? PRIVACY_CONTACT_MAX : undefined}
                       autoComplete="off"
                     />
                   )}

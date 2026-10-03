@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { pageContextFromReferer } from "@/lib/analytics";
-import { getRequestMeta } from "@/lib/ip";
-import { AUDIT_RETENTION_DAYS, insertLog, pruneOldAudit, pruneOldLogs } from "@/lib/logs";
+import { getRequestMeta, ipLimitKey } from "@/lib/ip";
+import { insertLog } from "@/lib/logs";
 import {
   hardenSecretsForStorage,
   isLogEvent,
   isQrType,
-  maskEncodedSecrets,
+  maskWifiPasswords,
   sanitizeOptionsForStorage,
   sanitizePayloadForStorage,
 } from "@/lib/qr/sanitize";
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   const meta = getRequestMeta(req);
-  const limit = rateLimit(`log:${meta.ip}`, RATE_LIMIT, RATE_WINDOW_MS);
+  const limit = rateLimit(`log:${ipLimitKey(meta.ip)}`, RATE_LIMIT, RATE_WINDOW_MS);
   if (!limit.ok) {
     logEvent("warn", "log.rate_limited", { ip: meta.ip });
     return NextResponse.json(
@@ -63,8 +63,7 @@ export async function POST(req: NextRequest) {
     sanitizePayloadForStorage(body.type, body.payload, { maskWifiPassword: true }),
   );
   const options = sanitizeOptionsForStorage(body.options);
-  const encodedPreview =
-    typeof body.encoded === "string" ? maskEncodedSecrets(body.type, body.encoded).slice(0, 200) : null;
+  const encodedPreview = typeof body.encoded === "string" ? maskWifiPasswords(body.encoded).slice(0, 200) : null;
 
   // Which page (and UI language) the save happened on — only trusted from a same-origin Referer.
   const context = pageContextFromReferer(meta.referer, req.headers.get("x-forwarded-host") ?? req.headers.get("host"));
@@ -89,12 +88,6 @@ export async function POST(req: NextRequest) {
     await incrementFunnel("save", body.type, context.locale);
   } catch (err) {
     logEvent("error", "funnel.increment_failed", { type: body.type, ...errorFields(err) });
-  }
-
-  // Opportunistic retention cleanup instead of a cron job.
-  if (Math.random() < 0.01) {
-    const retention = Number.parseInt(settings.log_retention_days, 10);
-    await Promise.all([pruneOldLogs(retention), pruneOldAudit(AUDIT_RETENTION_DAYS)]);
   }
 
   return NextResponse.json({ ok: true });

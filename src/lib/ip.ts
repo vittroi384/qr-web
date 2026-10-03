@@ -1,9 +1,9 @@
 /**
- * Client IP resolution. In production the app is only reachable through Caddy
- * (docker-compose exposes no host port for the app), and Caddy overwrites both
- * X-Real-IP (Caddyfile header_up) and X-Forwarded-For with the real peer address,
- * discarding anything the client sent. So: trust X-Real-IP first, then the
- * *last* X-Forwarded-For hop (the one appended by our proxy), never the first.
+ * Client IP resolution. In production the app is reached through Caddy (its only published port
+ * is 127.0.0.1:3000, for the owner's SSH tunnel), and Caddy overwrites both X-Real-IP (Caddyfile
+ * header_up) and X-Forwarded-For with the real peer address, discarding anything the client sent.
+ * So: trust X-Real-IP first, then the *last* X-Forwarded-For hop (the one appended by our
+ * proxy), never the first.
  */
 export function getClientIpFromHeaders(headers: Headers): string {
   const real = headers.get("x-real-ip")?.trim();
@@ -32,6 +32,32 @@ export function getRequestMetaFromHeaders(headers: Headers) {
 
 export function getRequestMeta(req: Request) {
   return getRequestMetaFromHeaders(req.headers);
+}
+
+/** Expands an IPv6 address to its eight hextets (lower-case, no leading zeros); null when malformed. */
+function ipv6Hextets(ip: string): string[] | null {
+  const halves = ip.split("%")[0].split("::"); // drop a zone id ("fe80::1%eth0")
+  if (halves.length > 2) return null;
+  const head = halves[0] ? halves[0].split(":") : [];
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  const missing = 8 - head.length - tail.length;
+  if (halves.length === 1 ? missing !== 0 : missing < 1) return null;
+  const groups = [...head, ...Array<string>(missing).fill("0"), ...tail];
+  if (groups.some((g) => !/^[0-9a-f]{1,4}$/i.test(g))) return null;
+  return groups.map((g) => g.toLowerCase().replace(/^0+(?=.)/, ""));
+}
+
+/**
+ * Key for per-client rate limits and login lockouts. IPv6 clients get a whole /64 (the prefix an
+ * ISP hands one subscriber, who can otherwise rotate through 2^64 addresses to dodge a per-address
+ * limit); IPv4 and IPv4-mapped addresses are used as they are.
+ */
+export function ipLimitKey(ip: string): string {
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(ip);
+  if (mapped) return mapped[1];
+  if (!ip.includes(":")) return ip;
+  const hextets = ipv6Hextets(ip);
+  return hextets ? `${hextets.slice(0, 4).join(":")}::/64` : ip;
 }
 
 /** True when the request's Origin (or Referer) matches the Host it was sent to. */

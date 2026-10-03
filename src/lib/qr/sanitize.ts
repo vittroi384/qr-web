@@ -3,12 +3,32 @@ import { LOG_EVENTS, QR_TYPES, type LogEvent, type QrType } from "./types";
 const MAX_STRING = 4000;
 const FIXED_MASK = "****";
 
+/**
+ * One WIFI: block: from "WIFI:" to its ";;" terminator, or to the end of the string when the
+ * terminator is missing (truncated). Backslash escapes (\; \: \\ …) are skipped as a unit so an
+ * escaped ";" inside a value never ends the block early.
+ */
+const WIFI_BLOCK = /WIFI:(?:\\.|[^\\])*?(?:;;|$)/gi;
+/** A P: (password) field at a field boundary inside one block; the value runs to the first unescaped ";". */
+const WIFI_PASSWORD_FIELD = /(^WIFI:|;)P:(?:\\.|[^;\\])*(?:;|$)/gi;
+
 export function isQrType(value: unknown): value is QrType {
   return typeof value === "string" && (QR_TYPES as readonly string[]).includes(value);
 }
 
 export function isLogEvent(value: unknown): value is LogEvent {
   return typeof value === "string" && (LOG_EVENTS as readonly string[]).includes(value);
+}
+
+/**
+ * Replaces the password of every WIFI: block found anywhere in the string with a fixed mask —
+ * whatever comes before it, however many blocks there are, and even when the string was cut off
+ * in the middle of the password. Safe to call on any text; strings without "WIFI:" are returned
+ * unchanged. Shared by the browser (before the beacon leaves) and the server (before storage).
+ */
+export function maskWifiPasswords(value: string): string {
+  if (!/WIFI:/i.test(value)) return value;
+  return value.replace(WIFI_BLOCK, (block) => block.replace(WIFI_PASSWORD_FIELD, `$1P:${FIXED_MASK};`));
 }
 
 /** Keep only primitive fields, clamp string length, optionally mask secrets before persisting. */
@@ -31,30 +51,21 @@ export function sanitizePayloadForStorage(
 }
 
 /**
- * Final, unconditional pass right before a row is written: every known secret field becomes a
- * fixed-length mask so neither the plaintext nor its length reaches the database or exports.
+ * Final, unconditional pass right before a row is written: the Wi-Fi password field becomes a
+ * fixed-length mask so neither the plaintext nor its length reaches the database or exports, and
+ * every string value — whatever the QR type (free text, batch samples, …) — has the password of
+ * any embedded WIFI: string masked too.
  */
 export function hardenSecretsForStorage(
   type: QrType,
   payload: Record<string, string | number | boolean>,
 ): Record<string, string | number | boolean> {
-  if (type === "wifi" && payload.password !== undefined && payload.password !== "") {
-    return { ...payload, password: FIXED_MASK };
+  const out: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(payload)) {
+    out[key] = typeof value === "string" ? maskWifiPasswords(value) : value;
   }
-  // A raw WIFI: string pasted into the free-text type carries the password too.
-  if (type === "text" && typeof payload.text === "string" && /^WIFI:/i.test(payload.text)) {
-    return { ...payload, text: maskEncodedSecrets("wifi", payload.text) };
-  }
-  return payload;
-}
-
-/** Mask secrets inside the encoded QR string (applied BEFORE any truncation). */
-export function maskEncodedSecrets(type: QrType, encoded: string): string {
-  // Also catch raw WIFI: strings typed into the free-text type.
-  if (type !== "wifi" && !/^WIFI:/i.test(encoded)) return encoded;
-  // P: value runs to the first unescaped ';'. If the string was cut mid-value there is no
-  // terminator, so also mask an unterminated tail.
-  return encoded.replace(/P:(?:\\.|[^;\\])*(?:;|$)/, `P:${FIXED_MASK};`);
+  if (type === "wifi" && out.password !== undefined && out.password !== "") out.password = FIXED_MASK;
+  return out;
 }
 
 /** Strip large fields (logo image) from style options before storing. */

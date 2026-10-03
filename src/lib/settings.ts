@@ -7,6 +7,7 @@ export const SETTING_KEYS = [
   "site_url",
   "site_description",
   "footer_notice",
+  "privacy_contact",
   "adsense_client",
   "ads_enabled",
   "ad_placeholders",
@@ -29,11 +30,24 @@ export const SETTING_KEYS = [
 export type SettingKey = (typeof SETTING_KEYS)[number];
 export type Settings = Record<SettingKey, string>;
 
+/**
+ * Public URL before the owner saves one in the admin settings (a stored value always wins):
+ * https://DOMAIN when Caddy serves a domain, else SITE_URL, else the local dev address.
+ */
+function defaultSiteUrl(): string {
+  const domain = process.env.DOMAIN?.trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  if (domain && !domain.startsWith(":")) return `https://${domain}`;
+  const siteUrl = process.env.SITE_URL?.trim().replace(/\/+$/, "");
+  return siteUrl || "http://localhost:3000";
+}
+
 export const DEFAULT_SETTINGS: Settings = {
   site_name: "QR Maker",
-  site_url: "http://localhost:3000",
+  site_url: defaultSiteUrl(),
   site_description: "Free QR code generator for links, Wi-Fi, vCards, WhatsApp, social profiles, crypto payments, files and more. No sign-up, codes never expire.",
   footer_notice: "What you enter may be stored on our server to improve the service.",
+  // Shown in the privacy policy's contact section; empty = the contact sentence is omitted.
+  privacy_contact: "",
   adsense_client: "",
   ads_enabled: "0",
   ad_placeholders: "0",
@@ -60,6 +74,7 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   site_url: "사이트 URL (https://example.com)",
   site_description: "사이트 설명 (메타 태그)",
   footer_notice: "푸터 고지 문구",
+  privacy_contact: "개인정보 문의 연락처 (이메일 또는 자유 텍스트, 비우면 문의 문장 생략)",
   adsense_client: "AdSense 게시자 ID (ca-pub-xxxxxxxxxxxxxxxx)",
   ads_enabled: "광고 표시",
   ad_placeholders: "광고 자리 점선 표시 (레이아웃 확인용)",
@@ -80,6 +95,18 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
 };
 
 export const BOOLEAN_SETTINGS: SettingKey[] = ["ads_enabled", "ad_placeholders", "logging_enabled"];
+
+export const PRIVACY_CONTACT_MAX = 200;
+
+/** Empty, or a single line of at most 200 characters (an e-mail address or free text). */
+export function isValidPrivacyContact(value: string): boolean {
+  return value.length <= PRIVACY_CONTACT_MAX && !/[\r\n]/.test(value);
+}
+
+/** True when the contact can be rendered as a mailto: link (one token containing "@"). */
+export function isEmailLike(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+$/.test(value);
+}
 
 const CACHE_TTL_MS = 30_000;
 let cache: { value: Settings; at: number } | null = null;

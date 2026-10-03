@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { EVENT_LABELS, StatCard } from "@/components/admin/ui";
 import { LOCALE_NAMES, isLocale } from "@/lib/i18n/locales";
 import { QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
+import { requireAdmin } from "@/lib/adminSession";
 import { getStats } from "@/lib/stats";
 
 /** Save methods shown as matrix columns ("generate" is never logged). */
@@ -47,6 +48,7 @@ function Bars({ items, height }: { items: { key: string; c: number; title: strin
 }
 
 export default async function StatsPage() {
+  await requireAdmin();
   const s = await getStats();
   const maxDay = Math.max(0, ...s.byDay.map((d) => d.c));
   const localeTotal = s.byLocale.reduce((sum, r) => sum + r.c, 0);
