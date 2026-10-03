@@ -42,7 +42,7 @@ if [ ! -f .env ]; then
   sed -i "s|^DOMAIN=.*|DOMAIN=|" .env
   echo
   echo "    .env created. NOW EDIT IT:  nano .env"
-  echo "      ADMIN_PASSWORD=     (at least 12 characters, unique — the example value is rejected in production)"
+  echo "      ADMIN_PASSWORD=     (at least 10 characters, unique — the example value is rejected in production)"
   echo "      ADMIN_TOTP_SECRET=  (REQUIRED before the first login; see step 4 below)"
   echo "      DOMAIN=             (leave empty until your domain's DNS points here)"
   echo "    Your secret admin entry path is: ${ADMIN_PATH}   <- bookmark it"
@@ -51,7 +51,7 @@ chmod +x deploy.sh scripts/backup.sh
 mkdir -p backups
 
 echo "==> 5/5 Done. Next:"
-echo "    1) nano .env   (set ADMIN_PASSWORD, 12+ chars; optionally ADMIN_ALLOWED_IPS)"
+echo "    1) nano .env   (set ADMIN_PASSWORD, 10+ chars; optionally ADMIN_ALLOWED_IPS)"
 echo "    2) newgrp docker   (or log out and back in so 'docker' works without sudo)"
 echo "    3) ./deploy.sh     (builds and starts; first build takes a few minutes on A1)"
 echo "    4) TOTP is REQUIRED before the first login (production refuses to log in without it):"

@@ -93,7 +93,7 @@ export function sessionCookieOptionsFor(ttlSec: number) {
 
 /* ---------- Production configuration guard ---------- */
 
-const MIN_PASSWORD_LENGTH = 12;
+const MIN_PASSWORD_LENGTH = 10;
 /** Values from .env.example / local development that must never unlock a production admin. */
 const PLACEHOLDER_PASSWORDS = new Set(["change-me-to-a-long-password", "admin1234", "password", "changeme", "admin"]);
 

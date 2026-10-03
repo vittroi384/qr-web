@@ -158,7 +158,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
    cd ~/qr-web && nano .env                 # ADMIN_PASSWORD 입력, DOMAIN은 DNS 연결 후
    newgrp docker && ./deploy.sh
    ```
-3. OTP 등록(**첫 로그인 전 필수** — 운영 모드는 TOTP 없이, 또는 12자 미만·예시 비밀번호로는 로그인을 거부): `docker compose exec app node scripts/totp-setup.mjs` → QR을 인증 앱으로 스캔 → `.env`에 `ADMIN_TOTP_SECRET` 추가 → `docker compose up -d`. `DOMAIN`이 비어 있는 동안(평문 HTTP)은 공개 주소로 로그인하지 말고 SSH 터널로 접속: `ssh -L 3000:127.0.0.1:3000 ubuntu@<서버IP>` → `http://localhost:3000/<ADMIN_PATH>` (앱 포트는 서버 루프백에만 바인딩)
+3. OTP 등록(**첫 로그인 전 필수** — 운영 모드는 TOTP 없이, 또는 10자 미만·예시 비밀번호로는 로그인을 거부): `docker compose exec app node scripts/totp-setup.mjs` → QR을 인증 앱으로 스캔 → `.env`에 `ADMIN_TOTP_SECRET` 추가 → `docker compose up -d`. `DOMAIN`이 비어 있는 동안(평문 HTTP)은 공개 주소로 로그인하지 말고 SSH 터널로 접속: `ssh -L 3000:127.0.0.1:3000 ubuntu@<서버IP>` → `http://localhost:3000/<ADMIN_PATH>` (앱 포트는 서버 루프백에만 바인딩)
 4. 도메인 연결 시 `.env`의 `DOMAIN=`만 채우면 Caddy가 HTTPS를 자동 발급. 관리자 설정의 **사이트 URL**도 실제 도메인으로 변경
 5. 업데이트: `./deploy.sh` (git pull + 재빌드). 새 마이그레이션은 app 컨테이너가 시작하면서 자동 적용(`docker compose logs app`에 `[migrate]` 줄)
 6. 백업: `scripts/backup.sh` → `backups/qr-YYYY-MM-DD.sql.gz` + `backups/umami-YYYY-MM-DD.sql.gz`(umami DB가 있을 때) (`pg_dump`, 30일 보관). cron 예: `30 4 * * * ~/qr-web/scripts/backup.sh`. 복원은 `gunzip -c backups/qr-….sql.gz | docker compose exec -T db psql -U qr -d qr`
