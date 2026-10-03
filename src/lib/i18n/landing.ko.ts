@@ -924,4 +924,200 @@ export const useCasesKo: Record<UseCaseId, LandingCopy> = {
       },
     ],
   },
+
+  // TODO(i18n): localize — temporary English copy
+  with_logo: {
+    title: "QR Code Generator with Logo",
+    subtitle: "Put your logo in the middle of a QR code that still scans, and download it as PNG or SVG.",
+    metaTitle: "QR Code Generator with Logo — Free, No Sign-up",
+    metaDescription:
+      "Add your logo to the centre of a QR code and keep it scannable. Upload PNG, JPG, SVG or WEBP, pick colours, download PNG or SVG for print. Free, no sign-up.",
+    sections: {
+      howTitle: "How a QR code with a logo works",
+      how: [
+        "A QR code survives damage because it carries error correction: extra data that lets a scanner rebuild modules it cannot see. A logo in the middle is damage on purpose. When you upload one here, error correction switches to Maximum (level H), which tolerates about 30% of the modules being covered, and the setting is locked while the logo stays. Remove the logo and you can set it back.",
+        "The Style section is open on this page, with the logo field ready. Drop a PNG, JPG, SVG or WEBP up to 1 MB, or choose a file. The logo is placed on a small rounded plate in the background colour and takes a fixed share of the code's width, about a fifth, so it never covers the three corner squares scanners use to find the code.",
+        "The preview updates as you work, so you can try a brand colour for the modules at the same time. The code stays static: the logo is drawn into the image, and the content stays the link you typed. Download a PNG for screens and documents, or an SVG for print files, where the logo is embedded in the vector file and scales without blur.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "Packaging and labels, where a plain black code looks like a barcode and a branded one looks like part of the design.",
+        "Business cards and brochures, so the code to your site or profile matches the rest of the card.",
+        "Posters and shop windows, where people decide in a second whether a code is worth scanning.",
+        "Social media graphics and presentation slides, where the logo tells viewers whose link it is before they scan.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "Maximum error correction packs more modules into the same space, so keep the content short. A long tracking link makes the modules tiny and the logo harder to read around; a short address scans better.",
+        "Use a logo with a solid background or a simple shape. Thin lines and tiny text turn to mush at the size a code allows.",
+        "Keep the module colour dark and the background light. The colour warning in the Style section tells you when the contrast gets too low for phone cameras.",
+        "Scan the final file on an iPhone and an Android phone, at the printed size and from a normal distance, before you order a print run.",
+      ],
+    },
+    faq: [
+      {
+        q: "Why does the error-correction setting lock when I add a logo?",
+        a: "The logo hides part of the code, and only Maximum (level H) can rebuild that much. The setting unlocks again when you remove the logo.",
+      },
+      {
+        q: "How large can the logo be?",
+        a: "The file can be up to 1 MB. In the code the logo takes a fixed share of the width, about a fifth, which keeps it inside what Maximum error correction can recover.",
+      },
+      {
+        q: "Does the logo change what the code contains?",
+        a: "No. The content is still the link or text you entered. The logo is only drawn on top of the image you download.",
+      },
+      {
+        q: "Should I download PNG or SVG?",
+        a: "PNG for websites, documents and messaging. SVG for print shops and design tools, because it scales without blur.",
+      },
+    ],
+  },
+
+  // TODO(i18n): localize — temporary English copy
+  instagram: {
+    title: "Instagram QR Code Generator",
+    subtitle: "Turn your Instagram handle into a code that opens your profile, for cards, menus and shop windows.",
+    metaTitle: "Instagram QR Code Generator — Free, No Sign-up",
+    metaDescription:
+      "Make a QR code for your Instagram profile from your @handle. Opens instagram.com/yourname on any phone. Download PNG or SVG for cards and signs. Free, no sign-up.",
+    sections: {
+      howTitle: "How an Instagram QR code works",
+      how: [
+        "Instagram is selected on this page, so you only type your handle. Enter `@yourname` or `yourname`; the leading @ is removed, spaces and slashes are dropped, and the code holds the public profile address `https://www.instagram.com/yourname/`. Pasting a full profile link that starts with https:// is accepted as it is, so a link copied from the app works too.",
+        "On scan, the phone shows the address and opens it. If the Instagram app is installed, the system usually hands the link to the app and lands on your profile with the follow button in view. Without the app, the profile opens in the browser, where visitors can still see posts and your bio.",
+        "The code is static: it contains only the address, nothing is stored on this site to make it work, and it never expires. If you rename your account, instagram.com/yourname changes with it and printed codes stop working, so pick a handle you plan to keep before you print.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "Business cards for photographers, stylists, makers and anyone whose portfolio lives on Instagram.",
+        "Table tents and the back of a menu, inviting guests to tag the restaurant in their photos.",
+        "Shop windows, packaging and thank-you cards in online orders, turning buyers into followers.",
+        "Event signage and photo backdrops, where guests want to find the official account quickly.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "Scan the code yourself and check that it lands on your profile, not a similar handle. A missing letter leads to someone else's account or an error page.",
+        "Keep the code pointed at the profile, not at a single post. Posts age; your profile keeps every new one.",
+        "Add a short line under the code, such as “Follow us on Instagram”, and your handle in text, for people who prefer to search.",
+        "Make the code at least 2 cm wide on a card and larger on signs read from a distance. Print sheet / PDF gives you an A4 version with a headline.",
+      ],
+    },
+    faq: [
+      {
+        q: "Do I enter my handle with or without the @?",
+        a: "Either works. The @ is removed and the code contains instagram.com/yourname.",
+      },
+      {
+        q: "Can the code open the Instagram app directly?",
+        a: "The code holds a normal web address. Phones with the app installed usually open it there; others use the browser.",
+      },
+      {
+        q: "What happens if I change my username?",
+        a: "The code still points at the old address, which stops working. Make a new code and reprint.",
+      },
+      {
+        q: "Can I link a single post or reel instead?",
+        a: "Yes. Copy the post's share link and paste the whole https:// address into the field. For printed material, the profile is the safer choice.",
+      },
+    ],
+  },
+
+  // TODO(i18n): localize — temporary English copy
+  youtube: {
+    title: "YouTube QR Code Generator",
+    subtitle: "Make a code that opens your YouTube channel from your @handle, for packaging, posters and cards.",
+    metaTitle: "YouTube QR Code Generator — Free, No Sign-up",
+    metaDescription:
+      "Create a QR code for your YouTube channel from its @handle, or paste a video or playlist link. Opens in the YouTube app. Download PNG or SVG. Free, no sign-up.",
+    sections: {
+      howTitle: "How a YouTube QR code works",
+      how: [
+        "YouTube is selected on this page. Type your channel handle, with or without the @, and the code holds the channel address `https://www.youtube.com/@yourchannel`. Handles are the short names YouTube gives every channel, shown under the channel name and in the channel URL. If you are not sure of yours, open your channel in the app and copy it from the page.",
+        "You can also paste a full link that starts with https://, and it is used unchanged. That is the way to point a code at a single video, a playlist or a live stream: copy the Share link from YouTube and paste it into the field. A shortened youtu.be link works as well.",
+        "On scan, the phone opens the address, and when the YouTube app is installed it usually takes over and shows the channel with its Subscribe button, or starts the video. The code is static and holds only the address, so it keeps working as long as the channel or video exists.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "Product packaging and manuals, pointing to an unboxing or setup video instead of a printed guide.",
+        "Posters and flyers for musicians, churches, schools and clubs, leading to a channel or a recorded event.",
+        "Business cards for creators and trainers whose work is easier to show than to describe.",
+        "Classroom handouts and workshop slides, where a playlist collects the lessons in order.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "Point printed codes at the channel or a playlist rather than one video, unless the video is the product. Channels outlive single uploads.",
+        "If you link a video, open the Share link on a phone first and check that it is public, not unlisted or private, and that it starts where you expect.",
+        "Add a line under the code that says what the viewer gets, such as “Watch the setup video (2 min)”. People scan when they know the payoff.",
+        "Keep the code at least 2 cm wide and test it on an iPhone and an Android phone from where people will stand.",
+      ],
+    },
+    faq: [
+      {
+        q: "Where do I find my YouTube handle?",
+        a: "Open your channel page; the handle starts with @ and appears under the channel name and in the address bar. Enter it with or without the @.",
+      },
+      {
+        q: "Can the code open a specific video or playlist?",
+        a: "Yes. Use the Share button on the video or playlist, copy the link and paste the whole https:// address into the field.",
+      },
+      {
+        q: "Does it open in the YouTube app?",
+        a: "The code holds a normal web address. Phones with the app installed usually open it there; others play in the browser.",
+      },
+      {
+        q: "Will the code break if I rename my channel?",
+        a: "Changing the channel name is fine; changing the handle changes the address, so make a new code and reprint.",
+      },
+    ],
+  },
+
+  // TODO(i18n): localize — temporary English copy
+  bulk: {
+    title: "Bulk QR Code Generator",
+    subtitle: "Paste a list of links or text and download every code at once as a ZIP with an index.",
+    metaTitle: "Bulk QR Code Generator — Free, No Sign-up",
+    metaDescription:
+      "Make up to 200 QR codes at once from a pasted list or spreadsheet columns. Download a ZIP of numbered PNGs with an index.csv. Runs in your browser. Free, no sign-up.",
+    sections: {
+      howTitle: "How bulk QR code generation works",
+      how: [
+        "The tool above takes a list instead of a single link. Type one entry per line, or copy two columns from Excel or Google Sheets, name and link, and paste them into the table; the Tab between cells splits each line into its name and content, and if the link is in the first column the two are swapped for you. A single column works too and fills the content cells. The list holds up to 200 rows per download.",
+        "Each row is checked on its own. Anything shaped like a web address, such as `https://example.com/menu` or `shop.example.com`, becomes a link, and everything else is stored as plain text, so a list can mix the two. A label next to the row shows which one it is, and a preview appears as soon as the row is valid. Rows with a problem are marked, for example text too long for a QR code or an address with a blocked scheme, and the rest can still be downloaded.",
+        "Download gives you `qr-codes.zip`. Inside are numbered PNGs named after your names, such as `001-menu-table-1.png`, or just `001.png` for rows without a name, plus an `index.csv` with the columns file, name and content, so you can see which file holds which link. Everything is generated in your browser; when you download, only the count and a short sample of the first lines are kept, never the whole list.",
+      ],
+      usesTitle: "Where it helps",
+      uses: [
+        "Numbered tables in a restaurant or event, each code opening the same menu or a table-specific order link.",
+        "Asset tags for equipment, rooms or shelves, where each code carries an ID or an inventory page.",
+        "Name badges and tickets for a conference, one profile or check-in link per attendee.",
+        "Product labels, where every item in a catalogue has its own page or support link.",
+      ],
+      tipsTitle: "Tips before you print",
+      tips: [
+        "Fill the name column. The names become the file names and the index, which saves a lot of matching when you place two hundred codes into a layout.",
+        "Names are made file-safe: spaces and symbols become hyphens, and anything beyond 40 characters is cut, so keep them short and distinct.",
+        "Pick the output size before you download. 512 px suits labels and cards; 1024 px is better for posters and files that will be enlarged.",
+        "Spot-check a few PNGs from the start, middle and end of the ZIP on a phone before printing, and keep index.csv next to the images.",
+      ],
+    },
+    faq: [
+      {
+        q: "How many codes can I make at once?",
+        a: "Up to 200 per download. For longer lists, split them and download in parts; the numbering starts at 001 in each ZIP.",
+      },
+      {
+        q: "Can I paste from Excel or Google Sheets?",
+        a: "Yes. Copy two columns, name and link, and paste into the table. Each spreadsheet row becomes a line with the fields in the right place; a single column works too.",
+      },
+      {
+        q: "What is in the ZIP?",
+        a: "One PNG per valid row, named 001-name.png in order, and an index.csv listing file, name and content for each one.",
+      },
+      {
+        q: "Can I make Wi-Fi, vCard or other formats in bulk?",
+        a: "No. The bulk tool handles links and plain text. Other formats are made one at a time on their own pages.",
+      },
+    ],
+  },
 };

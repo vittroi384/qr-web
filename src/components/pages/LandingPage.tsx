@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
 import { adConfig } from "@/components/ads/adConfig";
 import { AffiliateCard } from "@/components/AffiliateCard";
+import { BatchTool } from "@/components/batch/BatchTool";
 import { resolveAffiliate } from "@/components/affiliate";
 import { FaqList } from "@/components/FaqList";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
@@ -131,14 +132,30 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
         ) : null}
 
         <div className="min-w-0 flex-1">
-          <I18nProvider locale={locale}>
-            <QrGenerator
-              initialType={type}
-              initialPayload={target.initialPayload}
-              heading={{ title: c.title, subtitle: c.subtitle }}
-              affiliate={affiliate}
-            />
-          </I18nProvider>
+          {target.kind === "useCase" && target.id === "bulk" ? (
+            // The bulk landing is about many codes at once, so the batch tool takes the generator's place.
+            <section aria-labelledby="generator-heading">
+              <header className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <h1 id="generator-heading" className="text-2xl font-semibold tracking-tight text-foreground">
+                  {c.title}
+                </h1>
+                <p className="text-sm text-muted">{c.subtitle}</p>
+              </header>
+              <I18nProvider locale={locale}>
+                <BatchTool />
+              </I18nProvider>
+            </section>
+          ) : (
+            <I18nProvider locale={locale}>
+              <QrGenerator
+                initialType={type}
+                initialPayload={target.initialPayload}
+                initialUi={target.initialUi}
+                heading={{ title: c.title, subtitle: c.subtitle }}
+                affiliate={affiliate}
+              />
+            </I18nProvider>
+          )}
 
           {/* Ads start below the generator — never beside it (same rule as the home page). */}
           <div className="mt-12 flex gap-8 border-t border-border pt-12">

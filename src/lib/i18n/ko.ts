@@ -33,6 +33,10 @@ export const ko = {
       business_card: "명함",
       google_review: "구글 리뷰",
       wifi_cafe: "카페·숙소 Wi-Fi",
+      with_logo: "로고 넣은 QR",
+      instagram: "인스타그램",
+      youtube: "유튜브",
+      bulk: "일괄 생성",
     } satisfies Record<UseCaseId, string>,
     donate: "커피 한 잔 후원하기",
     /** Shown on English pages only while the admin footer notice is still the default text. */

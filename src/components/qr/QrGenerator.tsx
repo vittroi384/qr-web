@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { encodePayload } from "@/lib/qr/encoders";
 import { validatePayload } from "@/lib/qr/validate";
-import type { Dict } from "@/lib/i18n";
+import type { Dict, LandingUiHints } from "@/lib/i18n";
 import { DEFAULT_PAYLOADS, DEFAULT_STYLE, type QrPayloadMap, type QrStyleOptions, type QrType } from "@/lib/qr/types";
 import { StepGuide } from "../StepGuide";
 import { DownloadIcon, GridIcon, PencilIcon, ResetIcon } from "../icons";
@@ -34,9 +34,13 @@ function sheetDefaults(type: QrType, payloads: QrPayloadMap, encoded: string, t:
   return { headline, subline };
 }
 
+/** Classes that outline the logo field for a moment after a landing page scrolls to it. */
+const LOGO_HIGHLIGHT = ["outline-2", "outline-offset-4", "outline-accent", "rounded-lg"];
+
 export function QrGenerator({
   initialType = "url",
   initialPayload,
+  initialUi,
   heading,
   affiliate,
 }: {
@@ -44,6 +48,8 @@ export function QrGenerator({
   initialType?: QrType;
   /** Payload fields to preselect (e.g. the Google Review platform on its landing page). */
   initialPayload?: Partial<QrPayloadMap>;
+  /** Open the Style section and point at the logo field (the "QR code with logo" landing). */
+  initialUi?: LandingUiHints;
   /** Replaces the default H1 and tagline (landing pages use their own). */
   heading?: { title: string; subtitle: string };
   /** Print-partner slot shown inside the print-sheet dialog; omitted when not configured. */
@@ -77,6 +83,26 @@ export function QrGenerator({
 
   const setPayload = (next: QrPayloadMap[QrType]) => setPayloads((prev) => ({ ...prev, [type]: next }));
   const reset = () => setPayloads((prev) => ({ ...prev, [type]: DEFAULT_PAYLOADS[type] }));
+
+  // Landing hints run once on mount. The Style section owns its own <details>, so this only
+  // flips the native `open` flag and, if asked, scrolls to the logo field and outlines it briefly.
+  const styleRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!initialUi?.openStyle && !initialUi?.focusLogo) return;
+    const root = styleRef.current;
+    if (!root) return;
+    const details = root.querySelector("details");
+    if (details) details.open = true;
+    if (!initialUi.focusLogo) return;
+    const field = root.querySelector('input[type="file"]')?.closest<HTMLElement>('[role="group"]');
+    if (!field) return;
+    field.scrollIntoView({ block: "center", behavior: "smooth" });
+    field.classList.add(...LOGO_HIGHLIGHT);
+    const timer = window.setTimeout(() => field.classList.remove(...LOGO_HIGHLIGHT), 2500);
+    return () => window.clearTimeout(timer);
+    // Mount-only: the hints describe the landing page, not live state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section aria-labelledby="generator-heading">
@@ -145,7 +171,7 @@ export function QrGenerator({
         </div>
 
         {/* 꾸미기 — secondary, collapsed by default */}
-        <div className="min-w-0 border-t border-border p-4 sm:px-6 sm:py-6 lg:col-start-1 lg:row-start-2">
+        <div ref={styleRef} className="min-w-0 border-t border-border p-4 sm:px-6 sm:py-6 lg:col-start-1 lg:row-start-2">
           <StyleOptions value={style} onChange={setStyle} />
         </div>
       </div>
