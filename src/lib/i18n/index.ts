@@ -127,7 +127,24 @@ export function getLanding(locale: Locale): Record<QrType, LandingCopy> {
 
 /* ---------- Use-case landing pages (/restaurant-menu-qr-code, …) ---------- */
 
-export type UseCaseId = "restaurant_menu" | "wedding" | "business_card" | "google_review" | "wifi_cafe";
+export type UseCaseId =
+  | "restaurant_menu"
+  | "wedding"
+  | "business_card"
+  | "google_review"
+  | "wifi_cafe"
+  | "with_logo"
+  | "instagram"
+  | "youtube"
+  | "bulk";
+
+/** Generator UI to arrange on first render, for landings whose topic is a feature rather than a type. */
+export type LandingUiHints = {
+  /** Open the collapsed Style section. */
+  openStyle?: boolean;
+  /** Scroll to the logo upload field and highlight it once. */
+  focusLogo?: boolean;
+};
 
 /** Same page template as a type landing, but the copy is about the situation, not the format. */
 export const USE_CASES: readonly {
@@ -136,12 +153,19 @@ export const USE_CASES: readonly {
   type: QrType;
   /** Payload fields to preselect, e.g. the Google Review platform. */
   initialPayload?: Partial<QrPayloadMap>;
+  /** Generator UI to open or highlight on load (the logo landing opens the Style section). */
+  initialUi?: LandingUiHints;
 }[] = [
   { id: "restaurant_menu", slug: "restaurant-menu-qr-code", type: "url" },
   { id: "wedding", slug: "wedding-qr-code", type: "url" },
   { id: "business_card", slug: "business-card-qr-code", type: "vcard" },
   { id: "google_review", slug: "google-review-qr-code", type: "social", initialPayload: { social: { platform: "google_review", handle: "" } } },
   { id: "wifi_cafe", slug: "wifi-qr-code-for-cafe", type: "wifi" },
+  { id: "with_logo", slug: "qr-code-with-logo", type: "url", initialUi: { openStyle: true, focusLogo: true } },
+  { id: "instagram", slug: "instagram-qr-code", type: "social", initialPayload: { social: { platform: "instagram", handle: "" } } },
+  { id: "youtube", slug: "youtube-qr-code", type: "social", initialPayload: { social: { platform: "youtube", handle: "" } } },
+  // Rendered with the batch tool in place of the generator (see LandingPage); the type is nominal.
+  { id: "bulk", slug: "bulk-qr-code-generator", type: "url" },
 ];
 
 const USE_CASE_COPY: Record<Locale, Record<UseCaseId, LandingCopy>> = {
@@ -157,15 +181,25 @@ const USE_CASE_COPY: Record<Locale, Record<UseCaseId, LandingCopy>> = {
 };
 
 export type LandingTarget =
-  | { kind: "type"; slug: string; type: QrType; copy: LandingCopy; initialPayload?: undefined }
-  | { kind: "useCase"; slug: string; type: QrType; copy: LandingCopy; id: UseCaseId; initialPayload?: Partial<QrPayloadMap> };
+  | { kind: "type"; slug: string; type: QrType; copy: LandingCopy; initialPayload?: undefined; initialUi?: undefined }
+  | {
+      kind: "useCase";
+      slug: string;
+      type: QrType;
+      copy: LandingCopy;
+      id: UseCaseId;
+      initialPayload?: Partial<QrPayloadMap>;
+      initialUi?: LandingUiHints;
+    };
 
 /** Resolves any landing slug (type or use case) to its copy; null for unknown slugs. */
 export function resolveLanding(locale: Locale, slug: string): LandingTarget | null {
   const type = slugToType(slug);
   if (type) return { kind: "type", slug, type, copy: LANDINGS[locale][type] };
   const uc = USE_CASES.find((u) => u.slug === slug);
-  if (uc) return { kind: "useCase", slug, type: uc.type, copy: USE_CASE_COPY[locale][uc.id], id: uc.id, initialPayload: uc.initialPayload };
+  if (uc) {
+    return { kind: "useCase", slug, type: uc.type, copy: USE_CASE_COPY[locale][uc.id], id: uc.id, initialPayload: uc.initialPayload, initialUi: uc.initialUi };
+  }
   return null;
 }
 
