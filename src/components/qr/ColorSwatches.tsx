@@ -21,12 +21,12 @@ export function ColorSwatches({ value, onChange }: { value: string; onChange: (h
             aria-label={name}
             title={name}
             onClick={() => onChange(c.value)}
-            className={`grid size-8 place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 ${
+            className={`grid size-11 place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 ${
               active ? "outline-2 outline-offset-2 outline-foreground" : ""
             }`}
             style={{ backgroundColor: c.value }}
           >
-            {active ? <CheckIcon className="size-4" /> : null}
+            {active ? <CheckIcon className="size-5" /> : null}
           </button>
         );
       })}

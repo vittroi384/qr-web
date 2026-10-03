@@ -178,8 +178,9 @@
   .btn-danger {
     @apply text-danger hover:border-red-300 hover:bg-danger-soft;
   }
+  /* Compact variant for mouse users; on touch screens it keeps the 44px target. */
   .btn-sm {
-    @apply min-h-8 rounded-md px-2.5 py-1 text-xs;
+    @apply min-h-8 rounded-md px-2.5 py-1 text-xs pointer-coarse:min-h-11;
   }
   .btn-sm svg {
     @apply size-3.5;
@@ -189,8 +190,9 @@
   .segmented {
     @apply grid auto-cols-fr grid-flow-col gap-1 rounded-lg bg-surface p-1;
   }
+  /* Items are 44px like every other control, so the whole group is a comfortable touch target. */
   .segmented-item {
-    @apply flex min-h-9 flex-col items-center justify-center rounded-md px-2 py-1 text-[13px] leading-tight font-medium text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-[0_1px_2px_rgb(24_24_27/0.08),0_0_0_1px_rgb(24_24_27/0.06)];
+    @apply flex min-h-11 flex-col items-center justify-center rounded-md px-2 py-1 text-[13px] leading-tight font-medium text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-[0_1px_2px_rgb(24_24_27/0.08),0_0_0_1px_rgb(24_24_27/0.06)];
   }
 
   .card {
@@ -229,6 +231,26 @@
   }
   .table-scroll thead th {
     @apply sticky top-0 z-10 bg-subtle shadow-[inset_0_-1px_0_var(--border)];
+  }
+}
+
+/* Phone save bar (QrPreview): slides up from the bottom edge when it appears. */
+@keyframes save-bar-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.save-bar {
+  animation: save-bar-in 180ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .save-bar {
+    animation: none;
   }
 }
 

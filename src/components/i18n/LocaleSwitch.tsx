@@ -44,20 +44,25 @@ export function LocaleSwitch({ locale, label }: { locale: Locale; label: string 
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
-        className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold tracking-wide transition-colors ${
-          open
-            ? "border-border-strong bg-surface text-foreground"
-            : "border-border bg-card text-muted hover:border-border-strong hover:bg-surface hover:text-foreground"
-        }`}
+        // The pill stays 32px tall; the button around it is the 44px touch target.
+        className="group -mx-1 inline-flex h-11 items-center rounded-full px-1"
       >
-        <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
-        </svg>
-        <span>{LOCALE_NAMES[locale].short}</span>
-        <svg viewBox="0 0 20 20" className={`size-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M6 8l4 4 4-4" />
-        </svg>
+        <span
+          className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold tracking-wide transition-colors ${
+            open
+              ? "border-border-strong bg-surface text-foreground"
+              : "border-border bg-card text-muted group-hover:border-border-strong group-hover:bg-surface group-hover:text-foreground"
+          }`}
+        >
+          <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+          </svg>
+          <span>{LOCALE_NAMES[locale].short}</span>
+          <svg viewBox="0 0 20 20" className={`size-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 8l4 4 4-4" />
+          </svg>
+        </span>
       </button>
 
       {open && (
@@ -80,7 +85,7 @@ export function LocaleSwitch({ locale, label }: { locale: Locale; label: string 
                     href={localePath(l, base)}
                     hrefLang={l}
                     lang={l}
-                    className={`flex min-h-9 items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[13px] leading-tight transition-colors ${
+                    className={`flex min-h-11 items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[13px] leading-tight transition-colors ${
                       active ? "bg-accent-soft font-medium text-accent" : "text-foreground hover:bg-surface"
                     }`}
                   >
