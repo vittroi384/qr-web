@@ -38,8 +38,12 @@ export function clientFingerprint(userAgent: string | null | undefined): string 
   return createHash("sha256").update(userAgent ?? "").digest("base64url").slice(0, 16);
 }
 
+/** A remembered session is renewed (slid forward) by the proxy once it is older than this. */
+const RENEW_AFTER_SEC = 60 * 60 * 24;
+
 export async function createSessionToken(userAgent: string | null | undefined, ttlSec: number = SESSION_TTL_SEC): Promise<string> {
-  return new SignJWT({ role: "admin", fp: clientFingerprint(userAgent) })
+  const remember = ttlSec > SESSION_TTL_SEC;
+  return new SignJWT({ role: "admin", fp: clientFingerprint(userAgent), ...(remember ? { rm: true } : {}) })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${ttlSec}s`)
@@ -54,6 +58,21 @@ export async function verifySessionToken(token: string | undefined, userAgent?: 
     // Fingerprint check is skipped only when the caller cannot supply a UA.
     if (userAgent !== undefined && payload.fp !== clientFingerprint(userAgent)) return false;
     return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * True when a valid, remembered (30-day) session was issued more than a day ago. The proxy then
+ * re-issues it so the owner's own browser stays signed in as long as it is used at least monthly.
+ */
+export async function sessionRenewalDue(token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const { payload } = await jwtVerify(token, secretKey());
+    if (payload.role !== "admin" || payload.rm !== true || typeof payload.iat !== "number") return false;
+    return Date.now() / 1000 - payload.iat > RENEW_AFTER_SEC;
   } catch {
     return false;
   }
