@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { frameLayout } from "@/lib/qr/frame";
 import type { QrStyleOptions } from "@/lib/qr/types";
 import { CheckIcon, ChevronDownIcon, CodeIcon, CopyIcon, DownloadIcon, PrinterIcon, QrMarkIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
@@ -151,14 +152,16 @@ export function QrPreview({ encoded, invalid = false, style, onStyleChange, file
         ? { text: p.badgeInvalid, cls: "bg-warning-soft text-warning" }
         : { text: p.badgeIdle, cls: "bg-surface text-muted" };
 
-  let outputPx = style.size;
+  let qrPx = style.size;
   if (encoded) {
     try {
-      outputPx = exactWidth(encoded, style);
+      qrPx = exactWidth(encoded, style);
     } catch {
       // content too long for a QR — the error state is shown elsewhere
     }
   }
+  // Saved image size: the code plus its frame (identical to the code alone without one).
+  const output = frameLayout(qrPx, style);
 
   const showBar = actionsBelow && !disabled;
 
@@ -172,13 +175,13 @@ export function QrPreview({ encoded, invalid = false, style, onStyleChange, file
         </span>
       </div>
 
-      {/* The canvas keeps its full output resolution; CSS scales it to the frame. */}
+      {/* The canvas keeps its full output resolution; CSS scales it to the box (letterboxed when a frame makes it taller). */}
       <div ref={frameRef} className="relative mx-auto aspect-square w-full max-w-[280px] scroll-mt-20 overflow-hidden rounded-lg border border-border bg-white">
         <canvas
           ref={canvasRef}
           role="img"
           aria-label={p.canvasLabel}
-          className={`block h-full w-full ${encoded && !shownError ? "" : "opacity-0"}`}
+          className={`block h-full w-full object-contain ${encoded && !shownError ? "" : "opacity-0"}`}
           style={{ imageRendering: "auto" }}
         />
         {!encoded ? (
@@ -219,7 +222,7 @@ export function QrPreview({ encoded, invalid = false, style, onStyleChange, file
       <p className="mt-2 text-xs text-muted tabular-nums">
         {p.summaryPrefix}{" "}
         <span className="font-mono text-foreground tabular-nums">
-          {outputPx} × {outputPx}px
+          {output.width} × {output.height}px
         </span>{" "}
         · {p.summaryMargin(style.margin)}
       </p>
@@ -287,7 +290,7 @@ export function QrPreview({ encoded, invalid = false, style, onStyleChange, file
                   <span className="font-medium text-success">{p.barReady}</span>
                   <span className="text-muted"> · </span>
                   <span className="font-mono tabular-nums">
-                    {outputPx}×{outputPx}
+                    {output.width}×{output.height}
                   </span>
                 </>
               )}

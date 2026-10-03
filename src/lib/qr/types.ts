@@ -96,6 +96,16 @@ export type QrPayload = QrPayloadMap[QrType];
 
 export type ErrorCorrectionLevel = "L" | "M" | "Q" | "H";
 
+/**
+ * Decorative frame around the saved image: a coloured border plus a one-line label bar under the
+ * code ("Scan me", …). Presets fill the label with the dictionary text of the UI language;
+ * editing that text turns the preset into "custom".
+ */
+export const FRAME_PRESETS = ["none", "scan", "wifi", "menu", "review", "pay", "custom"] as const;
+export type FramePreset = (typeof FRAME_PRESETS)[number];
+/** Presets that come with a default label (every preset except "none" and "custom"). */
+export type FrameTextPreset = Exclude<FramePreset, "none" | "custom">;
+
 export type QrStyleOptions = {
   size: number;
   margin: number;
@@ -103,6 +113,11 @@ export type QrStyleOptions = {
   lightColor: string;
   errorCorrectionLevel: ErrorCorrectionLevel;
   logoDataUrl: string | null;
+  frame: FramePreset;
+  /** Label under the code; empty → border only. */
+  frameText: string;
+  /** Border and label-bar colour. Empty string = follow `darkColor`. */
+  frameColor: string;
 };
 
 export const DEFAULT_STYLE: QrStyleOptions = {
@@ -112,6 +127,9 @@ export const DEFAULT_STYLE: QrStyleOptions = {
   lightColor: "#ffffff",
   errorCorrectionLevel: "M",
   logoDataUrl: null,
+  frame: "none",
+  frameText: "",
+  frameColor: "",
 };
 
 export const DEFAULT_PAYLOADS: QrPayloadMap = {

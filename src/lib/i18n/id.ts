@@ -338,8 +338,17 @@ export const id: Dict = {
 
   style: {
     title: "Gaya",
-    summary: "Opsional · Warna, latar, koreksi kesalahan, logo",
+    summary: "Opsional · Bingkai, warna, latar, koreksi kesalahan, logo",
     changed: "Diubah",
+    frame: "Bingkai",
+    frameHint: "Menambahkan tepi berwarna dan satu baris teks di sekeliling kode. Ikut tersimpan di PNG, SVG, dan poster.",
+    frameNone: "Tanpa",
+    framePresets: { scan: "Scan me", wifi: "Wi-Fi", menu: "Menu", review: "Ulasan", pay: "Bayar", custom: "Teks sendiri" },
+    frameTexts: { scan: "Scan di sini", wifi: "Scan untuk Wi-Fi", menu: "Scan untuk lihat menu", review: "Scan untuk beri ulasan", pay: "Scan untuk bayar" },
+    frameText: "Teks",
+    frameTextHint: "Maks. 40 karakter · kosongkan untuk tepi saja.",
+    frameColor: "Warna bingkai",
+    frameSameAsCode: "Sama dengan kode",
     codeColor: "Warna kode",
     colors: {
       black: "Hitam",

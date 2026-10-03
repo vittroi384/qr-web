@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { hardenSecretsForStorage, maskWifiPasswords } from "./sanitize";
+import { hardenSecretsForStorage, maskWifiPasswords, sanitizeOptionsForStorage } from "./sanitize";
 
 describe("maskWifiPasswords", () => {
   it("masks a plain WIFI: string", () => {
@@ -58,5 +58,13 @@ describe("hardenSecretsForStorage", () => {
   });
   it("returns other payloads unchanged", () => {
     assert.deepEqual(hardenSecretsForStorage("url", { url: "https://x.com" }), { url: "https://x.com" });
+  });
+});
+
+describe("sanitizeOptionsForStorage", () => {
+  it("keeps the frame preset and colour but only the length of the label text", () => {
+    const out = sanitizeOptionsForStorage({ size: 512, frame: "custom", frameColor: "#881337", frameText: "우리 가게 Wi-Fi", logoDataUrl: "data:..." });
+    assert.deepEqual(out, { size: 512, frame: "custom", frameColor: "#881337", frameTextLength: 11, hasLogo: true });
+    assert.equal(sanitizeOptionsForStorage({ frameText: 42 }).frameTextLength, 0);
   });
 });
