@@ -87,6 +87,21 @@ function ShapeIcon({ shape }: { shape: ShapeChoice }) {
           <rect x="3" y="2" width="22" height="24" rx="8" {...common} strokeWidth={2.5} />
           <rect x="6" y="18" width="16" height="5" rx="2" fill="currentColor" />
         </>
+      ) : shape === "ribbon" ? (
+        <>
+          <rect x="6" y="2" width="16" height="20" rx="3" {...common} />
+          <path d="M2 16h24l-2 3.5 2 3.5H2l2-3.5z" fill="currentColor" />
+        </>
+      ) : shape === "floating" ? (
+        <>
+          <rect x="5" y="2" width="18" height="17" rx="3" {...common} />
+          <rect x="4" y="21" width="20" height="5" rx="2.5" fill="currentColor" />
+        </>
+      ) : shape === "corners" ? (
+        <>
+          <path d="M4 10V4h6M18 4h6v6M24 18v6h-6M10 24H4v-6" {...common} strokeWidth={2.25} strokeLinecap="round" />
+          <rect x="9" y="25" width="10" height="2" rx="1" fill="currentColor" />
+        </>
       ) : (
         <>
           <rect x="5" y="3" width="18" height="18" rx="2" {...common} strokeWidth={1.25} />
@@ -154,9 +169,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
   const t = useI18n().t.style;
   const [logoError, setLogoError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [more, setMore] = useState(false);
   const fileId = useId();
-  const moreId = useId();
 
   const onLogo = (file: File | undefined) => {
     setLogoError(null);
@@ -210,16 +223,15 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
   const shapeNames: Record<ShapeChoice, string> = { none: t.frameNone, ...t.frameShapes };
 
   return (
-    <details className="group">
-      <summary className="-m-2 flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors select-none hover:bg-subtle">
-        <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold text-foreground">{t.title}</span>
-          <span className="mt-0.5 block text-[13px] text-muted">{t.summary}</span>
-        </span>
+    <div>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[15px] font-semibold text-foreground">{t.title}</h2>
+          <p className="mt-0.5 text-[13px] text-muted">{t.summary}</p>
+        </div>
         {edited ? <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span> : null}
-        <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
-      </summary>
-      <div className="mt-6 grid gap-6">
+      </div>
+      <div className="mt-5 grid gap-6">
         <Group label={t.frameShape} hint={hasFrame ? undefined : t.frameHint}>
           <Chips items={SHAPE_CHOICES} value={hasFrame ? value.frameShape : "none"} onSelect={selectShape} label={t.frameShape} names={shapeNames} icon={(s) => <ShapeIcon shape={s} />} />
           {hasFrame ? (
@@ -312,15 +324,17 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
           ) : null}
         </Group>
 
-        {/* Colour, background and error correction are rarely needed: one toggle keeps them out of the way. */}
-        <div className="min-w-0">
-          <button type="button" aria-expanded={more} aria-controls={moreId} onClick={() => setMore((v) => !v)} className="btn btn-ghost btn-sm -ml-2.5">
-            <ChevronDownIcon className={`transition-transform ${more ? "rotate-180" : ""}`} />
-            {more ? t.fewerOptions : t.moreOptions}
-            {more ? null : <span className="font-normal text-muted/80">· {t.moreOptionsSummary}</span>}
-            {!more && colorsEdited ? <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span> : null}
-          </button>
-          <div id={moreId} hidden={!more} className="mt-4 grid gap-6">
+        {/* Colour, background and error correction are rarely needed: the one dropdown keeps them out of the way. */}
+        <details className="group min-w-0 rounded-lg border border-border bg-subtle/60">
+          <summary className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-3.5 py-2 transition-colors select-none hover:bg-subtle">
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-foreground">{t.moreOptions}</span>
+              <span className="mt-0.5 block text-xs text-muted">{t.moreOptionsSummary}</span>
+            </span>
+            {colorsEdited ? <span className="rounded-full bg-card px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span> : null}
+            <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="grid gap-6 px-3.5 pt-2 pb-4">
             <Group label={t.codeColor}>
               <div className="flex flex-wrap items-center gap-2.5">
                 <ColorSwatches value={value.darkColor} onChange={(darkColor) => onChange({ ...value, darkColor })} />
@@ -372,8 +386,8 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
               />
             </Group>
           </div>
-        </div>
+        </details>
       </div>
-    </details>
+    </div>
   );
 }

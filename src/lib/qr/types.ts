@@ -124,10 +124,10 @@ export type FramePreset = (typeof FRAME_PRESETS)[number];
 export type FrameTextPreset = Exclude<FramePreset, "none" | "custom">;
 /**
  * How the frame is drawn (geometry only; see src/lib/qr/frame.ts): caption bar below or above the
- * code, a speech bubble with a tail, larger rounded corners, or a thin line with the caption set
- * underneath in the frame colour.
+ * code, a speech bubble with a tail, larger rounded corners, a ribbon sticking out at the sides, a
+ * floating pill under the box, a thin line or corner marks with the caption set in the open.
  */
-export const FRAME_SHAPES = ["label", "top", "bubble", "rounded", "thin"] as const;
+export const FRAME_SHAPES = ["label", "top", "bubble", "rounded", "ribbon", "floating", "thin", "corners"] as const;
 export type FrameShape = (typeof FRAME_SHAPES)[number];
 
 export type QrStyleOptions = {

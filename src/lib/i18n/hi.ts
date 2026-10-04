@@ -429,7 +429,7 @@ export const hi: Dict = {
     frameColor: "फ़्रेम का रंग",
     frameSameAsCode: "कोड जैसा",
     frameShape: "फ़्रेम का आकार",
-    frameShapes: { label: "नीचे कैप्शन", top: "ऊपर कैप्शन", bubble: "स्पीच बबल", rounded: "गोल कोने", thin: "पतली रेखा" },
+    frameShapes: { label: "नीचे कैप्शन", top: "ऊपर कैप्शन", bubble: "स्पीच बबल", rounded: "गोल कोने", thin: "पतली रेखा", ribbon: "रिबन", floating: "फ़्लोटिंग लेबल", corners: "कोने के निशान" },
     moreOptions: "और विकल्प",
     fewerOptions: "कम विकल्प",
     moreOptionsSummary: "कोड का रंग · बैकग्राउंड · एरर करेक्शन",

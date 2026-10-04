@@ -88,17 +88,13 @@ export function QrGenerator({
   const setPayload = (next: QrPayloadMap[QrType]) => setPayloads((prev) => ({ ...prev, [type]: next }));
   const reset = () => setPayloads((prev) => ({ ...prev, [type]: DEFAULT_PAYLOADS[type] }));
 
-  // Landing hints run once on mount. The Style section owns its own <details>, so this only
-  // flips the native `open` flag and, if asked, outlines the logo field briefly. No auto-scroll:
-  // the landing headline must stay in view on first paint.
+  // Landing hints run once on mount: the Style section is always open, so this only outlines
+  // the logo field briefly when asked. No auto-scroll: the landing headline must stay in view.
   const styleRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!initialUi?.openStyle && !initialUi?.focusLogo) return;
+    if (!initialUi?.focusLogo) return;
     const root = styleRef.current;
     if (!root) return;
-    const details = root.querySelector("details");
-    if (details) details.open = true;
-    if (!initialUi.focusLogo) return;
     const field = root.querySelector('input[type="file"]')?.closest<HTMLElement>('[role="group"]');
     if (!field) return;
     field.classList.add(...LOGO_HIGHLIGHT);

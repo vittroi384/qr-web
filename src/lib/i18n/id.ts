@@ -429,7 +429,7 @@ export const id: Dict = {
     frameColor: "Warna bingkai",
     frameSameAsCode: "Sama dengan kode",
     frameShape: "Bentuk bingkai",
-    frameShapes: { label: "Teks di bawah", top: "Teks di atas", bubble: "Balon ucapan", rounded: "Sudut bulat", thin: "Garis tipis" },
+    frameShapes: { label: "Teks di bawah", top: "Teks di atas", bubble: "Balon ucapan", rounded: "Sudut bulat", thin: "Garis tipis", ribbon: "Pita", floating: "Label melayang", corners: "Tanda sudut" },
     moreOptions: "Opsi lainnya",
     fewerOptions: "Lebih sedikit opsi",
     moreOptionsSummary: "Warna kode · Latar · Koreksi kesalahan",

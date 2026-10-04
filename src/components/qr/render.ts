@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { FRAME_FONT_FAMILY, FRAME_FONT_WEIGHT, frameFont, frameLayout, frameTextColor, hasFrame, resolveFrameColor, type FrameLayout } from "@/lib/qr/frame";
+import { FRAME_FONT_FAMILY, FRAME_FONT_WEIGHT, frameFont, frameLayout, frameTextColor, hasFrame, resolveFrameColor, type FrameLayout, type FrameRect } from "@/lib/qr/frame";
 import type { QrStyleOptions } from "@/lib/qr/types";
 
 /** Share of the code's width taken by a centre logo, and the padding plate around it. */
@@ -92,10 +92,13 @@ export async function drawQrToCanvas(canvas: HTMLCanvasElement, encoded: string,
     ctx.roundRect(layout.box.x, layout.box.y, layout.box.w, layout.box.h, layout.box.radius);
     ctx.fill();
   }
-  if (layout.tail) {
+  for (const part of layout.parts) {
     ctx.beginPath();
-    layout.tail.points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-    ctx.closePath();
+    if (part.kind === "rect") ctx.roundRect(part.x, part.y, part.w, part.h, part.radius);
+    else {
+      part.points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.closePath();
+    }
     ctx.fill();
   }
   // Punch the code's square out of the frame so a transparent background stays transparent.
@@ -146,22 +149,27 @@ function escapeXml(text: string): string {
 /** Up to four decimals, no trailing zeros — keeps the SVG small and stable. */
 const num = (n: number) => String(Math.round(n * 10_000) / 10_000);
 
-/** Rounded box with the code's square cut out (evenodd), so a transparent code stays transparent. */
-function framePath(layout: FrameLayout): string {
-  if (!layout.box) return "";
-  const { x, y, w, h, radius: r } = layout.box;
-  const outer =
+/** Path of a rounded rectangle. */
+function roundedRectPath({ x, y, w, h, radius: r }: FrameRect): string {
+  return (
     `M${num(x + r)} ${num(y)}H${num(x + w - r)}A${num(r)} ${num(r)} 0 0 1 ${num(x + w)} ${num(y + r)}V${num(y + h - r)}A${num(r)} ${num(r)} 0 0 1 ${num(x + w - r)} ${num(y + h)}` +
-    `H${num(x + r)}A${num(r)} ${num(r)} 0 0 1 ${num(x)} ${num(y + h - r)}V${num(y + r)}A${num(r)} ${num(r)} 0 0 1 ${num(x + r)} ${num(y)}Z`;
-  const { qr } = layout;
-  const hole = `M${num(qr.x)} ${num(qr.y)}h${num(qr.size)}v${num(qr.size)}h${num(-qr.size)}Z`;
-  return outer + hole;
+    `H${num(x + r)}A${num(r)} ${num(r)} 0 0 1 ${num(x)} ${num(y + h - r)}V${num(y + r)}A${num(r)} ${num(r)} 0 0 1 ${num(x + r)} ${num(y)}Z`
+  );
 }
 
-/** Speech-bubble tail as its own path: it shares an edge with the box, so it must not join the evenodd path. */
-function tailPath(layout: FrameLayout): string {
-  if (!layout.tail) return "";
-  return layout.tail.points.map(([x, y], i) => `${i ? "L" : "M"}${num(x)} ${num(y)}`).join("") + "Z";
+/** The main box with the code's square cut out (evenodd), so a transparent code stays transparent. */
+function framePath(layout: FrameLayout): string {
+  if (!layout.box) return "";
+  const { qr } = layout;
+  const hole = `M${num(qr.x)} ${num(qr.y)}h${num(qr.size)}v${num(qr.size)}h${num(-qr.size)}Z`;
+  return roundedRectPath(layout.box) + hole;
+}
+
+/** Extra parts as one nonzero path (they may touch the box, so they must not join the evenodd path). */
+function partsPath(layout: FrameLayout): string {
+  return layout.parts
+    .map((part) => (part.kind === "rect" ? roundedRectPath(part) : part.points.map(([x, y], i) => `${i ? "L" : "M"}${num(x)} ${num(y)}`).join("") + "Z"))
+    .join("");
 }
 
 /**
@@ -180,12 +188,12 @@ export async function buildSvg(encoded: string, style: QrStyleOptions): Promise<
     ? `<text x="${num(layout.text.x)}" y="${num(layout.text.y)}" fill="${frameTextColor(layout, style)}" font-family='${FRAME_FONT_FAMILY}' font-size="${layout.text.fontPx}" font-weight="${FRAME_FONT_WEIGHT}" text-anchor="middle" dominant-baseline="central">${escapeXml(layout.text.value)}</text>`
     : "";
   const background = layout.fillBackground ? `<rect width="${layout.width}" height="${layout.height}" fill="${style.lightColor}"/>` : "";
-  const tail = layout.tail ? `<path fill="${color}" d="${tailPath(layout)}"/>` : "";
+  const parts = layout.parts.length ? `<path fill="${color}" d="${partsPath(layout)}"/>` : "";
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${layout.width}" height="${layout.height}" viewBox="0 0 ${layout.width} ${layout.height}">` +
     background +
-    `<path fill="${color}" fill-rule="evenodd" d="${framePath(layout)}"/>` +
-    tail +
+    (layout.box ? `<path fill="${color}" fill-rule="evenodd" d="${framePath(layout)}"/>` : "") +
+    parts +
     `<g transform="translate(${layout.qr.x} ${layout.qr.y}) scale(${num(layout.qr.size / units)})" shape-rendering="crispEdges">${body}</g>` +
     label +
     "</svg>\n"

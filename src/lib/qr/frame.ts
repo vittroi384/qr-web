@@ -2,9 +2,10 @@ import type { FrameShape, QrStyleOptions } from "./types";
 
 /**
  * Geometry of the decorative frame that wraps a saved QR image: a filled box in the frame colour
- * (border plus, for most shapes, a caption bar), an optional speech-bubble tail and the caption.
- * Pure arithmetic, shared by the canvas renderer, the SVG builder and the size caption so all
- * three agree to the pixel. Everything is relative to the QR bitmap's own size.
+ * around the code (with the code's square cut out), extra filled parts (caption bars, pills,
+ * ribbons, bubble tails, corner marks) and the caption itself. Pure arithmetic, shared by the
+ * canvas renderer, the SVG builder and the size caption so all three agree to the pixel.
+ * Everything is relative to the QR bitmap's own size.
  */
 
 /** Longest label the UI accepts (code points). */
@@ -12,13 +13,21 @@ export const FRAME_TEXT_MAX = 40;
 /** Caption bar height and nominal font size as shares of the QR size (bar shapes). */
 const BAR_RATIO = 0.18;
 const FONT_RATIO = 0.55;
-/** "thin": caption set under the box in the frame colour — gap and font as shares of the QR size. */
+/** Captions set outside the box in the frame colour: gap and font as shares of the QR size. */
 const OUTSIDE_GAP_RATIO = 0.05;
 const OUTSIDE_FONT_RATIO = 0.11;
 const OUTSIDE_LINE_RATIO = 1.3;
 /** Speech-bubble tail, as shares of the QR size. */
 const TAIL_W_RATIO = 0.14;
 const TAIL_H_RATIO = 0.08;
+/** Corner marks: thickness, arm length and distance from the code, as shares of the QR size. */
+const CORNER_THICK_RATIO = 0.06;
+const CORNER_ARM_RATIO = 0.24;
+const CORNER_GAP_RATIO = 0.04;
+/** Floating label: gap between the box and the pill, as a share of the QR size. */
+const PILL_GAP_RATIO = 0.06;
+/** Ribbon: how far the bar sticks out on each side and the depth of its notched ends. */
+const RIBBON_WING_RATIO = 0.1;
 /**
  * A label is shrunk to fit down to this share of the nominal font size, then cut with an ellipsis.
  * 40 % lets the longest allowed Latin label (40 characters) fit without being cut.
@@ -31,40 +40,26 @@ export const FRAME_TEXT_COLOR = "#ffffff";
 export const FRAME_FONT_FAMILY = 'system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif';
 export const FRAME_FONT_WEIGHT = 700;
 
-type ShapeSpec = {
-  /** Border thickness as a share of the QR size. */
-  border: number;
-  /** Corner radius as a multiple of the border. */
-  radius: number;
-  /** Where the caption bar goes; "none" sets the caption outside the box in the frame colour. */
-  bar: "bottom" | "top" | "none";
-  tail: boolean;
-};
-
-const SHAPES: Record<FrameShape, ShapeSpec> = {
-  label: { border: 0.06, radius: 2, bar: "bottom", tail: false },
-  top: { border: 0.06, radius: 2, bar: "top", tail: false },
-  bubble: { border: 0.06, radius: 2, bar: "bottom", tail: true },
-  rounded: { border: 0.08, radius: 3.5, bar: "bottom", tail: false },
-  thin: { border: 0.025, radius: 2, bar: "none", tail: false },
-};
+export type FrameRect = { x: number; y: number; w: number; h: number; radius: number };
+/** A filled part in the frame colour besides the main box. */
+export type FramePart = ({ kind: "rect" } & FrameRect) | { kind: "polygon"; points: [number, number][] };
 
 export type FrameLayout = {
   width: number;
   height: number;
   /** Where the QR bitmap goes. */
   qr: { x: number; y: number; size: number };
-  /** Filled rounded box in the frame colour (border, and the caption bar when it is inside). Null without a frame. */
-  box: { x: number; y: number; w: number; h: number; radius: number } | null;
-  /** Speech-bubble tail: a triangle in the frame colour whose base sits on the box's bottom edge. */
-  tail: { points: [number, number][] } | null;
-  /** Coloured strip holding the caption (border + bar), null when there is no bar. */
+  /** Filled rounded box in the frame colour with the code's square cut out. Null for frames made of parts only. */
+  box: FrameRect | null;
+  /** Further filled parts (caption bar outside the box, bubble tail, corner marks …), drawn after the box. */
+  parts: FramePart[];
+  /** Coloured strip holding the caption, null when the caption is not on a strip. */
   bar: { x: number; y: number; w: number; h: number } | null;
-  /** Caption centre, fitted font size, colour and the (possibly shortened) text. Null without a caption. */
+  /** Caption centre, fitted font size, colour ("" = frame colour) and the (possibly shortened) text. */
   text: { x: number; y: number; fontPx: number; maxWidth: number; value: string; color: string } | null;
-  /** True when the canvas must be painted with the code's light colour first (caption outside the box). */
+  /** True when the canvas must be painted with the code's light colour first (parts of it stay open). */
   fillBackground: boolean;
-  /** Corner radius of the outer frame; 0 without a frame. */
+  /** Corner radius of the main box; 0 without one. */
   radius: number;
   /** Border thickness; 0 without a frame. */
   border: number;
@@ -80,6 +75,11 @@ export function hasFrame(style: Pick<QrStyleOptions, "frame">): boolean {
 /** Border/bar colour: the chosen one, or the code colour when none was chosen. */
 export function resolveFrameColor(style: Pick<QrStyleOptions, "frameColor" | "darkColor">): string {
   return style.frameColor || style.darkColor;
+}
+
+/** Caption colour for `layout`: white on a strip, the frame colour when set in the open. */
+export function frameTextColor(layout: FrameLayout, style: Pick<QrStyleOptions, "frameColor" | "darkColor">): string {
+  return layout.text?.color || resolveFrameColor(style);
 }
 
 /** CSS shorthand for the label font at `fontPx`. */
@@ -130,6 +130,169 @@ export function fitLabel(text: string, fontPx: number, maxWidth: number, measure
   return { value: chars.join("").trimEnd() + ELLIPSIS, fontPx: minPx };
 }
 
+type Ctx = { qr: number; label: string; measure: TextMeasure };
+
+/** Caption centred in a strip: white text at 55 % of the bar height, at most as wide as the code. */
+function stripText(c: Ctx, strip: { x: number; y: number; w: number; h: number }, barH: number): FrameLayout["text"] {
+  const fitted = fitLabel(c.label, Math.round(barH * FONT_RATIO), c.qr, c.measure);
+  return { x: strip.x + strip.w / 2, y: strip.y + strip.h / 2, fontPx: fitted.fontPx, maxWidth: c.qr, value: fitted.value, color: FRAME_TEXT_COLOR };
+}
+
+/** Caption set below `bottom` in the open, in the frame colour. Returns the text and the extra height it needs. */
+function openText(c: Ctx, cx: number, bottom: number): { text: FrameLayout["text"]; extra: number } {
+  const gap = Math.round(c.qr * OUTSIDE_GAP_RATIO);
+  const fitted = fitLabel(c.label, Math.round(c.qr * OUTSIDE_FONT_RATIO), c.qr, c.measure);
+  const line = Math.round(fitted.fontPx * OUTSIDE_LINE_RATIO);
+  return { text: { x: cx, y: bottom + gap + line / 2, fontPx: fitted.fontPx, maxWidth: c.qr, value: fitted.value, color: "" }, extra: gap + line };
+}
+
+/**
+ * Box with a caption strip inside it, below or above the code ("label", "top", "bubble" with a
+ * tail, "rounded" with a thicker border and bigger radius, "ribbon" with a bar sticking out).
+ */
+function boxWithStrip(c: Ctx, o: { border: number; radius: number; top?: boolean; tail?: boolean; ribbon?: boolean }): FrameLayout {
+  const border = Math.round(c.qr * o.border);
+  const radius = Math.round(border * o.radius);
+  const barH = c.label ? Math.round(c.qr * BAR_RATIO) : 0;
+  const wing = o.ribbon && c.label ? Math.round(c.qr * RIBBON_WING_RATIO) : 0;
+  const boxW = c.qr + border * 2;
+  const boxH = boxW + barH;
+  const tailH = o.tail ? Math.round(c.qr * TAIL_H_RATIO) : 0;
+  const box: FrameRect = { x: wing, y: 0, w: boxW, h: boxH, radius };
+  const layout: FrameLayout = {
+    width: boxW + wing * 2,
+    height: boxH + tailH,
+    qr: { x: wing + border, y: o.top ? border + barH : border, size: c.qr },
+    box,
+    parts: [],
+    bar: null,
+    text: null,
+    fillBackground: wing > 0,
+    radius,
+    border,
+  };
+  if (o.tail) {
+    const tailW = Math.round(c.qr * TAIL_W_RATIO);
+    const cx = layout.width / 2;
+    layout.parts.push({ kind: "polygon", points: [[cx - tailW / 2, boxH], [cx + tailW / 2, boxH], [cx, boxH + tailH]] });
+  }
+  if (!c.label) return layout;
+  // The strip is the bar plus the adjacent border; the label sits in its middle.
+  const strip = o.top ? { x: wing, y: 0, w: boxW, h: border + barH } : { x: wing, y: border + c.qr, w: boxW, h: border + barH };
+  if (wing > 0) {
+    // Ribbon: the strip runs the full width, with a notch cut into each end.
+    const { y, h } = strip;
+    const notch = Math.round(h * 0.45);
+    const w = layout.width;
+    layout.parts.push({ kind: "polygon", points: [[0, y], [w, y], [w - notch, y + h / 2], [w, y + h], [0, y + h], [notch, y + h / 2]] });
+    strip.x = 0;
+    strip.w = w;
+  }
+  layout.bar = strip;
+  layout.text = stripText(c, strip, barH);
+  return layout;
+}
+
+/** Thin border, caption below in the open. */
+function thinLine(c: Ctx): FrameLayout {
+  const border = Math.max(2, Math.round(c.qr * 0.025));
+  const w = c.qr + border * 2;
+  const layout: FrameLayout = {
+    width: w,
+    height: w,
+    qr: { x: border, y: border, size: c.qr },
+    box: { x: 0, y: 0, w, h: w, radius: border * 2 },
+    parts: [],
+    bar: null,
+    text: null,
+    fillBackground: true,
+    radius: border * 2,
+    border,
+  };
+  if (!c.label) return layout;
+  const open = openText(c, w / 2, w);
+  layout.height += open.extra;
+  layout.text = open.text;
+  return layout;
+}
+
+/** Four L-shaped corner marks around the code (viewfinder look), caption below in the open. */
+function cornerMarks(c: Ctx): FrameLayout {
+  const thick = Math.max(2, Math.round(c.qr * CORNER_THICK_RATIO));
+  const arm = Math.round(c.qr * CORNER_ARM_RATIO);
+  const gap = Math.round(c.qr * CORNER_GAP_RATIO);
+  const inset = thick + gap;
+  const w = c.qr + inset * 2;
+  const parts: FramePart[] = [];
+  for (const [left, top] of [
+    [true, true],
+    [false, true],
+    [true, false],
+    [false, false],
+  ]) {
+    const x = left ? 0 : w - thick;
+    const y = top ? 0 : w - thick;
+    // Horizontal arm then vertical arm, both starting at the corner.
+    parts.push({ kind: "rect", x: left ? 0 : w - arm, y, w: arm, h: thick, radius: 0 });
+    parts.push({ kind: "rect", x, y: top ? 0 : w - arm, w: thick, h: arm, radius: 0 });
+  }
+  const layout: FrameLayout = {
+    width: w,
+    height: w,
+    qr: { x: inset, y: inset, size: c.qr },
+    box: null,
+    parts,
+    bar: null,
+    text: null,
+    fillBackground: true,
+    radius: 0,
+    border: thick,
+  };
+  if (!c.label) return layout;
+  const open = openText(c, w / 2, w);
+  layout.height += open.extra;
+  layout.text = open.text;
+  return layout;
+}
+
+/** Border box with the caption on a separate pill floating under it. */
+function floatingLabel(c: Ctx): FrameLayout {
+  const border = Math.round(c.qr * 0.06);
+  const w = c.qr + border * 2;
+  const layout: FrameLayout = {
+    width: w,
+    height: w,
+    qr: { x: border, y: border, size: c.qr },
+    box: { x: 0, y: 0, w, h: w, radius: border * 2 },
+    parts: [],
+    bar: null,
+    text: null,
+    fillBackground: true,
+    radius: border * 2,
+    border,
+  };
+  if (!c.label) return layout;
+  const gap = Math.round(c.qr * PILL_GAP_RATIO);
+  const pillH = Math.round(c.qr * BAR_RATIO);
+  const pill = { x: 0, y: w + gap, w, h: pillH };
+  layout.parts.push({ kind: "rect", ...pill, radius: pillH / 2 });
+  layout.height = pill.y + pill.h;
+  layout.bar = pill;
+  layout.text = stripText(c, pill, pillH);
+  return layout;
+}
+
+const BUILDERS: Record<FrameShape, (c: Ctx) => FrameLayout> = {
+  label: (c) => boxWithStrip(c, { border: 0.06, radius: 2 }),
+  top: (c) => boxWithStrip(c, { border: 0.06, radius: 2, top: true }),
+  bubble: (c) => boxWithStrip(c, { border: 0.06, radius: 2, tail: true }),
+  rounded: (c) => boxWithStrip(c, { border: 0.08, radius: 3.5 }),
+  ribbon: (c) => boxWithStrip(c, { border: 0.06, radius: 2, ribbon: true }),
+  thin: thinLine,
+  corners: cornerMarks,
+  floating: floatingLabel,
+};
+
 /**
  * Lays out the frame around a QR bitmap of `qrSize` pixels. With `frame: "none"` the result is the
  * bare QR (width = height = qrSize, nothing else), so callers can use it unconditionally.
@@ -140,59 +303,8 @@ export function frameLayout(
   measure: TextMeasure = estimateTextWidth,
 ): FrameLayout {
   if (!hasFrame(style)) {
-    return { width: qrSize, height: qrSize, qr: { x: 0, y: 0, size: qrSize }, box: null, tail: null, bar: null, text: null, fillBackground: false, radius: 0, border: 0 };
+    return { width: qrSize, height: qrSize, qr: { x: 0, y: 0, size: qrSize }, box: null, parts: [], bar: null, text: null, fillBackground: false, radius: 0, border: 0 };
   }
-  const spec = SHAPES[style.frameShape] ?? SHAPES.label;
-  const border = Math.max(2, Math.round(qrSize * spec.border));
-  const radius = Math.round(border * spec.radius);
-  const label = normalizeFrameText(style.frameText);
-  const width = qrSize + border * 2;
-
-  if (spec.bar === "none") {
-    // Thin line: the box is just the border; the caption sits below it in the frame colour.
-    const box = { x: 0, y: 0, w: width, h: width, radius };
-    const layout: FrameLayout = { width, height: width, qr: { x: border, y: border, size: qrSize }, box, tail: null, bar: null, text: null, fillBackground: true, radius, border };
-    if (!label) return layout;
-    const gap = Math.round(qrSize * OUTSIDE_GAP_RATIO);
-    const fitted = fitLabel(label, Math.round(qrSize * OUTSIDE_FONT_RATIO), qrSize, measure);
-    const line = Math.round(fitted.fontPx * OUTSIDE_LINE_RATIO);
-    layout.height = width + gap + line;
-    layout.text = { x: width / 2, y: width + gap + line / 2, fontPx: fitted.fontPx, maxWidth: qrSize, value: fitted.value, color: "" };
-    return layout;
-  }
-
-  const barH = label ? Math.round(qrSize * BAR_RATIO) : 0;
-  const boxH = width + barH;
-  const tailH = spec.tail ? Math.round(qrSize * TAIL_H_RATIO) : 0;
-  const qrY = spec.bar === "top" ? border + barH : border;
-  const layout: FrameLayout = {
-    width,
-    height: boxH + tailH,
-    qr: { x: border, y: qrY, size: qrSize },
-    box: { x: 0, y: 0, w: width, h: boxH, radius },
-    tail: null,
-    bar: null,
-    text: null,
-    fillBackground: false,
-    radius,
-    border,
-  };
-  if (spec.tail) {
-    const tailW = Math.round(qrSize * TAIL_W_RATIO);
-    const cx = width / 2;
-    layout.tail = { points: [[cx - tailW / 2, boxH], [cx + tailW / 2, boxH], [cx, boxH + tailH]] };
-  }
-  if (!label) return layout;
-  // The strip holding the caption is the bar plus the adjacent border; the label sits in its middle.
-  layout.bar = spec.bar === "top" ? { x: 0, y: 0, w: width, h: border + barH } : { x: 0, y: border + qrSize, w: width, h: border + barH };
-  // The label may run as wide as the code itself: one border width of padding on each side.
-  const maxWidth = qrSize;
-  const fitted = fitLabel(label, Math.round(barH * FONT_RATIO), maxWidth, measure);
-  layout.text = { x: width / 2, y: layout.bar.y + layout.bar.h / 2, fontPx: fitted.fontPx, maxWidth, value: fitted.value, color: FRAME_TEXT_COLOR };
-  return layout;
-}
-
-/** Caption colour for `layout`: white on a bar, the frame colour when set outside the box. */
-export function frameTextColor(layout: FrameLayout, style: Pick<QrStyleOptions, "frameColor" | "darkColor">): string {
-  return layout.text?.color || resolveFrameColor(style);
+  const build = BUILDERS[style.frameShape] ?? BUILDERS.label;
+  return build({ qr: qrSize, label: normalizeFrameText(style.frameText), measure });
 }

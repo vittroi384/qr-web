@@ -429,7 +429,7 @@ export const ja: Dict = {
     frameColor: "フレームの色",
     frameSameAsCode: "コードと同じ",
     frameShape: "フレームの形",
-    frameShapes: { label: "下に文字", top: "上に文字", bubble: "吹き出し", rounded: "角丸", thin: "細い線" },
+    frameShapes: { label: "下に文字", top: "上に文字", bubble: "吹き出し", rounded: "角丸", thin: "細い線", ribbon: "リボン", floating: "浮かぶラベル", corners: "コーナー" },
     moreOptions: "その他のオプション",
     fewerOptions: "オプションを閉じる",
     moreOptionsSummary: "コードの色 · 背景 · 誤り訂正",

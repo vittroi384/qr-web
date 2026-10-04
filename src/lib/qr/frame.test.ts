@@ -5,7 +5,7 @@ import { FRAME_TEXT_MAX, estimateTextWidth, fitLabel, frameLayout, frameTextColo
 describe("frameLayout", () => {
   it("is the bare QR when the frame is off, whatever the text says", () => {
     const l = frameLayout(528, { frame: "none", frameShape: "label", frameText: "Scan me" });
-    assert.deepEqual(l, { width: 528, height: 528, qr: { x: 0, y: 0, size: 528 }, box: null, tail: null, bar: null, text: null, fillBackground: false, radius: 0, border: 0 });
+    assert.deepEqual(l, { width: 528, height: 528, qr: { x: 0, y: 0, size: 528 }, box: null, parts: [], bar: null, text: null, fillBackground: false, radius: 0, border: 0 });
   });
 
   it("adds a 6% border and an 18% label bar below the code", () => {
@@ -24,7 +24,7 @@ describe("frameLayout", () => {
     assert.equal(l.text.y, l.bar.y + l.bar.h / 2);
     assert.equal(l.radius, border * 2);
     assert.deepEqual(l.box, { x: 0, y: 0, w: l.width, h: l.height, radius: border * 2 });
-    assert.equal(l.tail, null);
+    assert.deepEqual(l.parts, []);
     assert.equal(l.text.color, "#ffffff");
   });
 
@@ -39,10 +39,12 @@ describe("frameLayout", () => {
 
   it("adds a tail under the box for the speech bubble, and the canvas grows by its height", () => {
     const l = frameLayout(500, { frame: "scan", frameShape: "bubble", frameText: "Scan me" });
-    assert.ok(l.box && l.tail);
+    assert.ok(l.box);
     const tailH = Math.round(500 * 0.08);
     assert.equal(l.height, l.box.h + tailH);
-    const [a, b, tip] = l.tail.points;
+    const tail = l.parts[0];
+    assert.ok(tail && tail.kind === "polygon");
+    const [a, b, tip] = tail.points;
     assert.equal(a[1], l.box.h);
     assert.equal(b[1], l.box.h);
     assert.equal(tip[1], l.box.h + tailH);
@@ -53,6 +55,51 @@ describe("frameLayout", () => {
     const l = frameLayout(500, { frame: "scan", frameShape: "rounded", frameText: "Scan me" });
     assert.equal(l.border, Math.round(500 * 0.08));
     assert.equal(l.radius, Math.round(l.border * 3.5));
+  });
+
+  it("ribbon: the strip runs wider than the box with notched ends, over the code's background", () => {
+    const l = frameLayout(500, { frame: "scan", frameShape: "ribbon", frameText: "Scan me" });
+    const border = Math.round(500 * 0.06);
+    const wing = Math.round(500 * 0.1);
+    assert.ok(l.box && l.bar);
+    assert.equal(l.width, 500 + border * 2 + wing * 2);
+    assert.equal(l.box.x, wing);
+    assert.equal(l.qr.x, wing + border);
+    assert.deepEqual([l.bar.x, l.bar.w], [0, l.width]);
+    assert.equal(l.fillBackground, true);
+    const ribbon = l.parts[0];
+    assert.ok(ribbon && ribbon.kind === "polygon" && ribbon.points.length === 6);
+    // Without a caption there is no ribbon and the canvas is just the box.
+    const bare = frameLayout(500, { frame: "custom", frameShape: "ribbon", frameText: "" });
+    assert.equal(bare.width, 500 + border * 2);
+    assert.deepEqual(bare.parts, []);
+  });
+
+  it("floating: the caption sits on a pill below the box with a gap", () => {
+    const l = frameLayout(500, { frame: "scan", frameShape: "floating", frameText: "Scan me" });
+    const border = Math.round(500 * 0.06);
+    const w = 500 + border * 2;
+    assert.ok(l.box && l.bar && l.text);
+    assert.equal(l.box.h, w);
+    assert.equal(l.bar.y, w + Math.round(500 * 0.06));
+    assert.equal(l.bar.h, Math.round(500 * 0.18));
+    assert.equal(l.height, l.bar.y + l.bar.h);
+    const pill = l.parts[0];
+    assert.ok(pill && pill.kind === "rect" && pill.radius === pill.h / 2);
+    assert.equal(l.text.color, "#ffffff");
+  });
+
+  it("corners: four L marks and no box, caption below in the frame colour", () => {
+    const l = frameLayout(500, { frame: "scan", frameShape: "corners", frameText: "Scan me" });
+    const thick = Math.round(500 * 0.06);
+    const inset = thick + Math.round(500 * 0.04);
+    assert.equal(l.box, null);
+    assert.equal(l.parts.length, 8);
+    assert.ok(l.parts.every((p) => p.kind === "rect"));
+    assert.deepEqual(l.qr, { x: inset, y: inset, size: 500 });
+    assert.equal(l.width, 500 + inset * 2);
+    assert.ok(l.text && l.text.color === "" && l.text.y > l.width);
+    assert.equal(l.fillBackground, true);
   });
 
   it("sets the caption outside a thin box in the frame colour, over the code's background", () => {

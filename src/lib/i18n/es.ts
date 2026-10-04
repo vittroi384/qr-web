@@ -429,7 +429,7 @@ export const es: Dict = {
     frameColor: "Color del marco",
     frameSameAsCode: "Igual que el código",
     frameShape: "Forma del marco",
-    frameShapes: { label: "Texto abajo", top: "Texto arriba", bubble: "Bocadillo", rounded: "Redondeado", thin: "Línea fina" },
+    frameShapes: { label: "Texto abajo", top: "Texto arriba", bubble: "Bocadillo", rounded: "Redondeado", thin: "Línea fina", ribbon: "Cinta", floating: "Etiqueta flotante", corners: "Esquinas" },
     moreOptions: "Más opciones",
     fewerOptions: "Menos opciones",
     moreOptionsSummary: "Color del código · Fondo · Corrección de errores",
