@@ -144,28 +144,23 @@ export function QrGenerator({
             />
           </div>
 
-          <div className="border-t border-border p-4 sm:px-6 sm:py-6">
-            {selected ? (
-              <>
-                <SectionHeading
-                  step={2}
-                  title={t.types.labels[type]}
-                  description={t.types.descriptions[type]}
-                  action={
-                    <button type="button" className="btn btn-ghost btn-sm -mt-1 -mr-1.5 shrink-0" onClick={reset}>
-                      <ResetIcon />
-                      {t.generator.reset}
-                    </button>
-                  }
-                />
-                <PayloadForm key={type} type={type} value={payload} onChange={setPayload} issue={issue} />
-              </>
-            ) : (
-              <p role="status" className="rounded-lg border border-dashed border-border-strong bg-subtle px-4 py-6 text-center text-sm font-medium text-muted">
-                {t.generator.pickFirst}
-              </p>
-            )}
-          </div>
+          {/* Step 2 exists only while a type is selected; clearing the selection simply hides it. */}
+          {selected ? (
+            <div className="border-t border-border p-4 sm:px-6 sm:py-6">
+              <SectionHeading
+                step={2}
+                title={t.types.labels[type]}
+                description={t.types.descriptions[type]}
+                action={
+                  <button type="button" className="btn btn-ghost btn-sm -mt-1 -mr-1.5 shrink-0" onClick={reset}>
+                    <ResetIcon />
+                    {t.generator.reset}
+                  </button>
+                }
+              />
+              <PayloadForm key={type} type={type} value={payload} onChange={setPayload} issue={issue} />
+            </div>
+          ) : null}
         </div>
 
         {/* 미리보기 · 저장 — desktop: sticky right column. Mobile: right after the form. */}

@@ -75,8 +75,6 @@ export const ja: Dict = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `ほかの種類 (${n})`,
     typeLess: "種類を閉じる",
-    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
-    pickFirst: "まず上で種類を選んでください。",
   },
 
   types: {

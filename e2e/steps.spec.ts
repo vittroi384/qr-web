@@ -24,7 +24,6 @@ test.describe("step guide and type tiles", () => {
     await wifi.click();
     await expect(wifi).toHaveAttribute("aria-pressed", "false");
     await expect(gauge).toHaveAttribute("aria-valuenow", "0");
-    await expect(page.getByRole("status")).toContainText("Pick a type above to start");
     await expect(page.getByPlaceholder("e.g. MyHome_5G")).toHaveCount(0);
 
     // Re-selecting restores what was typed.

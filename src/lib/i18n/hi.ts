@@ -75,8 +75,6 @@ export const hi: Dict = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `और टाइप (${n})`,
     typeLess: "कम टाइप दिखाएँ",
-    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
-    pickFirst: "शुरू करने के लिए ऊपर एक टाइप चुनें।",
   },
 
   types: {

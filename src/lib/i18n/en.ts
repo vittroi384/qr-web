@@ -75,8 +75,6 @@ export const en: Dict = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `More types (${n})`,
     typeLess: "Fewer types",
-    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
-    pickFirst: "Pick a type above to start.",
   },
 
   types: {

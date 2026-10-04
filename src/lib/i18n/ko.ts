@@ -79,8 +79,6 @@ export const ko = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `종류 더 보기 (${n})`,
     typeLess: "종류 접기",
-    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
-    pickFirst: "위에서 종류를 먼저 골라 주세요.",
   },
 
   types: {

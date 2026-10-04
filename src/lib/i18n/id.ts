@@ -75,8 +75,6 @@ export const id: Dict = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `Jenis lainnya (${n})`,
     typeLess: "Lebih sedikit jenis",
-    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
-    pickFirst: "Pilih jenis di atas untuk memulai.",
   },
 
   types: {
