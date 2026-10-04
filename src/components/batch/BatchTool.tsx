@@ -4,9 +4,9 @@ import { useEffect, useId, useMemo, useRef, useState, type ClipboardEvent, type 
 import { maskWifiPasswords } from "@/lib/qr/sanitize";
 import { DEFAULT_STYLE, type QrStyleOptions } from "@/lib/qr/types";
 import { StepGuide } from "../StepGuide";
-import { ArchiveIcon, CheckIcon, ChevronDownIcon, ClipboardIcon, DownloadIcon, EyeIcon, PlusIcon, TrashIcon, WarningIcon } from "../icons";
+import { ArchiveIcon, CheckIcon, ChevronDownIcon, ClipboardIcon, DownloadIcon, EyeIcon, PlusIcon, QrMarkIcon, TrashIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
-import { ColorSwatches } from "../qr/ColorSwatches";
+import { ColorRow } from "../qr/ColorSwatches";
 import { CODE_COLORS, OUTPUT_SIZES, TRANSPARENT } from "../qr/presets";
 import { drawQrToCanvas, triggerDownload } from "../qr/render";
 import { Segmented } from "../qr/Segmented";
@@ -71,7 +71,7 @@ function Thumb({ check, look, label }: { check: RowCheck; look: Look; label: str
     });
   }, [debounced, look, visible]);
 
-  const box = "grid size-11 shrink-0 place-items-center overflow-hidden rounded-md border";
+  const box = "grid size-12 shrink-0 place-items-center overflow-hidden rounded-lg border";
   if (check.state === "invalid") {
     return (
       <span className={`${box} border-danger/30 bg-card text-danger`} aria-hidden="true">
@@ -79,7 +79,13 @@ function Thumb({ check, look, label }: { check: RowCheck; look: Look; label: str
       </span>
     );
   }
-  if (!encoded) return <span className={`${box} border-dashed border-border-strong bg-card`} aria-hidden="true" />;
+  if (!encoded) {
+    return (
+      <span className={`${box} border-dashed border-border bg-subtle text-muted/50`} aria-hidden="true">
+        <QrMarkIcon className="size-4" />
+      </span>
+    );
+  }
   return (
     <span className={`${box} border-border bg-white`}>
       <canvas ref={ref} role="img" aria-label={label} className="block size-full" />
@@ -286,30 +292,22 @@ export function BatchTool() {
         doneLabel={t.steps.done}
         currentLabel={t.steps.current}
         steps={b.steps.map((step, i) => ({ ...step, icon: stepIcons[i] }))}
+        className="mb-4"
       />
-      <p className="mt-2 mb-5 text-xs text-muted">{b.limitNote(MAX_ROWS)}</p>
 
-      <div className="rounded-xl border border-border bg-card shadow-panel">
+      <div className="grid gap-4">
         {/* 목록 */}
-        <div className="p-4 sm:px-6 sm:py-6">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-panel sm:px-6 sm:py-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <h2 className="text-[15px] font-semibold text-foreground">{b.listTitle}</h2>
-            <button
-              type="button"
-              className="btn w-full sm:w-auto"
-              aria-expanded={pasteOpen}
-              aria-controls={pasteId}
-              onClick={() => {
-                if (!pasteOpen) pendingFocus.current = `${pasteId}-text`;
-                setPasteOpen(!pasteOpen);
-              }}
-            >
-              {b.pasteOpen}
-            </button>
+            <span className="rounded-full bg-surface px-2.5 py-0.5 font-mono text-xs text-muted tabular-nums" title={b.limitNote(MAX_ROWS)}>
+              {b.count(filledCount, MAX_ROWS)}
+            </span>
           </div>
 
+          {/* Paste zone: a dashed invitation that opens into the textarea. */}
           {pasteOpen ? (
-            <div id={pasteId} className="mb-5 rounded-lg border border-border bg-subtle p-3 sm:p-4">
+            <div id={pasteId} className="mb-5 rounded-xl border border-accent/40 bg-accent-soft/40 p-3 sm:p-4">
               <label htmlFor={`${pasteId}-text`} className="label">
                 {b.pasteLabel}
               </label>
@@ -326,7 +324,7 @@ export function BatchTool() {
               />
               <p className="hint">{b.pasteHint}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" className="btn" onClick={applyPaste} disabled={!pasteText.trim()}>
+                <button type="button" className="btn btn-primary" onClick={applyPaste} disabled={!pasteText.trim()}>
                   {b.pasteApply}
                 </button>
                 <button
@@ -341,19 +339,38 @@ export function BatchTool() {
                 </button>
               </div>
             </div>
-          ) : null}
+          ) : (
+            <button
+              type="button"
+              aria-expanded={false}
+              aria-controls={pasteId}
+              onClick={() => {
+                pendingFocus.current = `${pasteId}-text`;
+                setPasteOpen(true);
+              }}
+              className="mb-5 flex w-full items-center gap-3 rounded-xl border border-dashed border-border-strong bg-card p-3 text-left transition-colors hover:border-accent hover:bg-accent-soft/40 sm:p-4"
+            >
+              <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
+                <ClipboardIcon className="size-5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-foreground">{b.pasteOpen}</span>
+                <span className="mt-0.5 block text-xs leading-relaxed text-muted">{b.pasteHint}</span>
+              </span>
+            </button>
+          )}
 
           {/* Column titles (wide screens). Phones rely on the placeholders. */}
-          <div className="hidden items-start gap-3 px-1.5 pb-1 text-xs font-medium text-muted sm:flex" aria-hidden="true">
+          <div className="hidden items-start gap-3 px-1.5 pb-1 text-xs font-semibold text-muted sm:flex" aria-hidden="true">
             <span className="w-6 shrink-0" />
             <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,12rem)_minmax(0,1fr)] gap-2">
               <span className="px-3.5">{b.colName}</span>
               <span className="px-3.5">{b.colContent}</span>
             </span>
-            <span className="w-[100px] shrink-0" />
+            <span className="w-[108px] shrink-0" />
           </div>
 
-          <ol className="space-y-1.5 sm:space-y-1">
+          <ol className="space-y-2 sm:space-y-1">
             {rows.map((row, index) => {
               const check = checks[index];
               const invalid = check.state === "invalid";
@@ -363,11 +380,11 @@ export function BatchTool() {
                 <li
                   key={row.id}
                   className={`flex items-start gap-2 rounded-lg border p-2 transition-colors sm:gap-3 sm:p-1.5 ${
-                    invalid ? "border-danger/50 bg-danger-soft" : "border-border sm:border-transparent"
+                    invalid ? "border-danger/50 bg-danger-soft" : "border-border bg-subtle/50 sm:border-transparent sm:bg-transparent sm:hover:bg-subtle/60"
                   }`}
                 >
-                  <span className="hidden w-6 shrink-0 pt-3 text-right font-mono text-xs text-muted tabular-nums sm:block" aria-hidden="true">
-                    {n}
+                  <span className="hidden w-6 shrink-0 justify-center pt-3 sm:flex" aria-hidden="true">
+                    <span className="grid size-6 place-items-center rounded-full bg-surface font-mono text-[11px] font-semibold text-muted tabular-nums">{n}</span>
                   </span>
                   <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
                     <input
@@ -398,7 +415,11 @@ export function BatchTool() {
                         onPaste={onPaste(index)}
                       />
                       {check.state === "ok" ? (
-                        <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded bg-surface px-1.5 py-0.5 text-[11px] leading-none font-medium text-muted">
+                        <span
+                          className={`pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded-full px-2 py-0.5 text-[11px] leading-none font-semibold ${
+                            check.kind === "url" ? "bg-accent-soft text-accent" : "bg-surface text-muted"
+                          }`}
+                        >
                           {check.kind === "url" ? b.kindUrl : b.kindText}
                         </span>
                       ) : null}
@@ -409,7 +430,7 @@ export function BatchTool() {
                       </p>
                     ) : null}
                   </div>
-                  <div className="flex shrink-0 flex-col items-center gap-1 sm:flex-row sm:gap-3">
+                  <div className="flex shrink-0 flex-col items-center gap-1 sm:flex-row sm:gap-2">
                     <Thumb check={check} look={look} label={b.rowPreview(n)} />
                     <button
                       type="button"
@@ -427,89 +448,79 @@ export function BatchTool() {
             })}
           </ol>
 
-          <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <button type="button" className="btn btn-ghost -ml-2" onClick={addRow} disabled={rows.length >= MAX_ROWS}>
               <PlusIcon />
               {b.addRow}
             </button>
-            <span className="font-mono text-xs text-muted tabular-nums">{b.count(filledCount, MAX_ROWS)}</span>
+            <p className="text-xs text-muted">{b.tableHint}</p>
           </div>
           {notice ? (
             <p role="status" className="mt-1 text-xs font-medium text-warning">
               {notice}
             </p>
           ) : null}
-          <p className="hint">{b.tableHint}</p>
         </div>
 
-        {/* 고급 설정 — defaults are fine for almost everyone. */}
-        <div className="border-t border-border p-4 sm:px-6 sm:py-6">
-          <details className="group">
-            <summary className="-m-2 flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors select-none hover:bg-subtle">
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium text-foreground">{b.advanced}</span>
-                <span className="mt-0.5 block text-xs text-muted">
-                  {size}px · {colorName} · {backgroundName}
-                </span>
+        {/* 설정 — defaults are fine for almost everyone, so it opens on demand (same look as the generator). */}
+        <details className="group rounded-xl border border-border bg-card shadow-panel">
+          <summary className="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-colors select-none hover:bg-subtle sm:px-6">
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-semibold text-foreground">{b.advanced}</span>
+              <span className="mt-0.5 block text-[13px] text-muted">
+                {size}px · {colorName} · {backgroundName}
               </span>
-              {advancedChanged ? (
-                <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.style.changed}</span>
-              ) : null}
-              <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              <div role="group" aria-label={b.size} className="sm:col-span-2">
-                <p className="label">{b.size}</p>
-                <Segmented label={b.size} options={sizeOptions} selected={size} onSelect={setSize} />
-              </div>
-              <div role="group" aria-label={b.color}>
-                <p className="label">{b.color}</p>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <ColorSwatches value={darkColor} onChange={setDarkColor} />
-                </div>
-              </div>
-              <div role="group" aria-label={b.background}>
-                <p className="label">{b.background}</p>
-                <Segmented
-                  label={b.background}
-                  options={[
-                    { name: b.backgrounds.white, value: WHITE },
-                    { name: b.backgrounds.transparent, value: TRANSPARENT },
-                  ]}
-                  selected={lightColor}
-                  onSelect={setLightColor}
-                />
-              </div>
+            </span>
+            {advancedChanged ? <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.style.changed}</span> : null}
+            <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="@container grid gap-6 border-t border-border px-4 pt-5 pb-5 sm:px-6 sm:pb-6">
+            <div role="group" aria-label={b.size}>
+              <p className="label">{b.size}</p>
+              <Segmented label={b.size} options={sizeOptions} selected={size} onSelect={setSize} />
             </div>
-          </details>
-        </div>
+            <div role="group" aria-label={b.color}>
+              <p className="label">{b.color}</p>
+              <ColorRow palette="code" value={darkColor} codeColor={CODE_COLORS[0].value} onChange={setDarkColor} />
+            </div>
+            <div role="group" aria-label={b.background}>
+              <p className="label">{b.background}</p>
+              <Segmented
+                label={b.background}
+                options={[
+                  { name: b.backgrounds.white, value: WHITE },
+                  { name: b.backgrounds.transparent, value: TRANSPARENT },
+                ]}
+                selected={lightColor}
+                onSelect={setLightColor}
+              />
+            </div>
+          </div>
+        </details>
 
         {/* 내려받기 */}
-        <div className="rounded-b-xl border-t border-border bg-subtle p-4 sm:px-6 sm:py-6">
-          <button type="button" className="btn btn-primary min-h-12 w-full text-[15px]" onClick={run} disabled={running || validCount === 0}>
+        <div className="rounded-xl border border-border bg-subtle p-4 shadow-panel sm:px-6 sm:py-6">
+          <button type="button" className="btn btn-primary w-full" onClick={run} disabled={running || validCount === 0}>
             <ArchiveIcon />
             {progress ? b.working(progress.done, progress.total) : b.download(validCount)}
           </button>
           {progress ? (
             <div
-              className="mt-3 h-1 w-full overflow-hidden rounded-full bg-surface"
+              className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-accent/15"
               role="progressbar"
               aria-label={b.download(progress.total)}
               aria-valuemin={0}
               aria-valuemax={progress.total}
               aria-valuenow={progress.done}
             >
-              <div
-                className="h-full rounded-full bg-accent transition-[width]"
-                style={{ width: `${(progress.done / Math.max(progress.total, 1)) * 100}%` }}
-              />
+              <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: `${(progress.done / Math.max(progress.total, 1)) * 100}%` }} />
             </div>
           ) : null}
 
           <div aria-live="polite">
             {result?.ok ? (
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-                <p className="flex items-center gap-1.5 text-sm font-medium text-success">
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-success">
                   <CheckIcon className="size-4" />
                   {b.done(result.count)}
                 </p>
