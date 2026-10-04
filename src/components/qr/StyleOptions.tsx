@@ -63,7 +63,7 @@ function Group({ label, hint, children, className = "" }: { label: string; hint?
 function ShapeIcon({ shape }: { shape: ShapeChoice }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinejoin: "round" as const };
   return (
-    <svg viewBox="0 0 28 28" className="size-7 shrink-0" aria-hidden="true">
+    <svg viewBox="0 0 28 28" className="size-9 shrink-0" aria-hidden="true">
       {shape === "none" ? (
         <rect x="6" y="6" width="16" height="16" rx="1" {...common} strokeDasharray="2.5 2" />
       ) : shape === "label" ? (
@@ -145,7 +145,7 @@ function Chips<T extends string>({
   label,
   names,
   icon,
-  scroll = false,
+  tiles = false,
 }: {
   items: readonly T[];
   value: T;
@@ -153,8 +153,8 @@ function Chips<T extends string>({
   label: string;
   names: Record<T, string>;
   icon?: (v: T) => ReactNode;
-  /** One row that scrolls sideways (snap points) instead of wrapping. */
-  scroll?: boolean;
+  /** Square picture tiles in a grid (icon above a short name) instead of text chips. */
+  tiles?: boolean;
 }) {
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
@@ -168,7 +168,7 @@ function Chips<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className={scroll ? "scroll-row -mx-1 flex snap-x gap-1.5 overflow-x-auto px-1 pt-0.5 pb-2" : "flex flex-wrap gap-1.5"}
+      className={tiles ? "grid grid-cols-4 gap-1.5 @sm:grid-cols-7" : "flex flex-wrap gap-1.5"}
       onKeyDown={onKeyDown}
     >
       {items.map((id) => {
@@ -182,12 +182,16 @@ function Chips<T extends string>({
             tabIndex={checked ? 0 : -1}
             data-chip={id}
             onClick={() => onSelect(id)}
-            className={`inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-lg border border-border-strong bg-card text-[13px] font-medium whitespace-nowrap text-muted shadow-xs transition-colors hover:border-zinc-400 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-checked:border-foreground aria-checked:text-foreground aria-checked:ring-1 aria-checked:ring-foreground aria-checked:ring-inset ${
-              icon ? "pr-3.5 pl-2" : "px-3.5"
-            }`}
+            className={
+              tiles
+                ? "flex min-h-20 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-border bg-card px-1 py-2 text-[10.5px] leading-[1.15] font-medium text-muted shadow-xs transition-colors hover:border-border-strong hover:bg-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-checked:border-accent aria-checked:bg-accent-soft aria-checked:text-accent aria-checked:ring-1 aria-checked:ring-accent aria-checked:ring-inset"
+                : `inline-flex min-h-11 items-center gap-2 rounded-lg border border-border-strong bg-card text-[13px] font-medium text-muted shadow-xs transition-colors hover:border-zinc-400 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-checked:border-foreground aria-checked:text-foreground aria-checked:ring-1 aria-checked:ring-foreground aria-checked:ring-inset ${
+                    icon ? "pr-3.5 pl-2" : "px-3.5"
+                  }`
+            }
           >
             {icon ? icon(id) : null}
-            {names[id]}
+            <span className={tiles ? "line-clamp-2 block w-full text-center break-words" : ""}>{names[id]}</span>
           </button>
         );
       })}
@@ -263,11 +267,11 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
       </div>
       <div className="mt-5 grid gap-6 @2xl:grid-cols-2 @2xl:gap-x-8">
         <Group label={t.frameShape} hint={hasFrame ? undefined : t.frameHint}>
-          <Chips scroll items={SHAPE_CHOICES} value={hasFrame ? value.frameShape : "none"} onSelect={selectShape} label={t.frameShape} names={shapeNames} icon={(s) => <ShapeIcon shape={s} />} />
+          <Chips tiles items={SHAPE_CHOICES} value={hasFrame ? value.frameShape : "none"} onSelect={selectShape} label={t.frameShape} names={shapeNames} icon={(s) => <ShapeIcon shape={s} />} />
           {hasFrame ? (
             <div className="mt-3 grid gap-4">
               <Group label={t.frameText} hint={t.frameTextHint}>
-                <Chips scroll items={CAPTION_PRESETS} value={value.frame as Exclude<FramePreset, "none">} onSelect={selectCaption} label={t.frameText} names={t.framePresets} />
+                <Chips items={CAPTION_PRESETS} value={value.frame as Exclude<FramePreset, "none">} onSelect={selectCaption} label={t.frameText} names={t.framePresets} />
                 <input
                   className="input mt-1.5"
                   aria-label={t.frameText}

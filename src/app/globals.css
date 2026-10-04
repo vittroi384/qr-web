@@ -189,12 +189,6 @@
     @apply size-3.5;
   }
 
-  /* ---- Single-row chip lists that scroll sideways (frame shapes): a slim, quiet scrollbar. ---- */
-  .scroll-row {
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-border-strong) transparent;
-  }
-
   /* ---- Segmented control (neutral selection; accent is reserved for actions). ---- */
   .segmented {
     @apply grid auto-cols-fr grid-flow-col gap-1 rounded-lg bg-surface p-1;
