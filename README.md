@@ -9,6 +9,8 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose%20%2B%20Caddy-2496ED?logo=docker&logoColor=white)
 ![Oracle Cloud](https://img.shields.io/badge/Oracle%20Cloud-Ampere%20A1-F80000?logo=oracle&logoColor=white)
 
+**라이브: <https://getqrmaker.com>** (Oracle Cloud Ampere A1 + Cloudflare, 2026-10 공개)
+
 URL·SNS·WhatsApp·Wi-Fi·연락처·결제 링크 등 **17종 정보를 QR 코드로** 만드는 공개 웹서비스입니다.
 QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 서버에 종속되지 않습니다(경쟁 서비스의 "동적 QR + 구독" 모델을 의도적으로 배제).
 해외 사용자가 주 타깃이라 **영어가 기본**(`/`)이고 한국어·스페인어·포르투갈어·독일어·프랑스어·일본어·힌디어·인도네시아어는 `/ko` `/es` `/pt` `/de` `/fr` `/ja` `/hi` `/id` 아래에 **9개 언어**로 제공합니다. 수익은 AdSense 광고 6슬롯, 유입은 언어별 SEO 랜딩 페이지 234개(26종 × 9개 언어). 방문자가 저장한 QR 내용은 운영자 전용 관리자에서 확인합니다.
