@@ -58,14 +58,14 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
 - **비밀 입구 URL**: `/admin`은 누구에게나 **일반 404와 동일한 응답**입니다. `https://<도메인>/<ADMIN_PATH>`를 먼저 열면 30일 게이트 쿠키가 생기고, 그 브라우저에서만 `/admin`이 열립니다.
 - **OTP**: Google Authenticator 등 인증 앱용 RFC 6238을 직접 구현(재사용 차단). 비밀키는 `npm run totp-setup`으로 생성하며, 실패할 때마다 응답을 지연합니다.
 
-세션 쿠키는 HTTPS에서 `__Host-` 접두 + `SameSite=Strict` + 브라우저 지문 바인딩, 24시간 만료. 관리자 응답 `noindex`/`no-store`, robots.txt에 관리자 경로 미노출. `X-Real-IP`는 Caddy가 덮어쓰며 앱 포트는 외부에 publish하지 않습니다.
+세션 쿠키는 HTTPS에서 `__Host-` 접두 + `SameSite=Strict` + 브라우저 지문 바인딩, 24시간 만료. 관리자 응답 `noindex`/`no-store`, robots.txt에 관리자 경로 미노출. `X-Real-IP`는 Caddy가 덮어쓰며(Cloudflare 뒤에서는 Cloudflare 대역만 신뢰해 실제 방문자 IP), 앱 포트는 외부에 publish하지 않습니다.
 
 ## 아키텍처 (오라클 클라우드 배포 구성)
 
 ```
-방문자 ──HTTPS──▶ Caddy (자동 TLS, 보안 헤더, 64KB 본문 캡)
-                    │
-                    ▼
+방문자 ──HTTPS──▶ Cloudflare (프록시 · TLS · getqrmaker.com) ──HTTP :8080──▶ Caddy (보안 헤더, 64KB 본문 캡,
+                    │                                                      Cloudflare 대역만 신뢰 → 실제 방문자 IP를 앱에 전달)
+                    ▼                                                      (단독 서버면 Caddy가 80/443에서 자동 TLS)
                  Next.js 16 standalone (Node, non-root)
                     │  Drizzle ORM + postgres.js (풀 10)
                     │  시작 시 scripts/migrate.mjs → drizzle/*.sql 적용
@@ -79,7 +79,7 @@ OCI A1 · Docker Compose (db → app·umami → caddy, db healthcheck 후 기동
 배포: git pull && docker compose up -d --build (deploy.sh) · 백업: scripts/backup.sh (pg_dump)
 ```
 
-- **단일 서버 + PostgreSQL 컨테이너**: 운영 비용 0원(무료 티어). DB 포트는 외부에 열지 않고 compose 네트워크 안에서만 접근
+- **단일 서버 + PostgreSQL 컨테이너**: 서버 비용 0원(무료 티어), 도메인만 연 1만 원대. DB 포트는 외부에 열지 않고 compose 네트워크 안에서만 접근
 - **스키마는 코드, 변경은 마이그레이션**: `src/lib/db/schema.ts`(Drizzle) → `npm run db:generate`로 SQL 생성·커밋 → 컨테이너 시작 시 자동 적용. 테이블 관계는 [`docs/데이터-구조.md`](docs/데이터-구조.md)
 - **시간은 `timestamptz`, 표시는 KST**: 날짜 필터·오늘·14일 추이는 KST 달력일 기준(`AT TIME ZONE 'Asia/Seoul'`)
 - **설정은 DB, 비밀은 .env**: 사이트명·URL·광고 ID는 관리자 화면, 비밀번호·키·입구 경로·DB 비밀번호는 환경변수
