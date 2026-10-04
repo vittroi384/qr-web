@@ -10,6 +10,7 @@ export const CODE_COLORS = [
   { id: "teal", value: "#115e59" },
   { id: "burgundy", value: "#881337" },
   { id: "purple", value: "#5b21b6" },
+  { id: "rust", value: "#9a3412" },
 ] as const satisfies readonly { id: keyof Dict["style"]["colors"]; value: string }[];
 
 /** Frame colours — a varied, saturated set (captions are white on these). Names: `style.frameColors`. */

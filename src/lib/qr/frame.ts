@@ -17,6 +17,8 @@ const FONT_RATIO = 0.55;
 const OUTSIDE_GAP_RATIO = 0.05;
 const OUTSIDE_FONT_RATIO = 0.11;
 const OUTSIDE_LINE_RATIO = 1.3;
+/** "card": solid band across the top of the box, as a share of the QR size. */
+const BAND_RATIO = 0.12;
 /** Speech-bubble tail, as shares of the QR size. */
 const TAIL_W_RATIO = 0.14;
 const TAIL_H_RATIO = 0.08;
@@ -154,13 +156,15 @@ function openText(c: Ctx, cx: number, bottom: number): { text: FrameLayout["text
  * Box with a caption strip inside it, below or above the code ("label", "top", "bubble"/"bubbleTop"
  * with a tail, "rounded" with a thicker border and bigger radius, "ribbon" with a bar sticking out).
  */
-function boxWithStrip(c: Ctx, o: { border: number; radius: number; top?: boolean; tail?: "bottom" | "top"; ribbon?: boolean }): FrameLayout {
+function boxWithStrip(c: Ctx, o: { border: number; radius: number; top?: boolean; tail?: "bottom" | "top"; ribbon?: boolean; band?: boolean }): FrameLayout {
   const border = Math.round(c.qr * o.border);
   const radius = Math.round(border * o.radius);
   const barH = c.label ? Math.round(c.qr * BAR_RATIO) : 0;
   const wing = o.ribbon && c.label ? Math.round(c.qr * RIBBON_WING_RATIO) : 0;
+  // "card": a solid band above the code (the box simply grows; the band is box colour already).
+  const bandH = o.band ? Math.round(c.qr * BAND_RATIO) : 0;
   const boxW = c.qr + border * 2;
-  const boxH = boxW + barH;
+  const boxH = boxW + barH + bandH;
   const tailH = o.tail ? Math.round(c.qr * TAIL_H_RATIO) : 0;
   // A tail on top pushes the box down by its height.
   const boxY = o.tail === "top" ? tailH : 0;
@@ -168,7 +172,7 @@ function boxWithStrip(c: Ctx, o: { border: number; radius: number; top?: boolean
   const layout: FrameLayout = {
     width: boxW + wing * 2,
     height: boxH + tailH,
-    qr: { x: wing + border, y: boxY + (o.top ? border + barH : border), size: c.qr },
+    qr: { x: wing + border, y: boxY + bandH + (o.top ? border + barH : border), size: c.qr },
     box,
     parts: [],
     bar: null,
@@ -188,7 +192,7 @@ function boxWithStrip(c: Ctx, o: { border: number; radius: number; top?: boolean
   }
   if (!c.label) return layout;
   // The strip is the bar plus the adjacent border; the label sits in its middle.
-  const strip = o.top ? { x: wing, y: boxY, w: boxW, h: border + barH } : { x: wing, y: boxY + border + c.qr, w: boxW, h: border + barH };
+  const strip = o.top ? { x: wing, y: boxY, w: boxW, h: border + barH } : { x: wing, y: boxY + bandH + border + c.qr, w: boxW, h: border + barH };
   if (wing > 0) {
     // Ribbon: the strip runs the full width, with a notch cut into each end.
     const { y, h } = strip;
@@ -381,6 +385,7 @@ const BUILDERS: Record<FrameShape, (c: Ctx) => FrameLayout> = {
   bubbleTop: (c) => boxWithStrip(c, { border: 0.06, radius: 2, top: true, tail: "top" }),
   rounded: (c) => boxWithStrip(c, { border: 0.08, radius: 3.5 }),
   ribbon: (c) => boxWithStrip(c, { border: 0.06, radius: 2, ribbon: true }),
+  card: (c) => boxWithStrip(c, { border: 0.06, radius: 2, band: true }),
   floating: floatingLabel,
   circle: circleFrame,
   thin: thinLine,

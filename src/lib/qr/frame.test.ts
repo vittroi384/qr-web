@@ -102,6 +102,17 @@ describe("frameLayout", () => {
     assert.equal(l.fillBackground, true);
   });
 
+  it("card: a solid band above the code, caption strip below", () => {
+    const l = frameLayout(500, { frame: "scan", frameShape: "card", frameText: "Scan me" });
+    const border = Math.round(500 * 0.06);
+    const band = Math.round(500 * 0.12);
+    const barH = Math.round(500 * 0.18);
+    assert.ok(l.box && l.bar);
+    assert.deepEqual(l.qr, { x: border, y: band + border, size: 500 });
+    assert.equal(l.box.h, 500 + border * 2 + band + barH);
+    assert.equal(l.bar.y, band + border + 500);
+  });
+
   it("bubbleTop: the tail points up above a caption strip at the top", () => {
     const l = frameLayout(500, { frame: "scan", frameShape: "bubbleTop", frameText: "Scan me" });
     const tailH = Math.round(500 * 0.08);

@@ -4,10 +4,10 @@ import { useId, useState, type DragEvent, type KeyboardEvent, type ReactNode } f
 import { FRAME_TEXT_MAX } from "@/lib/qr/frame";
 import { FRAME_SHAPES, type QrStyleOptions } from "@/lib/qr/types";
 import type { Dict } from "@/lib/i18n";
-import { CheckIcon, ChevronDownIcon, ImageIcon, WarningIcon } from "../icons";
+import { ChevronDownIcon, ImageIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
-import { ColorSwatches } from "./ColorSwatches";
-import { BACKGROUNDS, CODE_COLORS, FRAME_COLORS, TRANSPARENT } from "./presets";
+import { ColorRow } from "./ColorSwatches";
+import { BACKGROUNDS, TRANSPARENT } from "./presets";
 import { Segmented } from "./Segmented";
 
 const MAX_LOGO_BYTES = 1024 * 1024;
@@ -42,27 +42,6 @@ function colorWarning(dark: string, light: string, t: Dict["style"]): string | n
   const ratio = (ll + 0.05) / (ld + 0.05);
   if (ratio < MIN_CONTRAST) return t.warnContrast;
   return null;
-}
-
-/**
- * Rainbow swatch that opens the native colour picker; shows the picked colour (with a check) once
- * it is not one of the presets.
- */
-function CustomColor({ value, isPreset, fallback, title, label, onChange }: { value: string; isPreset: boolean; fallback: string; title: string; label: string; onChange: (hex: string) => void }) {
-  return (
-    <label
-      title={title}
-      className={`relative grid size-11 cursor-pointer place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
-        isPreset ? "" : "outline-2 outline-offset-2 outline-foreground"
-      }`}
-      style={{
-        background: isPreset ? "conic-gradient(from 180deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444)" : value,
-      }}
-    >
-      <input type="color" className="sr-only" aria-label={label} value={/^#[0-9a-f]{6}$/i.test(value) ? value : fallback} onChange={(e) => onChange(e.target.value)} />
-      {isPreset ? null : <CheckIcon className="size-5 drop-shadow" />}
-    </label>
-  );
 }
 
 function Group({ label, hint, children, className = "" }: { label: string; hint?: ReactNode; children: ReactNode; className?: string }) {
@@ -120,6 +99,12 @@ function ShapeIcon({ shape }: { shape: ShapeChoice }) {
         <>
           <path d="M4 10V4h6M18 4h6v6M24 18v6h-6M10 24H4v-6" {...common} strokeWidth={2.25} strokeLinecap="round" />
           <rect x="9" y="25" width="10" height="2" rx="1" fill="currentColor" />
+        </>
+      ) : shape === "card" ? (
+        <>
+          <rect x="4" y="2" width="20" height="24" rx="3" {...common} />
+          <rect x="4" y="2" width="20" height="5" rx="2" fill="currentColor" />
+          <rect x="4" y="20" width="20" height="6" rx="2" fill="currentColor" />
         </>
       ) : shape === "bubbleTop" ? (
         <>
@@ -255,8 +240,6 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
     onDrop,
   };
 
-  const presetColor = CODE_COLORS.some((c) => c.value === value.darkColor.toLowerCase());
-  const presetFrameColor = value.frameColor === "" || FRAME_COLORS.some((c) => c.value === value.frameColor.toLowerCase());
   const warning = colorWarning(value.darkColor, value.lightColor, t);
   const hasLogo = Boolean(value.logoDataUrl);
   const hasFrame = value.frame !== "none";
@@ -295,27 +278,8 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
                   onChange={(e) => onChange({ ...value, frame: "custom", frameText: e.target.value })}
                 />
               </Group>
-              <Group label={t.frameColor}>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <button
-                    type="button"
-                    aria-pressed={value.frameColor === ""}
-                    onClick={() => onChange({ ...value, frameColor: "" })}
-                    className="btn aria-pressed:outline-2 aria-pressed:outline-offset-2 aria-pressed:outline-foreground"
-                  >
-                    {t.frameSameAsCode}
-                  </button>
-                  <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
-                  <ColorSwatches palette="frame" value={value.frameColor} onChange={(frameColor) => onChange({ ...value, frameColor })} />
-                  <CustomColor
-                    value={value.frameColor}
-                    isPreset={presetFrameColor}
-                    fallback={value.darkColor}
-                    title={t.customColor}
-                    label={t.customFrameColorLabel}
-                    onChange={(frameColor) => onChange({ ...value, frameColor })}
-                  />
-                </div>
+              <Group label={t.frameColor} hint={value.frameColor === "" ? t.frameSameAsCode : undefined}>
+                <ColorRow palette="frame" value={value.frameColor} codeColor={value.darkColor} sameAsCode={t.frameSameAsCode} onChange={(frameColor) => onChange({ ...value, frameColor })} />
               </Group>
             </div>
           ) : null}
@@ -391,20 +355,8 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
             <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
           </summary>
           <div className="grid gap-6 px-3.5 pt-2 pb-4">
-            <Group label={t.codeColor}>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <ColorSwatches value={value.darkColor} onChange={(darkColor) => onChange({ ...value, darkColor })} />
-                <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
-                <CustomColor
-                  value={value.darkColor}
-                  isPreset={presetColor}
-                  fallback="#111111"
-                  title={t.customColor}
-                  label={t.customColorLabel}
-                  onChange={(darkColor) => onChange({ ...value, darkColor })}
-                />
-                <span className="ml-1 font-mono text-xs text-muted uppercase">{value.darkColor}</span>
-              </div>
+            <Group label={t.codeColor} hint={<span className="font-mono uppercase">{value.darkColor}</span>}>
+              <ColorRow palette="code" value={value.darkColor} codeColor="#111111" onChange={(darkColor) => onChange({ ...value, darkColor })} />
             </Group>
 
             <Group label={t.background} hint={value.lightColor === TRANSPARENT ? t.transparentHint : undefined}>

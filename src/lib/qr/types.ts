@@ -127,7 +127,7 @@ export type FrameTextPreset = Exclude<FramePreset, "none" | "custom">;
  * code, a speech bubble with a tail, larger rounded corners, a ribbon sticking out at the sides, a
  * floating pill under the box, a thin line or corner marks with the caption set in the open.
  */
-export const FRAME_SHAPES = ["label", "top", "bubble", "bubbleTop", "rounded", "ribbon", "floating", "circle", "thin", "underline", "corners", "brackets"] as const;
+export const FRAME_SHAPES = ["label", "top", "bubble", "bubbleTop", "rounded", "ribbon", "card", "floating", "circle", "thin", "underline", "corners", "brackets"] as const;
 export type FrameShape = (typeof FRAME_SHAPES)[number];
 
 export type QrStyleOptions = {
