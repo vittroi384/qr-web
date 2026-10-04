@@ -1,10 +1,25 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ADMIN_MARKER_HEADER, GATE_COOKIE, GATE_TTL_SEC, adminEntryPath, adminMarker, createGateToken, gateSatisfied, ipAllowedForAdmin } from "@/lib/adminAccess";
 import { REMEMBER_TTL_SEC, SESSION_COOKIE, createSessionToken, sessionCookieOptionsFor, sessionRenewalDue, verifySessionToken } from "@/lib/auth";
-import { localeFromPath } from "@/lib/i18n/locales";
+import { LANG_COOKIE, isLocale, localeFromPath, preferredLocale } from "@/lib/i18n/locales";
 import { getClientIpFromHeaders } from "@/lib/ip";
 
 const HTTPS = process.env.NODE_ENV === "production" && Boolean(process.env.DOMAIN);
+
+const LANG_COOKIE_TTL_SEC = 60 * 60 * 24 * 365;
+/** Crawlers and audit tools must always see the English root (hreflang does the rest). */
+const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|preview|lighthouse|headless/i;
+
+/** True when the request came from a link on this site (language menu, footer, …). */
+function fromThisSite(req: NextRequest): boolean {
+  const referer = req.headers.get("referer");
+  if (!referer) return false;
+  try {
+    return new URL(referer).host === req.nextUrl.host;
+  } catch {
+    return false;
+  }
+}
 
 /** Serve the app's ordinary 404 page so a protected path looks exactly like a missing one. */
 function notFound(req: NextRequest): NextResponse {
@@ -24,7 +39,8 @@ function withAdminHeaders(res: NextResponse): NextResponse {
 }
 
 /**
- * 1) Public pages: tag the request with its UI locale ("/<code>/..." → code, else en); "/en/*" → "/*" (301).
+ * 1) Public pages: tag the request with its UI locale ("/<code>/..." → code, else en); "/en/*" → "/*" (301);
+ *    a first visit to "/" is sent to the visitor's language edition (Accept-Language, remembered in a cookie).
  * 2) Secret admin entry path (ADMIN_PATH): set the gate cookie and send the owner to the login page.
  * 3) /admin/*: invisible (404) unless gate cookie + allowed IP; then session check or login redirect.
  */
@@ -55,10 +71,31 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(url, 301);
     }
     const locale = localeFromPath(pathname);
+    const saved = req.cookies.get(LANG_COOKIE)?.value;
+    const internal = fromThisSite(req);
+    // A first visit to the root goes to the visitor's own language edition (browser language,
+    // or the edition they used before). Only the root: deep links from search already match the
+    // searcher's language via hreflang. Links from inside the site (the language menu) never
+    // bounce, and crawlers always get English.
+    if (pathname === "/" && req.method === "GET" && !internal && !BOT_UA.test(req.headers.get("user-agent") ?? "")) {
+      const target = isLocale(saved) ? saved : preferredLocale(req.headers.get("accept-language"));
+      if (target !== "en") {
+        const url = req.nextUrl.clone();
+        url.pathname = `/${target}`;
+        const res = NextResponse.redirect(url, 302);
+        res.headers.set("Vary", "Accept-Language, Cookie");
+        if (saved !== target) res.cookies.set(LANG_COOKIE, target, { sameSite: "lax", secure: HTTPS, path: "/", maxAge: LANG_COOKIE_TTL_SEC });
+        return res;
+      }
+    }
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set("x-locale", locale);
     requestHeaders.delete(ADMIN_MARKER_HEADER); // never trust a client-sent marker on public pages
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    const res = NextResponse.next({ request: { headers: requestHeaders } });
+    // Navigating inside the site (including the language menu) makes that edition the remembered one.
+    if (internal && saved !== locale) res.cookies.set(LANG_COOKIE, locale, { sameSite: "lax", secure: HTTPS, path: "/", maxAge: LANG_COOKIE_TTL_SEC });
+    if (pathname === "/") res.headers.set("Vary", "Accept-Language, Cookie");
+    return res;
   }
 
   // ---- /admin/* ----
