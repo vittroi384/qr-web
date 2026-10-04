@@ -2,7 +2,7 @@
 
 import { useId, useState, type DragEvent, type KeyboardEvent, type ReactNode } from "react";
 import { FRAME_TEXT_MAX } from "@/lib/qr/frame";
-import { FRAME_PRESETS, type FramePreset, type QrStyleOptions } from "@/lib/qr/types";
+import { FRAME_PRESETS, FRAME_SHAPES, type FramePreset, type QrStyleOptions } from "@/lib/qr/types";
 import type { Dict } from "@/lib/i18n";
 import { CheckIcon, ChevronDownIcon, ImageIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
@@ -13,6 +13,12 @@ import { Segmented } from "./Segmented";
 const MAX_LOGO_BYTES = 1024 * 1024;
 /** Below this contrast ratio many phone cameras struggle to read the code. */
 const MIN_CONTRAST = 4;
+
+/** Caption presets: every frame preset except "none" (that is the shape picker's job now). */
+const CAPTION_PRESETS = FRAME_PRESETS.filter((p): p is Exclude<FramePreset, "none"> => p !== "none");
+/** Shape picker entries: off, then the drawn shapes. */
+const SHAPE_CHOICES = ["none", ...FRAME_SHAPES] as const;
+type ShapeChoice = (typeof SHAPE_CHOICES)[number];
 
 /** #rgb / #rrggbb / #rrggbbaa → WCAG relative luminance. Fully transparent is treated as white. */
 function luminance(hex: string): number | null {
@@ -51,21 +57,76 @@ function Group({ label, hint, children, className = "" }: { label: string; hint?
 }
 
 /**
- * Frame presets as a radio group of chips (wrapping, 44px tall). Only the checked chip is in the
- * tab order; arrow keys move the selection like native radios.
+ * Miniature of each frame shape (28×28): the code is the inner square, the frame colour is
+ * `currentColor`, so the icon follows the chip's text colour.
  */
-function FrameChips({ value, onSelect, label, names }: { value: FramePreset; onSelect: (p: FramePreset) => void; label: string; names: Record<FramePreset, string> }) {
+function ShapeIcon({ shape }: { shape: ShapeChoice }) {
+  const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinejoin: "round" as const };
+  return (
+    <svg viewBox="0 0 28 28" className="size-7 shrink-0" aria-hidden="true">
+      {shape === "none" ? (
+        <rect x="6" y="6" width="16" height="16" rx="1" {...common} strokeDasharray="2.5 2" />
+      ) : shape === "label" ? (
+        <>
+          <rect x="4" y="3" width="20" height="22" rx="3" {...common} />
+          <rect x="4" y="18" width="20" height="7" rx="2" fill="currentColor" />
+        </>
+      ) : shape === "top" ? (
+        <>
+          <rect x="4" y="3" width="20" height="22" rx="3" {...common} />
+          <rect x="4" y="3" width="20" height="7" rx="2" fill="currentColor" />
+        </>
+      ) : shape === "bubble" ? (
+        <>
+          <rect x="4" y="2" width="20" height="20" rx="3" {...common} />
+          <rect x="4" y="15" width="20" height="7" rx="2" fill="currentColor" />
+          <path d="M11 22h6l-3 4z" fill="currentColor" />
+        </>
+      ) : shape === "rounded" ? (
+        <>
+          <rect x="3" y="2" width="22" height="24" rx="8" {...common} strokeWidth={2.5} />
+          <rect x="6" y="18" width="16" height="5" rx="2" fill="currentColor" />
+        </>
+      ) : (
+        <>
+          <rect x="5" y="3" width="18" height="18" rx="2" {...common} strokeWidth={1.25} />
+          <rect x="9" y="24" width="10" height="2" rx="1" fill="currentColor" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/**
+ * Radio group of chips (wrapping, 44px tall). Only the checked chip is in the tab order; arrow keys
+ * move the selection like native radios.
+ */
+function Chips<T extends string>({
+  items,
+  value,
+  onSelect,
+  label,
+  names,
+  icon,
+}: {
+  items: readonly T[];
+  value: T;
+  onSelect: (v: T) => void;
+  label: string;
+  names: Record<T, string>;
+  icon?: (v: T) => ReactNode;
+}) {
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
     if (!step) return;
     e.preventDefault();
-    const next = FRAME_PRESETS[(FRAME_PRESETS.indexOf(value) + step + FRAME_PRESETS.length) % FRAME_PRESETS.length];
+    const next = items[(items.indexOf(value) + step + items.length) % items.length];
     onSelect(next);
-    e.currentTarget.querySelector<HTMLButtonElement>(`[data-preset="${next}"]`)?.focus();
+    e.currentTarget.querySelector<HTMLButtonElement>(`[data-chip="${next}"]`)?.focus();
   };
   return (
     <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5" onKeyDown={onKeyDown}>
-      {FRAME_PRESETS.map((id) => {
+      {items.map((id) => {
         const checked = id === value;
         return (
           <button
@@ -74,10 +135,13 @@ function FrameChips({ value, onSelect, label, names }: { value: FramePreset; onS
             role="radio"
             aria-checked={checked}
             tabIndex={checked ? 0 : -1}
-            data-preset={id}
+            data-chip={id}
             onClick={() => onSelect(id)}
-            className="min-h-11 rounded-lg border border-border-strong bg-card px-3.5 text-[13px] font-medium text-muted shadow-xs transition-colors hover:border-zinc-400 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-checked:border-foreground aria-checked:text-foreground aria-checked:ring-1 aria-checked:ring-foreground aria-checked:ring-inset"
+            className={`inline-flex min-h-11 items-center gap-2 rounded-lg border border-border-strong bg-card text-[13px] font-medium text-muted shadow-xs transition-colors hover:border-zinc-400 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-checked:border-foreground aria-checked:text-foreground aria-checked:ring-1 aria-checked:ring-foreground aria-checked:ring-inset ${
+              icon ? "pr-3.5 pl-2" : "px-3.5"
+            }`}
           >
+            {icon ? icon(id) : null}
             {names[id]}
           </button>
         );
@@ -90,7 +154,9 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
   const t = useI18n().t.style;
   const [logoError, setLogoError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [more, setMore] = useState(false);
   const fileId = useId();
+  const moreId = useId();
 
   const onLogo = (file: File | undefined) => {
     setLogoError(null);
@@ -127,15 +193,21 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
   const warning = colorWarning(value.darkColor, value.lightColor, t);
   const hasLogo = Boolean(value.logoDataUrl);
   const hasFrame = value.frame !== "none";
-  const edited = hasLogo || hasFrame || value.darkColor.toLowerCase() !== "#111111" || value.lightColor.toLowerCase() !== "#ffffff";
+  const colorsEdited = value.darkColor.toLowerCase() !== "#111111" || value.lightColor.toLowerCase() !== "#ffffff";
+  const edited = hasLogo || hasFrame || colorsEdited;
 
-  /** A preset fills the label with this language's text; editing the text afterwards makes it "custom". */
-  const selectFrame = (frame: FramePreset) => {
-    if (frame === "none") onChange({ ...value, frame, frameText: "" });
-    else if (frame === "custom") onChange({ ...value, frame });
+  /** Turning a shape on starts with the "Scan me" caption; "none" switches the frame off (shape remembered). */
+  const selectShape = (shape: ShapeChoice) => {
+    if (shape === "none") onChange({ ...value, frame: "none", frameText: "" });
+    else if (hasFrame) onChange({ ...value, frameShape: shape });
+    else onChange({ ...value, frame: "scan", frameShape: shape, frameText: t.frameTexts.scan });
+  };
+  /** A preset fills the caption with this language's text; editing the text afterwards makes it "custom". */
+  const selectCaption = (frame: Exclude<FramePreset, "none">) => {
+    if (frame === "custom") onChange({ ...value, frame });
     else onChange({ ...value, frame, frameText: t.frameTexts[frame] });
   };
-  const frameNames: Record<FramePreset, string> = { none: t.frameNone, ...t.framePresets };
+  const shapeNames: Record<ShapeChoice, string> = { none: t.frameNone, ...t.frameShapes };
 
   return (
     <details className="group">
@@ -147,158 +219,161 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
         {edited ? <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span> : null}
         <ChevronDownIcon className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
       </summary>
-    <div className="mt-6 grid gap-6 sm:grid-cols-2">
-      <Group label={t.frame} className="sm:col-span-2" hint={hasFrame ? undefined : t.frameHint}>
-        <FrameChips value={value.frame} onSelect={selectFrame} label={t.frame} names={frameNames} />
-        {hasFrame ? (
-          <div className="mt-4 grid gap-4">
-            <label className="block min-w-0">
-              <span className="label">{t.frameText}</span>
-              <input
-                className="input"
-                value={value.frameText}
-                maxLength={FRAME_TEXT_MAX}
-                placeholder={t.frameTexts.scan}
-                onChange={(e) => onChange({ ...value, frame: "custom", frameText: e.target.value })}
+      <div className="mt-6 grid gap-6">
+        <Group label={t.frameShape} hint={hasFrame ? undefined : t.frameHint}>
+          <Chips items={SHAPE_CHOICES} value={hasFrame ? value.frameShape : "none"} onSelect={selectShape} label={t.frameShape} names={shapeNames} icon={(s) => <ShapeIcon shape={s} />} />
+          {hasFrame ? (
+            <div className="mt-4 grid gap-4">
+              <Group label={t.frameText} hint={t.frameTextHint}>
+                <Chips items={CAPTION_PRESETS} value={value.frame as Exclude<FramePreset, "none">} onSelect={selectCaption} label={t.frameText} names={t.framePresets} />
+                <input
+                  className="input mt-2.5"
+                  aria-label={t.frameText}
+                  value={value.frameText}
+                  maxLength={FRAME_TEXT_MAX}
+                  placeholder={t.frameTexts.scan}
+                  onChange={(e) => onChange({ ...value, frame: "custom", frameText: e.target.value })}
+                />
+              </Group>
+              <Group label={t.frameColor}>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    aria-pressed={value.frameColor === ""}
+                    onClick={() => onChange({ ...value, frameColor: "" })}
+                    className="btn aria-pressed:outline-2 aria-pressed:outline-offset-2 aria-pressed:outline-foreground"
+                  >
+                    {t.frameSameAsCode}
+                  </button>
+                  <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
+                  <ColorSwatches value={value.frameColor} onChange={(frameColor) => onChange({ ...value, frameColor })} />
+                </div>
+              </Group>
+            </div>
+          ) : null}
+        </Group>
+
+        <Group label={t.logo}>
+          <input
+            id={fileId}
+            type="file"
+            className="peer sr-only"
+            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            onChange={(e) => {
+              onLogo(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          {value.logoDataUrl ? (
+            <div
+              {...dragProps}
+              className={`flex items-center gap-3 rounded-lg border p-3 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${dragging ? "border-accent bg-accent-soft" : "border-border-strong bg-card"}`}
+            >
+              <span
+                className="size-12 shrink-0 rounded-md border border-border bg-white bg-contain bg-center bg-no-repeat"
+                style={{ backgroundImage: `url(${value.logoDataUrl})` }}
+                aria-hidden="true"
               />
-              <span className="hint">{t.frameTextHint}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium text-foreground">{t.logoApplied}</span>
+                <span className="block text-xs text-muted">{t.logoAppliedSub}</span>
+              </span>
+              <label htmlFor={fileId} className="btn btn-sm cursor-pointer">
+                {t.change}
+              </label>
+              <button type="button" className="btn btn-sm btn-danger" onClick={() => onChange({ ...value, logoDataUrl: null })}>
+                {t.remove}
+              </button>
+            </div>
+          ) : (
+            <label
+              htmlFor={fileId}
+              {...dragProps}
+              className={`flex cursor-pointer items-center gap-3 rounded-lg border border-dashed p-3 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${
+                dragging ? "border-accent bg-accent-soft" : "border-border-strong bg-card hover:border-zinc-400 hover:bg-subtle"
+              }`}
+            >
+              <span className="grid size-12 shrink-0 place-items-center rounded-md bg-surface text-muted">
+                <ImageIcon className="size-5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm text-foreground">
+                  {t.dropPrefix}
+                  <span className="font-medium text-accent">{t.choose}</span>
+                </span>
+                <span className="mt-0.5 block text-xs text-muted">{t.logoFormats}</span>
+              </span>
             </label>
-            <Group label={t.frameColor}>
+          )}
+          {logoError ? (
+            <p role="alert" className="mt-2 text-xs font-medium text-danger">
+              {logoError}
+            </p>
+          ) : null}
+        </Group>
+
+        {/* Colour, background and error correction are rarely needed: one toggle keeps them out of the way. */}
+        <div className="min-w-0">
+          <button type="button" aria-expanded={more} aria-controls={moreId} onClick={() => setMore((v) => !v)} className="btn btn-ghost btn-sm -ml-2.5">
+            <ChevronDownIcon className={`transition-transform ${more ? "rotate-180" : ""}`} />
+            {more ? t.fewerOptions : t.moreOptions}
+            {more ? null : <span className="font-normal text-muted/80">· {t.moreOptionsSummary}</span>}
+            {!more && colorsEdited ? <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span> : null}
+          </button>
+          <div id={moreId} hidden={!more} className="mt-4 grid gap-6">
+            <Group label={t.codeColor}>
               <div className="flex flex-wrap items-center gap-2.5">
-                <button
-                  type="button"
-                  aria-pressed={value.frameColor === ""}
-                  onClick={() => onChange({ ...value, frameColor: "" })}
-                  className="btn aria-pressed:outline-2 aria-pressed:outline-offset-2 aria-pressed:outline-foreground"
-                >
-                  {t.frameSameAsCode}
-                </button>
+                <ColorSwatches value={value.darkColor} onChange={(darkColor) => onChange({ ...value, darkColor })} />
                 <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
-                <ColorSwatches value={value.frameColor} onChange={(frameColor) => onChange({ ...value, frameColor })} />
+                <label
+                  title={t.customColor}
+                  className={`relative grid size-11 cursor-pointer place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+                    presetColor ? "" : "outline-2 outline-offset-2 outline-foreground"
+                  }`}
+                  style={{
+                    background: presetColor
+                      ? "conic-gradient(from 180deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444)"
+                      : value.darkColor,
+                  }}
+                >
+                  <input
+                    type="color"
+                    className="sr-only"
+                    aria-label={t.customColorLabel}
+                    value={/^#[0-9a-f]{6}$/i.test(value.darkColor) ? value.darkColor : "#111111"}
+                    onChange={(e) => onChange({ ...value, darkColor: e.target.value })}
+                  />
+                  {presetColor ? null : <CheckIcon className="size-5 drop-shadow" />}
+                </label>
+                <span className="ml-1 font-mono text-xs text-muted uppercase">{value.darkColor}</span>
               </div>
             </Group>
-          </div>
-        ) : null}
-      </Group>
 
-      <Group label={t.codeColor} className="sm:col-span-2">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <ColorSwatches value={value.darkColor} onChange={(darkColor) => onChange({ ...value, darkColor })} />
-          <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
-          <label
-            title={t.customColor}
-            className={`relative grid size-11 cursor-pointer place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
-              presetColor ? "" : "outline-2 outline-offset-2 outline-foreground"
-            }`}
-            style={{
-              background: presetColor
-                ? "conic-gradient(from 180deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444)"
-                : value.darkColor,
-            }}
-          >
-            <input
-              type="color"
-              className="sr-only"
-              aria-label={t.customColorLabel}
-              value={/^#[0-9a-f]{6}$/i.test(value.darkColor) ? value.darkColor : "#111111"}
-              onChange={(e) => onChange({ ...value, darkColor: e.target.value })}
-            />
-            {presetColor ? null : <CheckIcon className="size-5 drop-shadow" />}
-          </label>
-          <span className="ml-1 font-mono text-xs text-muted uppercase">{value.darkColor}</span>
+            <Group label={t.background} hint={value.lightColor === TRANSPARENT ? t.transparentHint : undefined}>
+              <Segmented label={t.background} options={BACKGROUNDS.map((b) => ({ name: t.backgrounds[b.id], value: b.value }))} selected={value.lightColor.toLowerCase()} onSelect={(lightColor) => onChange({ ...value, lightColor })} />
+            </Group>
+
+            {warning ? (
+              <p role="status" className="-mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-warning-soft px-3 py-2.5 text-xs leading-relaxed text-warning">
+                <WarningIcon className="mt-px size-4 shrink-0" />
+                {warning}
+              </p>
+            ) : null}
+
+            <Group label={t.ecc} hint={hasLogo ? t.eccHintLogo : t.eccHint}>
+              <Segmented
+                options={[
+                  { name: t.eccBasic, value: "basic", sub: t.eccBasicSub },
+                  { name: t.eccMax, value: "max", sub: t.eccMaxSub },
+                ]}
+                selected={value.errorCorrectionLevel === "H" ? "max" : "basic"}
+                disabled={hasLogo}
+                onSelect={(v) => onChange({ ...value, errorCorrectionLevel: v === "max" ? "H" : "M" })}
+              />
+            </Group>
+          </div>
         </div>
-      </Group>
-
-      <Group label={t.background} className="sm:col-span-2" hint={value.lightColor === TRANSPARENT ? t.transparentHint : undefined}>
-        <Segmented label={t.background} options={BACKGROUNDS.map((b) => ({ name: t.backgrounds[b.id], value: b.value }))} selected={value.lightColor.toLowerCase()} onSelect={(lightColor) => onChange({ ...value, lightColor })} />
-      </Group>
-
-      {warning ? (
-        <p role="status" className="-mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-warning-soft px-3 py-2.5 text-xs leading-relaxed text-warning sm:col-span-2">
-          <WarningIcon className="mt-px size-4 shrink-0" />
-          {warning}
-        </p>
-      ) : null}
-
-      <Group
-        label={t.ecc}
-        className="sm:col-span-2"
-        hint={
-          hasLogo
-            ? t.eccHintLogo
-            : t.eccHint
-        }
-      >
-        <Segmented
-          options={[
-            { name: t.eccBasic, value: "basic", sub: t.eccBasicSub },
-            { name: t.eccMax, value: "max", sub: t.eccMaxSub },
-          ]}
-          selected={value.errorCorrectionLevel === "H" ? "max" : "basic"}
-          disabled={hasLogo}
-          onSelect={(v) => onChange({ ...value, errorCorrectionLevel: v === "max" ? "H" : "M" })}
-        />
-      </Group>
-
-      <Group label={t.logo} className="sm:col-span-2">
-        <input
-          id={fileId}
-          type="file"
-          className="peer sr-only"
-          accept="image/png,image/jpeg,image/svg+xml,image/webp"
-          onChange={(e) => {
-            onLogo(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
-        {value.logoDataUrl ? (
-          <div
-            {...dragProps}
-            className={`flex items-center gap-3 rounded-lg border p-3 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${dragging ? "border-accent bg-accent-soft" : "border-border-strong bg-card"}`}
-          >
-            <span
-              className="size-12 shrink-0 rounded-md border border-border bg-white bg-contain bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${value.logoDataUrl})` }}
-              aria-hidden="true"
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-foreground">{t.logoApplied}</span>
-              <span className="block text-xs text-muted">{t.logoAppliedSub}</span>
-            </span>
-            <label htmlFor={fileId} className="btn btn-sm cursor-pointer">
-              {t.change}
-            </label>
-            <button type="button" className="btn btn-sm btn-danger" onClick={() => onChange({ ...value, logoDataUrl: null })}>
-              {t.remove}
-            </button>
-          </div>
-        ) : (
-          <label
-            htmlFor={fileId}
-            {...dragProps}
-            className={`flex cursor-pointer items-center gap-3 rounded-lg border border-dashed p-3 transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${
-              dragging ? "border-accent bg-accent-soft" : "border-border-strong bg-card hover:border-zinc-400 hover:bg-subtle"
-            }`}
-          >
-            <span className="grid size-12 shrink-0 place-items-center rounded-md bg-surface text-muted">
-              <ImageIcon className="size-5" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm text-foreground">
-                {t.dropPrefix}
-                <span className="font-medium text-accent">{t.choose}</span>
-              </span>
-              <span className="mt-0.5 block text-xs text-muted">{t.logoFormats}</span>
-            </span>
-          </label>
-        )}
-        {logoError ? (
-          <p role="alert" className="mt-2 text-xs font-medium text-danger">
-            {logoError}
-          </p>
-        ) : null}
-      </Group>
-    </div>
+      </div>
     </details>
   );
 }

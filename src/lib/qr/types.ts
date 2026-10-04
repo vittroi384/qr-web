@@ -122,6 +122,13 @@ export const FRAME_PRESETS = ["none", "scan", "wifi", "menu", "review", "pay", "
 export type FramePreset = (typeof FRAME_PRESETS)[number];
 /** Presets that come with a default label (every preset except "none" and "custom"). */
 export type FrameTextPreset = Exclude<FramePreset, "none" | "custom">;
+/**
+ * How the frame is drawn (geometry only; see src/lib/qr/frame.ts): caption bar below or above the
+ * code, a speech bubble with a tail, larger rounded corners, or a thin line with the caption set
+ * underneath in the frame colour.
+ */
+export const FRAME_SHAPES = ["label", "top", "bubble", "rounded", "thin"] as const;
+export type FrameShape = (typeof FRAME_SHAPES)[number];
 
 export type QrStyleOptions = {
   size: number;
@@ -131,6 +138,7 @@ export type QrStyleOptions = {
   errorCorrectionLevel: ErrorCorrectionLevel;
   logoDataUrl: string | null;
   frame: FramePreset;
+  frameShape: FrameShape;
   /** Label under the code; empty → border only. */
   frameText: string;
   /** Border and label-bar colour. Empty string = follow `darkColor`. */
@@ -145,6 +153,7 @@ export const DEFAULT_STYLE: QrStyleOptions = {
   errorCorrectionLevel: "M",
   logoDataUrl: null,
   frame: "none",
+  frameShape: "label",
   frameText: "",
   frameColor: "",
 };

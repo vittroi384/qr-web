@@ -428,6 +428,11 @@ export const id: Dict = {
     frameTextHint: "Maks. 40 karakter · kosongkan untuk tepi saja.",
     frameColor: "Warna bingkai",
     frameSameAsCode: "Sama dengan kode",
+    frameShape: "Bentuk bingkai",
+    frameShapes: { label: "Teks di bawah", top: "Teks di atas", bubble: "Balon ucapan", rounded: "Sudut bulat", thin: "Garis tipis" },
+    moreOptions: "Opsi lainnya",
+    fewerOptions: "Lebih sedikit opsi",
+    moreOptionsSummary: "Warna kode · Latar · Koreksi kesalahan",
     codeColor: "Warna kode",
     colors: {
       black: "Hitam",

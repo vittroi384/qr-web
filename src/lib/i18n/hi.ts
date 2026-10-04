@@ -428,6 +428,11 @@ export const hi: Dict = {
     frameTextHint: "अधिकतम 40 अक्षर · खाली छोड़ें तो सिर्फ़ बॉर्डर दिखेगा।",
     frameColor: "फ़्रेम का रंग",
     frameSameAsCode: "कोड जैसा",
+    frameShape: "फ़्रेम का आकार",
+    frameShapes: { label: "नीचे कैप्शन", top: "ऊपर कैप्शन", bubble: "स्पीच बबल", rounded: "गोल कोने", thin: "पतली रेखा" },
+    moreOptions: "और विकल्प",
+    fewerOptions: "कम विकल्प",
+    moreOptionsSummary: "कोड का रंग · बैकग्राउंड · एरर करेक्शन",
     codeColor: "कोड का रंग",
     colors: {
       black: "काला",

@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { FRAME_TEXT_MAX, estimateTextWidth, fitLabel, frameLayout, normalizeFrameText, resolveFrameColor } from "./frame";
+import { FRAME_TEXT_MAX, estimateTextWidth, fitLabel, frameLayout, frameTextColor, normalizeFrameText, resolveFrameColor } from "./frame";
 
 describe("frameLayout", () => {
   it("is the bare QR when the frame is off, whatever the text says", () => {
-    const l = frameLayout(528, { frame: "none", frameText: "Scan me" });
-    assert.deepEqual(l, { width: 528, height: 528, qr: { x: 0, y: 0, size: 528 }, bar: null, text: null, radius: 0, border: 0 });
+    const l = frameLayout(528, { frame: "none", frameShape: "label", frameText: "Scan me" });
+    assert.deepEqual(l, { width: 528, height: 528, qr: { x: 0, y: 0, size: 528 }, box: null, tail: null, bar: null, text: null, fillBackground: false, radius: 0, border: 0 });
   });
 
   it("adds a 6% border and an 18% label bar below the code", () => {
-    const l = frameLayout(512, { frame: "scan", frameText: "Scan me" });
+    const l = frameLayout(512, { frame: "scan", frameShape: "label", frameText: "Scan me" });
     const border = Math.round(512 * 0.06); // 31
     const barH = Math.round(512 * 0.18); // 92
     assert.equal(l.border, border);
@@ -23,10 +23,58 @@ describe("frameLayout", () => {
     assert.equal(l.text.x, l.width / 2);
     assert.equal(l.text.y, l.bar.y + l.bar.h / 2);
     assert.equal(l.radius, border * 2);
+    assert.deepEqual(l.box, { x: 0, y: 0, w: l.width, h: l.height, radius: border * 2 });
+    assert.equal(l.tail, null);
+    assert.equal(l.text.color, "#ffffff");
+  });
+
+  it("puts the caption bar above the code for the \"top\" shape", () => {
+    const l = frameLayout(512, { frame: "scan", frameShape: "top", frameText: "Scan me" });
+    const border = Math.round(512 * 0.06);
+    const barH = Math.round(512 * 0.18);
+    assert.deepEqual(l.qr, { x: border, y: border + barH, size: 512 });
+    assert.deepEqual(l.bar, { x: 0, y: 0, w: l.width, h: border + barH });
+    assert.equal(l.height, 512 + border * 2 + barH);
+  });
+
+  it("adds a tail under the box for the speech bubble, and the canvas grows by its height", () => {
+    const l = frameLayout(500, { frame: "scan", frameShape: "bubble", frameText: "Scan me" });
+    assert.ok(l.box && l.tail);
+    const tailH = Math.round(500 * 0.08);
+    assert.equal(l.height, l.box.h + tailH);
+    const [a, b, tip] = l.tail.points;
+    assert.equal(a[1], l.box.h);
+    assert.equal(b[1], l.box.h);
+    assert.equal(tip[1], l.box.h + tailH);
+    assert.equal(tip[0], l.width / 2);
+  });
+
+  it("uses a thicker border and a bigger radius for the rounded shape", () => {
+    const l = frameLayout(500, { frame: "scan", frameShape: "rounded", frameText: "Scan me" });
+    assert.equal(l.border, Math.round(500 * 0.08));
+    assert.equal(l.radius, Math.round(l.border * 3.5));
+  });
+
+  it("sets the caption outside a thin box in the frame colour, over the code's background", () => {
+    const l = frameLayout(400, { frame: "scan", frameShape: "thin", frameText: "Scan me" });
+    const border = Math.max(2, Math.round(400 * 0.025));
+    assert.equal(l.border, border);
+    assert.deepEqual(l.box, { x: 0, y: 0, w: 400 + border * 2, h: 400 + border * 2, radius: border * 2 });
+    assert.equal(l.bar, null);
+    assert.ok(l.text);
+    assert.equal(l.text.color, "");
+    assert.equal(l.fillBackground, true);
+    assert.ok(l.text.y > l.box.h);
+    assert.ok(l.height > l.box.h);
+    assert.equal(frameTextColor(l, { frameColor: "", darkColor: "#123456" }), "#123456");
+    // Without a caption the thin box is square.
+    const bare = frameLayout(400, { frame: "custom", frameShape: "thin", frameText: "" });
+    assert.equal(bare.height, bare.width);
+    assert.equal(bare.text, null);
   });
 
   it("is a square border only when the text is empty", () => {
-    const l = frameLayout(400, { frame: "custom", frameText: "   " });
+    const l = frameLayout(400, { frame: "custom", frameShape: "label", frameText: "   " });
     assert.equal(l.bar, null);
     assert.equal(l.text, null);
     assert.equal(l.width, l.height);
@@ -34,8 +82,8 @@ describe("frameLayout", () => {
   });
 
   it("shrinks the font for a long label and keeps it inside maxWidth", () => {
-    const short = frameLayout(512, { frame: "custom", frameText: "Menu" });
-    const long = frameLayout(512, { frame: "custom", frameText: "Scan here to open our full seasonal menu" });
+    const short = frameLayout(512, { frame: "custom", frameShape: "label", frameText: "Menu" });
+    const long = frameLayout(512, { frame: "custom", frameShape: "label", frameText: "Scan here to open our full seasonal menu" });
     assert.ok(short.text && long.text);
     assert.ok(long.text.fontPx < short.text.fontPx);
     assert.ok(estimateTextWidth(long.text.value, long.text.fontPx) <= long.text.maxWidth);
@@ -46,7 +94,7 @@ describe("frameLayout", () => {
 
   it("uses the supplied measurer (canvas measureText) instead of the estimate", () => {
     const wide = () => 10_000;
-    const l = frameLayout(512, { frame: "scan", frameText: "Scan me" }, wide);
+    const l = frameLayout(512, { frame: "scan", frameShape: "label", frameText: "Scan me" }, wide);
     assert.ok(l.text);
     assert.ok(l.text.value.endsWith("…"));
   });

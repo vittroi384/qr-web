@@ -428,6 +428,11 @@ export const en: Dict = {
     frameTextHint: "Up to 40 characters · leave empty for a border only.",
     frameColor: "Frame color",
     frameSameAsCode: "Same as code",
+    frameShape: "Frame shape",
+    frameShapes: { label: "Caption below", top: "Caption above", bubble: "Speech bubble", rounded: "Rounded", thin: "Thin line" },
+    moreOptions: "More options",
+    fewerOptions: "Fewer options",
+    moreOptionsSummary: "Code color · Background · Error correction",
     codeColor: "Code color",
     colors: {
       black: "Black",

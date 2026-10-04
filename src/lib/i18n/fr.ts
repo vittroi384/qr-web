@@ -428,6 +428,11 @@ export const fr: Dict = {
     frameTextHint: "40 caractères max. · laissez vide pour la bordure seule.",
     frameColor: "Couleur du cadre",
     frameSameAsCode: "Comme le code",
+    frameShape: "Forme du cadre",
+    frameShapes: { label: "Texte en bas", top: "Texte en haut", bubble: "Bulle", rounded: "Arrondi", thin: "Trait fin" },
+    moreOptions: "Plus d'options",
+    fewerOptions: "Moins d'options",
+    moreOptionsSummary: "Couleur du code · Fond · Correction d'erreur",
     codeColor: "Couleur du code",
     colors: {
       black: "Noir",

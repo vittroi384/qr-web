@@ -28,9 +28,11 @@ type Props = {
  * screen-reader state words are the same in both layouts.
  */
 export function StepGuide({ steps, label, doneLabel, currentLabel, completed = 0, live = false, slim = false, className = "" }: Props) {
-  // Live guides also draw a gauge under the steps: a filled share per finished step, so going
-  // back a step (deselecting the type) visibly empties it again.
-  const progress = Math.min(Math.max(completed, 0), steps.length) / steps.length;
+  // Live guides also draw a gauge under the steps. It fills per finished step and is full as soon
+  // as the last step is reached (content entered → "save" is up to the visitor), so going back a
+  // step (deselecting the type) visibly empties it again.
+  const gaugeSteps = Math.max(steps.length - 1, 1);
+  const progress = Math.min(Math.max(completed, 0), gaugeSteps) / gaugeSteps;
   return (
     <div className={`overflow-hidden rounded-xl bg-accent-soft ${className}`}>
     <ol
@@ -89,8 +91,8 @@ export function StepGuide({ steps, label, doneLabel, currentLabel, completed = 0
         role="progressbar"
         aria-label={label}
         aria-valuemin={0}
-        aria-valuemax={steps.length}
-        aria-valuenow={Math.min(completed, steps.length)}
+        aria-valuemax={gaugeSteps}
+        aria-valuenow={Math.min(Math.max(completed, 0), gaugeSteps)}
         className="mx-2 mb-2 h-1.5 overflow-hidden rounded-full bg-accent/15 sm:mx-5 sm:mb-2.5"
       >
         <div className="h-full rounded-full bg-accent motion-safe:transition-[width] motion-safe:duration-500 motion-safe:ease-out" style={{ width: `${progress * 100}%` }} />

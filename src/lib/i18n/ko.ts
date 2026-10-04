@@ -390,6 +390,11 @@ export const ko = {
     frameTextHint: "최대 40자 · 비워 두면 테두리만 표시됩니다.",
     frameColor: "프레임 색",
     frameSameAsCode: "코드 색과 같게",
+    frameShape: "프레임 모양",
+    frameShapes: { label: "아래 문구", top: "위 문구", bubble: "말풍선", rounded: "둥근 모서리", thin: "얇은 선" },
+    moreOptions: "옵션 더 보기",
+    fewerOptions: "옵션 접기",
+    moreOptionsSummary: "코드 색 · 배경 · 복원력",
     codeColor: "코드 색상",
     colors: {
       black: "블랙",
