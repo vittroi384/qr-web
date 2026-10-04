@@ -639,6 +639,7 @@ export const ja: Dict = {
     pasteLabel: "貼り付けるリスト",
     pastePlaceholder: "https://example.com/menu\nhttps://example.com/booking",
     pasteHint: "1行に1つずつ。スプレッドシートの名前列とリンク列をコピーすると、それぞれの欄に入ります。",
+    pasteShort: "1行に1つ · 表計算の2列もそのまま",
     pasteApply: "表に追加",
     pasteCancel: "キャンセル",
     truncated: (max: number) => `最初の${max}件だけを追加しました。`,

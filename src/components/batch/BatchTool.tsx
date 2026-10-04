@@ -355,7 +355,7 @@ export function BatchTool() {
               </span>
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-foreground">{b.pasteOpen}</span>
-                <span className="mt-0.5 block text-xs leading-relaxed text-muted">{b.pasteHint}</span>
+                <span className="mt-0.5 block truncate text-xs leading-relaxed text-muted">{b.pasteShort}</span>
               </span>
             </button>
           )}

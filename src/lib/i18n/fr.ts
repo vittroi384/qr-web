@@ -639,6 +639,7 @@ export const fr: Dict = {
     pasteLabel: "Liste à coller",
     pastePlaceholder: "https://example.com/menu\nhttps://example.com/booking",
     pasteHint: "Une entrée par ligne. Copiez une colonne de noms et une colonne de liens depuis un tableur : elles arrivent dans les bonnes cellules.",
+    pasteShort: "Un par ligne · deux colonnes d'un tableur aussi",
     pasteApply: "Ajouter au tableau",
     pasteCancel: "Annuler",
     truncated: (max: number) => `Seules les ${max} premières lignes ont été ajoutées.`,

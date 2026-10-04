@@ -639,6 +639,7 @@ export const hi: Dict = {
     pasteLabel: "पेस्ट करने के लिए लिस्ट",
     pastePlaceholder: "https://example.com/menu\nhttps://example.com/booking",
     pasteHint: "हर लाइन में एक। स्प्रेडशीट से नाम और लिंक के कॉलम कॉपी करें, वे सही खानों में आ जाएँगे।",
+    pasteShort: "हर लाइन में एक · स्प्रेडशीट के दो कॉलम भी",
     pasteApply: "टेबल में जोड़ें",
     pasteCancel: "रद्द करें",
     truncated: (max: number) => `सिर्फ़ पहले ${max} जोड़े गए।`,

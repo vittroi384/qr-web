@@ -639,6 +639,7 @@ export const id: Dict = {
     pasteLabel: "Daftar untuk ditempel",
     pastePlaceholder: "https://example.com/menu\nhttps://example.com/booking",
     pasteHint: "Satu per baris. Salin kolom nama dan kolom link dari spreadsheet, nanti masuk ke sel yang tepat.",
+    pasteShort: "Satu per baris · dua kolom spreadsheet juga bisa",
     pasteApply: "Tambahkan ke tabel",
     pasteCancel: "Batal",
     truncated: (max: number) => `Hanya ${max} baris pertama yang ditambahkan.`,

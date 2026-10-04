@@ -639,6 +639,7 @@ export const de: Dict = {
     pasteLabel: "Liste zum Einfügen",
     pastePlaceholder: "https://example.com/speisekarte\nhttps://example.com/reservierung",
     pasteHint: "Eine pro Zeile. Kopieren Sie eine Namens- und eine Linkspalte aus einer Tabelle, dann landen sie in den richtigen Zellen.",
+    pasteShort: "Eine pro Zeile · auch zwei Tabellenspalten",
     pasteApply: "Zur Tabelle hinzufügen",
     pasteCancel: "Abbrechen",
     truncated: (max: number) => `Nur die ersten ${max} wurden hinzugefügt.`,

@@ -77,9 +77,8 @@ export function StepGuide({ steps, label, doneLabel, currentLabel, completed = 0
               {step.body ? <span className={`mt-0.5 text-[13px] leading-snug text-muted ${slim ? "hidden sm:block" : "block"}`}>{step.body}</span> : null}
             </span>
             {!last ? (
-              <span aria-hidden="true" className="hidden items-center text-accent/45 sm:mt-3.5 sm:flex sm:min-w-3 sm:flex-1">
-                <span className="hidden h-px flex-1 bg-accent/25 sm:block" />
-                <ChevronRightIcon className="size-3.5 shrink-0 sm:-ml-1" />
+              <span aria-hidden="true" className={`hidden items-center justify-center text-accent/40 sm:flex sm:min-w-6 sm:flex-1 ${slim ? "sm:mt-1.5" : "sm:mt-1.5"}`}>
+                <ChevronRightIcon className="size-5 shrink-0" />
               </span>
             ) : null}
           </li>

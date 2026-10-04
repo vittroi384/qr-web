@@ -639,6 +639,7 @@ export const en: Dict = {
     pasteLabel: "List to paste",
     pastePlaceholder: "https://example.com/menu\nhttps://example.com/booking",
     pasteHint: "One per line. Copy a name column and a link column from a spreadsheet and they land in the right cells.",
+    pasteShort: "One per line · two columns from a spreadsheet work too",
     pasteApply: "Add to table",
     pasteCancel: "Cancel",
     truncated: (max: number) => `Only the first ${max} were added.`,

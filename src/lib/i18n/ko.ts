@@ -593,6 +593,7 @@ export const ko = {
     pasteLabel: "붙여 넣을 목록",
     pastePlaceholder: "https://example.com/menu\nhttps://example.com/booking",
     pasteHint: "한 줄에 하나씩. 엑셀에서 이름·링크 두 열을 복사해 붙이면 칸이 자동으로 나뉩니다.",
+    pasteShort: "한 줄에 하나씩 · 엑셀 두 열도 그대로 됩니다",
     pasteApply: "표에 넣기",
     pasteCancel: "취소",
     truncated: (max: number) => `최대 ${max}개까지만 넣었습니다.`,
