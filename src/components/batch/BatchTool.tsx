@@ -295,7 +295,8 @@ export function BatchTool() {
         className="mb-4"
       />
 
-      <div className="grid gap-4">
+      {/* minmax(0,1fr): a card may never widen the column (nowrap text inside would otherwise set the min width). */}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
         {/* 목록 */}
         <div className="rounded-xl border border-border bg-card p-4 shadow-panel sm:px-6 sm:py-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
