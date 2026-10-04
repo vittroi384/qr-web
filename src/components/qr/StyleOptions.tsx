@@ -265,7 +265,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
         </div>
         {edited ? <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span> : null}
       </div>
-      <div className="mt-5 grid gap-6 @2xl:grid-cols-2 @2xl:gap-x-8">
+      <div className="mt-5 grid gap-6">
         <Group label={t.frameShape} hint={hasFrame ? undefined : t.frameHint}>
           <Chips tiles items={SHAPE_CHOICES} value={hasFrame ? value.frameShape : "none"} onSelect={selectShape} label={t.frameShape} names={shapeNames} icon={(s) => <ShapeIcon shape={s} />} />
           {hasFrame ? (
@@ -299,7 +299,6 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
           ) : null}
         </Group>
 
-        <div className="grid content-start gap-6">
         <Group label={t.logo}>
           <input
             id={fileId}
@@ -422,7 +421,6 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
             </Group>
           </div>
         </details>
-        </div>
       </div>
     </div>
   );
