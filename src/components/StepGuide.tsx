@@ -28,10 +28,9 @@ type Props = {
  * screen-reader state words are the same in both layouts.
  */
 export function StepGuide({ steps, label, doneLabel, currentLabel, completed = 0, live = false, slim = false, className = "" }: Props) {
-  // Live guides also draw a gauge under the steps. It fills per finished step and is full as soon
-  // as the last step is reached (content entered → "save" is up to the visitor), so going back a
-  // step (deselecting the type) visibly empties it again.
-  const gaugeSteps = Math.max(steps.length - 1, 1);
+  // Live guides also draw a gauge under the steps: one equal share per finished step (pick a
+  // type → 1/3, add content → 2/3, save → full), so going back a step visibly empties it again.
+  const gaugeSteps = Math.max(steps.length, 1);
   const progress = Math.min(Math.max(completed, 0), gaugeSteps) / gaugeSteps;
   return (
     <div className={`overflow-hidden rounded-xl bg-accent-soft ${className}`}>

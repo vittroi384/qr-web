@@ -26,10 +26,13 @@ test.describe("step guide and type tiles", () => {
     await expect(gauge).toHaveAttribute("aria-valuenow", "0");
     await expect(page.getByPlaceholder("e.g. MyHome_5G")).toHaveCount(0);
 
-    // Re-selecting restores what was typed.
+    // Re-selecting restores what was typed; saving fills the last third.
     await wifi.click();
     await expect(page.getByPlaceholder("e.g. MyHome_5G")).toHaveValue("CafeGuest");
     await expect(gauge).toHaveAttribute("aria-valuenow", "2");
+    await expect(gauge).toHaveAttribute("aria-valuemax", "3");
+    await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Save image (PNG)" }).click()]);
+    await expect(gauge).toHaveAttribute("aria-valuenow", "3");
   });
 
   for (const viewport of [
