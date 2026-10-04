@@ -564,9 +564,9 @@ export const ko = {
     title: "QR 코드 여러 개 만들기",
     tagline: "링크 목록을 넣으면 QR 코드를 한 번에 만들어 드립니다",
     steps: [
-      { title: "붙여 넣기", body: "링크를 한 줄에 하나씩 입력하거나 붙여 넣으세요." },
-      { title: "확인", body: "줄마다 옆에 QR 미리보기가 나타납니다." },
-      { title: "내려받기", body: "버튼 하나로 모두 저장합니다." },
+      { title: "붙여 넣기", body: "링크를 한 줄에 하나씩" },
+      { title: "확인", body: "줄마다 QR 미리보기 표시" },
+      { title: "내려받기", body: "버튼 하나로 ZIP 저장" },
     ],
     stepsLabel: "사용 순서",
     limitNote: (max: number) => `한 번에 최대 ${max}개까지 만들 수 있습니다.`,
