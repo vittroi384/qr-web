@@ -1,0 +1,16 @@
+# Serve behind the Cloudflare proxy when this server cannot own 80/443 (another project does).
+# Cloudflare terminates TLS and forwards to the host port from docker-compose.port.yml (8080,
+# plain HTTP), so Caddy keeps serving ":80" while the app still reads DOMAIN from .env for
+# Secure cookies and the public site URL. Activate from .env:
+#
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.port.yml:docker-compose.cloudflare.yml
+#   DOMAIN=getqrmaker.com
+#
+# Cloudflare side: DNS A records (proxied) → server IP, SSL/TLS mode "Flexible", an Origin Rule
+# that rewrites the destination port to QR_HTTP_PORT, "Always Use HTTPS". See docs/배포-절차.md 2-C.
+services:
+  caddy:
+    environment:
+      DOMAIN: ":80"
+    volumes:
+      - ./caddy/cloudflare.caddy:/etc/caddy/global.d/cloudflare.caddy:ro

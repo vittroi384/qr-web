@@ -1,5 +1,11 @@
 # DOMAIN comes from .env via docker-compose. With a real domain Caddy issues a
 # Let's Encrypt certificate automatically; with ":80" it serves plain HTTP.
+{
+	# Behind the Cloudflare proxy, docker-compose.cloudflare.yml mounts a snippet here that trusts
+	# Cloudflare's ranges, so {client_ip} below is the visitor. Otherwise the glob matches nothing.
+	import /etc/caddy/global.d/*.caddy
+}
+
 {$DOMAIN} {
 	encode zstd gzip
 
@@ -42,7 +48,8 @@
 		respond 404
 	}
 
+	# {client_ip} equals the peer address unless a trusted proxy (Cloudflare) reports the visitor.
 	reverse_proxy app:3000 {
-		header_up X-Real-IP {remote_host}
+		header_up X-Real-IP {client_ip}
 	}
 }
