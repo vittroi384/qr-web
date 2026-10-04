@@ -57,6 +57,9 @@ export function QrGenerator({
 } = {}) {
   const { t, locale } = useI18n();
   const [type, setType] = useState<QrType>(initialType);
+  // False after the chosen tile is pressed again: the form and preview hide, the step guide
+  // returns to step 1, and `type` keeps the last choice so re-selecting restores what was typed.
+  const [selected, setSelected] = useState(true);
   const [payloads, setPayloads] = useState<QrPayloadMap>(() => ({ ...DEFAULT_PAYLOADS, ...initialPayload }));
   const [style, setStyle] = useState<QrStyleOptions>(DEFAULT_STYLE);
 
@@ -65,7 +68,7 @@ export function QrGenerator({
   // issue never reaches the encoder, so nothing half-right (a payment link minus its amount, a
   // blocked URL scheme) can go Live and be saved.
   const issue = useMemo(() => validatePayload(type, payload), [type, payload]);
-  const encoded = useMemo(() => (issue ? "" : encodePayload(type, payload)), [type, payload, issue]);
+  const encoded = useMemo(() => (issue || !selected ? "" : encodePayload(type, payload)), [type, payload, issue, selected]);
   // Logs only on download, copy and print — typing and previewing never reach the server.
   const logAction = useQrLogger({ type, payload, options: style, encoded });
   // Step guide state: which content was last saved (download, copy or print).
@@ -76,7 +79,7 @@ export function QrGenerator({
     logAction(event);
     setSavedFor(encoded);
   };
-  const touched = typePicked || payload !== DEFAULT_PAYLOADS[type];
+  const touched = selected && (typePicked || payload !== DEFAULT_PAYLOADS[type]);
   // Anonymous select → preview counters (once per type per session); no content is sent. "select"
   // waits for `touched`, so a plain visit to the home page (default type: URL) is not a selection.
   useFunnel(type, touched, Boolean(encoded), locale);
@@ -108,7 +111,7 @@ export function QrGenerator({
   return (
     <section aria-labelledby="generator-heading">
       <header className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <h1 id="generator-heading" className="text-2xl font-semibold tracking-tight text-foreground">
+        <h1 id="generator-heading" className="text-2xl font-bold tracking-tight text-foreground">
           {heading?.title ?? t.generator.title}
         </h1>
         <p className="text-sm text-muted">{heading?.subtitle ?? t.generator.tagline}</p>
@@ -131,27 +134,41 @@ export function QrGenerator({
           <div className="p-4 sm:px-6 sm:py-6">
             <SectionHeading step={1} title={t.generator.stepType} />
             <TypeTabs
-              value={type}
+              value={selected ? type : null}
               onChange={(next) => {
+                if (next === null) {
+                  setSelected(false);
+                  setTypePicked(false);
+                  return;
+                }
                 setType(next);
+                setSelected(true);
                 setTypePicked(true);
               }}
             />
           </div>
 
           <div className="border-t border-border p-4 sm:px-6 sm:py-6">
-            <SectionHeading
-              step={2}
-              title={t.types.labels[type]}
-              description={t.types.descriptions[type]}
-              action={
-                <button type="button" className="btn btn-ghost btn-sm -mt-1 -mr-1.5 shrink-0" onClick={reset}>
-                  <ResetIcon />
-                  {t.generator.reset}
-                </button>
-              }
-            />
-            <PayloadForm key={type} type={type} value={payload} onChange={setPayload} issue={issue} />
+            {selected ? (
+              <>
+                <SectionHeading
+                  step={2}
+                  title={t.types.labels[type]}
+                  description={t.types.descriptions[type]}
+                  action={
+                    <button type="button" className="btn btn-ghost btn-sm -mt-1 -mr-1.5 shrink-0" onClick={reset}>
+                      <ResetIcon />
+                      {t.generator.reset}
+                    </button>
+                  }
+                />
+                <PayloadForm key={type} type={type} value={payload} onChange={setPayload} issue={issue} />
+              </>
+            ) : (
+              <p role="status" className="rounded-lg border border-dashed border-border-strong bg-subtle px-4 py-6 text-center text-sm font-medium text-muted">
+                {t.generator.pickFirst}
+              </p>
+            )}
           </div>
         </div>
 
@@ -161,7 +178,7 @@ export function QrGenerator({
             <QrPreview
               affiliate={affiliate ?? null}
               encoded={encoded}
-              invalid={Boolean(issue)}
+              invalid={selected && Boolean(issue)}
               style={style}
               onStyleChange={setStyle}
               fileBase={`qr-${type}`}

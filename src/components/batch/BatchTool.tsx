@@ -413,7 +413,7 @@ export function BatchTool() {
                     <Thumb check={check} look={look} label={b.rowPreview(n)} />
                     <button
                       type="button"
-                      className="btn btn-ghost size-11 px-0"
+                      className="btn btn-ghost size-12 px-0"
                       aria-label={b.rowDelete(n)}
                       title={b.rowDelete(n)}
                       onClick={() => removeRow(index)}

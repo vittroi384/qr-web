@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
 import { FaqList } from "@/components/FaqList";
-import { adConfig } from "@/components/ads/adConfig";
+import { adSlots } from "@/components/ads/adConfig";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { resolveAffiliate } from "@/components/affiliate";
 import { QrGenerator } from "@/components/qr/QrGenerator";
@@ -14,14 +14,7 @@ const FAQ_BEFORE_AD = 3;
 export async function HomePage({ locale }: { locale: Locale }) {
   const t = getDict(locale);
   const s = await getSettings();
-  const ads = {
-    top: adConfig(s, s.ad_slot_top),
-    left: adConfig(s, s.ad_slot_left),
-    right: adConfig(s, s.ad_slot_right),
-    bottom: adConfig(s, s.ad_slot_bottom),
-    incontent: adConfig(s, s.ad_slot_incontent),
-    inarticle: adConfig(s, s.ad_slot_inarticle),
-  };
+  const ads = adSlots(s);
   const sideVisible = (c: AdSlotConfig) => (c.enabled && c.client && c.slotId) || c.showPlaceholder;
   const faqItems = [
     ...t.home.faq,

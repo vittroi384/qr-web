@@ -7,9 +7,9 @@ import { GATE_COOKIE, gateSatisfied, ipAllowedForAdmin } from "@/lib/adminAccess
 import { writeAudit } from "@/lib/audit";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getRequestMetaFromHeaders } from "@/lib/ip";
-import { BOOLEAN_SETTINGS, SETTING_KEYS, type Settings, isValidPrivacyContact, updateSettings } from "@/lib/settings";
+import { AD_SLOT_NAMES, BOOLEAN_SETTINGS, SETTING_KEYS, type Settings, isValidPrivacyContact, updateSettings } from "@/lib/settings";
 
-const AD_SLOT_KEYS = ["ad_slot_top", "ad_slot_left", "ad_slot_right", "ad_slot_bottom", "ad_slot_incontent", "ad_slot_inarticle"] as const;
+const AD_SLOT_KEYS = AD_SLOT_NAMES.map((n) => `ad_slot_${n}` as const);
 
 export async function saveSettingsAction(formData: FormData) {
   const cookieStore = await cookies();

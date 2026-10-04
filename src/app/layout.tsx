@@ -67,6 +67,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} className="h-full antialiased">
       <head>
+        {/* Pretendard Variable (dynamic subset): the first family in --font-sans, so weights 500–700 render the same on every OS. */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" crossOrigin="anonymous" />
         {adsenseClient ? <AdSenseScript client={adsenseClient} /> : null}
         {analytics ? <UmamiScript src={analytics.analytics_script_url} websiteId={analytics.analytics_website_id} /> : null}
       </head>

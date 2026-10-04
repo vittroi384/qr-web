@@ -28,12 +28,16 @@ type Props = {
  * screen-reader state words are the same in both layouts.
  */
 export function StepGuide({ steps, label, doneLabel, currentLabel, completed = 0, live = false, slim = false, className = "" }: Props) {
+  // Live guides also draw a gauge under the steps: a filled share per finished step, so going
+  // back a step (deselecting the type) visibly empties it again.
+  const progress = Math.min(Math.max(completed, 0), steps.length) / steps.length;
   return (
+    <div className={`overflow-hidden rounded-xl bg-accent-soft ${className}`}>
     <ol
       aria-label={label}
-      className={`rounded-xl bg-accent-soft sm:flex sm:flex-row sm:items-start sm:gap-3 sm:px-5 ${
+      className={`sm:flex sm:flex-row sm:items-start sm:gap-3 sm:px-5 ${
         slim ? "grid grid-cols-3 gap-1 px-2 py-2.5 sm:py-3.5" : "flex flex-col gap-4 px-4 py-4"
-      } ${className}`}
+      }`}
     >
       {steps.map((step, i) => {
         const last = i === steps.length - 1;
@@ -80,5 +84,18 @@ export function StepGuide({ steps, label, doneLabel, currentLabel, completed = 0
         );
       })}
     </ol>
+    {live ? (
+      <div
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={steps.length}
+        aria-valuenow={Math.min(completed, steps.length)}
+        className="mx-2 mb-2 h-1.5 overflow-hidden rounded-full bg-accent/15 sm:mx-5 sm:mb-2.5"
+      >
+        <div className="h-full rounded-full bg-accent motion-safe:transition-[width] motion-safe:duration-500 motion-safe:ease-out" style={{ width: `${progress * 100}%` }} />
+      </div>
+    ) : null}
+    </div>
   );
 }

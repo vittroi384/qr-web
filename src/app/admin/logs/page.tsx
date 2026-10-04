@@ -116,11 +116,11 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
             className="h-10 w-full rounded-lg border border-border-strong bg-card pr-3 pl-9 text-sm text-foreground placeholder:text-zinc-400 outline-none focus:border-accent focus:ring-3 focus:ring-accent/15"
           />
         </label>
-        <button type="submit" className="btn btn-primary h-10">
+        <button type="submit" className="btn btn-primary h-10 min-h-0">
           검색
         </button>
         {hasFilter ? (
-          <Link href="/admin/logs" className="btn btn-ghost h-10">
+          <Link href="/admin/logs" className="btn btn-ghost h-10 min-h-0">
             초기화
           </Link>
         ) : null}

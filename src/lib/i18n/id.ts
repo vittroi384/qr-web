@@ -36,6 +36,8 @@ export const id: Dict = {
       bulk: "Buat massal",
     },
     donate: "Traktir saya kopi",
+    info: "Info",
+    tagline: "Kode QR statis yang tidak pernah kedaluwarsa — gratis, tanpa daftar.",
     defaultNotice: "Data yang Anda masukkan dapat disimpan di server kami untuk meningkatkan layanan.",
   },
 
@@ -73,6 +75,8 @@ export const id: Dict = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `Jenis lainnya (${n})`,
     typeLess: "Lebih sedikit jenis",
+    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
+    pickFirst: "Pilih jenis di atas untuk memulai.",
   },
 
   types: {

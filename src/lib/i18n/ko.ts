@@ -39,6 +39,8 @@ export const ko = {
       bulk: "일괄 생성",
     } satisfies Record<UseCaseId, string>,
     donate: "커피 한 잔 후원하기",
+    info: "정보",
+    tagline: "만료되지 않는 정적 QR 코드 — 무료, 가입 없음.",
     /** Shown on English pages only while the admin footer notice is still the default text. */
     defaultNotice: "입력하신 내용은 서비스 품질 개선을 위해 서버에 저장될 수 있습니다.",
   },
@@ -77,6 +79,8 @@ export const ko = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `종류 더 보기 (${n})`,
     typeLess: "종류 접기",
+    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
+    pickFirst: "위에서 종류를 먼저 골라 주세요.",
   },
 
   types: {

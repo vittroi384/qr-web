@@ -17,6 +17,12 @@ export const SETTING_KEYS = [
   "ad_slot_bottom",
   "ad_slot_incontent",
   "ad_slot_inarticle",
+  "ad_show_top",
+  "ad_show_left",
+  "ad_show_right",
+  "ad_show_bottom",
+  "ad_show_incontent",
+  "ad_show_inarticle",
   "logging_enabled",
   "log_retention_days",
   "affiliate_print_url",
@@ -57,6 +63,13 @@ export const DEFAULT_SETTINGS: Settings = {
   ad_slot_bottom: "",
   ad_slot_incontent: "",
   ad_slot_inarticle: "",
+  // Per-position switches: the top banner sits right above the generator, so it starts off.
+  ad_show_top: "0",
+  ad_show_left: "1",
+  ad_show_right: "1",
+  ad_show_bottom: "1",
+  ad_show_incontent: "1",
+  ad_show_inarticle: "1",
   logging_enabled: "1",
   log_retention_days: "90",
   // Monetisation slots: an empty URL hides the slot entirely.
@@ -84,6 +97,12 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   ad_slot_bottom: "광고 슬롯 ID — 하단 가로",
   ad_slot_incontent: "광고 슬롯 ID — 본문 중간",
   ad_slot_inarticle: "광고 슬롯 ID — 글 사이 (인아티클)",
+  ad_show_top: "자리 켜기 — 상단 가로 (생성기 바로 위)",
+  ad_show_left: "자리 켜기 — 왼쪽 세로",
+  ad_show_right: "자리 켜기 — 오른쪽 세로",
+  ad_show_bottom: "자리 켜기 — 하단 가로",
+  ad_show_incontent: "자리 켜기 — 본문 중간",
+  ad_show_inarticle: "자리 켜기 — 글 사이 (인아티클)",
   logging_enabled: "방문자 입력 기록 저장",
   log_retention_days: "기록 보관 일수 (0 = 무제한)",
   affiliate_print_url: "인쇄 제휴 링크 URL (비우면 숨김)",
@@ -94,7 +113,15 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   analytics_website_id: "Umami 웹사이트 ID (UUID)",
 };
 
-export const BOOLEAN_SETTINGS: SettingKey[] = ["ads_enabled", "ad_placeholders", "logging_enabled"];
+export const AD_SLOT_NAMES = ["top", "left", "right", "bottom", "incontent", "inarticle"] as const;
+export type AdSlotName = (typeof AD_SLOT_NAMES)[number];
+
+export const BOOLEAN_SETTINGS: SettingKey[] = [
+  "ads_enabled",
+  "ad_placeholders",
+  "logging_enabled",
+  ...AD_SLOT_NAMES.map((n) => `ad_show_${n}` as const),
+];
 
 export const PRIVACY_CONTACT_MAX = 200;
 

@@ -36,6 +36,8 @@ export const es: Dict = {
       bulk: "Generación masiva",
     },
     donate: "Invítame un café",
+    info: "Información",
+    tagline: "Códigos QR estáticos que nunca caducan — gratis, sin registro.",
     defaultNotice: "Lo que escribes puede guardarse en nuestro servidor para mejorar el servicio.",
   },
 
@@ -73,6 +75,8 @@ export const es: Dict = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `Más tipos (${n})`,
     typeLess: "Menos tipos",
+    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
+    pickFirst: "Elige un tipo arriba para empezar.",
   },
 
   types: {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { AdSlot, type AdSlotConfig } from "@/components/ads/AdSlot";
-import { adConfig } from "@/components/ads/adConfig";
+import { adSlots } from "@/components/ads/adConfig";
 import { AffiliateCard } from "@/components/AffiliateCard";
 import { BatchTool } from "@/components/batch/BatchTool";
 import { resolveAffiliate } from "@/components/affiliate";
@@ -74,14 +74,7 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
   const { type, copy: c } = target;
   const s = await getSettings();
   const affiliate = resolveAffiliate(s, locale);
-  const ads = {
-    top: adConfig(s, s.ad_slot_top),
-    left: adConfig(s, s.ad_slot_left),
-    right: adConfig(s, s.ad_slot_right),
-    bottom: adConfig(s, s.ad_slot_bottom),
-    incontent: adConfig(s, s.ad_slot_incontent),
-    inarticle: adConfig(s, s.ad_slot_inarticle),
-  };
+  const ads = adSlots(s);
   const sideVisible = (cfg: AdSlotConfig) => (cfg.enabled && cfg.client && cfg.slotId) || cfg.showPlaceholder;
 
   const base = s.site_url.replace(/\/$/, "");

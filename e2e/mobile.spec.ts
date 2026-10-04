@@ -6,15 +6,18 @@ import { apiLogin, passGate } from "./helpers";
  * through the admin settings form for this file and restore the previous value afterwards.
  */
 let admin: BrowserContext | null = null;
-let placeholdersWereOn = false;
+// The top position is off by default (it sits right above the generator), so the layout tests
+// switch it on alongside the placeholders and restore both afterwards.
+const SWITCHES = ["ad_placeholders", "ad_show_top"] as const;
+type Switch = (typeof SWITCHES)[number];
+const wereOn: Record<Switch, boolean> = { ad_placeholders: false, ad_show_top: false };
 
-async function setAdPlaceholders(page: Page, on: boolean) {
+async function setSwitches(page: Page, values: Partial<Record<Switch, boolean>>) {
   await page.goto("/admin/settings");
-  const box = page.locator('input[type="checkbox"][name="ad_placeholders"]');
-  await box.setChecked(on);
+  for (const [name, on] of Object.entries(values)) await page.locator(`input[type="checkbox"][name="${name}"]`).setChecked(on);
   await page.getByRole("button", { name: "저장" }).first().click();
   await expect(page).toHaveURL(/\/admin\/settings\?saved=\d+/);
-  await expect(page.locator('input[type="checkbox"][name="ad_placeholders"]')).toBeChecked({ checked: on });
+  for (const [name, on] of Object.entries(values)) await expect(page.locator(`input[type="checkbox"][name="${name}"]`)).toBeChecked({ checked: on });
 }
 
 async function adminPage(browser: Browser, baseURL: string): Promise<Page> {
@@ -28,13 +31,15 @@ async function adminPage(browser: Browser, baseURL: string): Promise<Page> {
 test.beforeAll(async ({ browser, baseURL }) => {
   const page = await adminPage(browser, baseURL!);
   await page.goto("/admin/settings");
-  placeholdersWereOn = await page.locator('input[type="checkbox"][name="ad_placeholders"]').isChecked();
-  if (!placeholdersWereOn) await setAdPlaceholders(page, true);
+  for (const name of SWITCHES) wereOn[name] = await page.locator(`input[type="checkbox"][name="${name}"]`).isChecked();
+  const toTurnOn = Object.fromEntries(SWITCHES.filter((n) => !wereOn[n]).map((n) => [n, true]));
+  if (Object.keys(toTurnOn).length) await setSwitches(page, toTurnOn);
 });
 
 test.afterAll(async () => {
   if (!admin) return;
-  if (!placeholdersWereOn) await setAdPlaceholders(admin.pages()[0], false);
+  const toRestore = Object.fromEntries(SWITCHES.filter((n) => !wereOn[n]).map((n) => [n, false]));
+  if (Object.keys(toRestore).length) await setSwitches(admin.pages()[0], toRestore);
   await admin.close();
 });
 

@@ -36,6 +36,8 @@ export const ja: Dict = {
       bulk: "一括生成",
     },
     donate: "開発者にコーヒーをおごる",
+    info: "情報",
+    tagline: "期限切れのない静的QRコード — 無料・登録不要。",
     defaultNotice: "サービス改善のため、入力内容がサーバーに保存されることがあります。",
   },
 
@@ -73,6 +75,8 @@ export const ja: Dict = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `ほかの種類 (${n})`,
     typeLess: "種類を閉じる",
+    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
+    pickFirst: "まず上で種類を選んでください。",
   },
 
   types: {

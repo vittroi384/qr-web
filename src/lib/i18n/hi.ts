@@ -36,6 +36,8 @@ export const hi: Dict = {
       bulk: "एक साथ कई QR",
     },
     donate: "हमें एक कॉफ़ी पिलाएँ",
+    info: "जानकारी",
+    tagline: "स्टैटिक QR कोड जो कभी एक्सपायर नहीं होते — मुफ़्त, बिना साइन-अप।",
     defaultNotice: "सेवा को बेहतर बनाने के लिए आपकी डाली गई जानकारी हमारे सर्वर पर सेव की जा सकती है।",
   },
 
@@ -73,6 +75,8 @@ export const hi: Dict = {
     // Phones show the first six type tiles; these toggle the rest.
     typeMore: (n: number) => `और टाइप (${n})`,
     typeLess: "कम टाइप दिखाएँ",
+    // Shown in place of the content form after the chosen tile is tapped again (nothing selected).
+    pickFirst: "शुरू करने के लिए ऊपर एक टाइप चुनें।",
   },
 
   types: {

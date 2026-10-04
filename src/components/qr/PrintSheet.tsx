@@ -160,7 +160,7 @@ export function PrintSheetDialog({
             </div>
             <button
               type="button"
-              className="btn btn-ghost -mt-1.5 -mr-2.5 size-11 shrink-0 px-0"
+              className="btn btn-ghost -mt-1.5 -mr-2.5 size-12 shrink-0 px-0"
               aria-label={p.close}
               onClick={() => dialogRef.current?.close()}
             >
