@@ -88,13 +88,15 @@ function sendFunnelOnce(step: "select" | "preview", type: QrType, locale: Locale
 }
 
 /**
- * Funnel steps for the generator: "select" when a type is shown (initial type or a tile click),
- * "preview" the first time that type renders a non-empty QR. Saves are counted by /api/log.
+ * Funnel steps for the generator: "select" once the visitor has actually chosen a type (a tile
+ * click, typing into the default type, or landing on a type-specific page) — merely loading the
+ * home page with its default type does not count. "preview" the first time that type renders a
+ * non-empty QR. Saves are counted by /api/log.
  */
-export function useFunnel(type: QrType, hasPreview: boolean, locale: Locale) {
+export function useFunnel(type: QrType, selected: boolean, hasPreview: boolean, locale: Locale) {
   useEffect(() => {
-    sendFunnelOnce("select", type, locale);
-  }, [type, locale]);
+    if (selected) sendFunnelOnce("select", type, locale);
+  }, [type, selected, locale]);
 
   useEffect(() => {
     if (hasPreview) sendFunnelOnce("preview", type, locale);

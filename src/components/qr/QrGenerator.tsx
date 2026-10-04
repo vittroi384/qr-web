@@ -68,8 +68,6 @@ export function QrGenerator({
   const encoded = useMemo(() => (issue ? "" : encodePayload(type, payload)), [type, payload, issue]);
   // Logs only on download, copy and print — typing and previewing never reach the server.
   const logAction = useQrLogger({ type, payload, options: style, encoded });
-  // Anonymous select → preview counters (once per type per session); no content is sent.
-  useFunnel(type, Boolean(encoded), locale);
   // Step guide state: which content was last saved (download, copy or print).
   const [savedFor, setSavedFor] = useState<string | null>(null);
   // A landing page has already chosen the type, so step 1 starts done there.
@@ -79,6 +77,9 @@ export function QrGenerator({
     setSavedFor(encoded);
   };
   const touched = typePicked || payload !== DEFAULT_PAYLOADS[type];
+  // Anonymous select → preview counters (once per type per session); no content is sent. "select"
+  // waits for `touched`, so a plain visit to the home page (default type: URL) is not a selection.
+  useFunnel(type, touched, Boolean(encoded), locale);
   const completedSteps = encoded && savedFor === encoded ? 3 : encoded ? 2 : touched ? 1 : 0;
 
   const setPayload = (next: QrPayloadMap[QrType]) => setPayloads((prev) => ({ ...prev, [type]: next }));
