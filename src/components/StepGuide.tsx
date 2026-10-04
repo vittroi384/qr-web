@@ -37,7 +37,8 @@ export function StepGuide({ steps, label, doneLabel, currentLabel, completed = 0
     <div className={`overflow-hidden rounded-xl bg-accent-soft ${className}`}>
     <ol
       aria-label={label}
-      className={`sm:flex sm:flex-row sm:items-start sm:gap-3 sm:px-5 ${
+      // From sm every step gets exactly a third of the width; the chevron sits in the gap between columns.
+      className={`sm:grid sm:grid-cols-3 sm:gap-8 sm:px-5 ${
         slim ? "grid grid-cols-3 gap-1 px-2 py-2.5 sm:py-3.5" : "flex flex-col gap-4 px-4 py-4"
       }`}
     >
@@ -52,7 +53,7 @@ export function StepGuide({ steps, label, doneLabel, currentLabel, completed = 0
             aria-current={current ? "step" : undefined}
             className={`relative flex min-w-0 ${
               slim ? "flex-col items-center gap-1 text-center sm:flex-row sm:items-start sm:gap-2.5 sm:text-left" : "items-start gap-2.5"
-            } ${last ? "" : slim ? "sm:flex-1" : "flex-1"}`}
+            }`}
           >
             {!last && !slim ? (
               <span aria-hidden="true" className="absolute top-9 -bottom-3 left-[13.5px] w-px bg-accent/25 sm:hidden" />
@@ -77,8 +78,8 @@ export function StepGuide({ steps, label, doneLabel, currentLabel, completed = 0
               {step.body ? <span className={`mt-0.5 text-[13px] leading-snug text-muted ${slim ? "hidden sm:block" : "block"}`}>{step.body}</span> : null}
             </span>
             {!last ? (
-              <span aria-hidden="true" className={`hidden items-center justify-center text-accent/40 sm:flex sm:min-w-6 sm:flex-1 ${slim ? "sm:mt-1.5" : "sm:mt-1.5"}`}>
-                <ChevronRightIcon className="size-5 shrink-0" />
+              <span aria-hidden="true" className="absolute top-1 -right-[26px] hidden text-accent/40 sm:block">
+                <ChevronRightIcon className="size-5" />
               </span>
             ) : null}
           </li>
