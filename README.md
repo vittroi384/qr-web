@@ -38,14 +38,14 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
 ## 주요 기능
 
 - **QR 17종**: URL · SNS/앱 링크(28개 플랫폼 프리셋, 링크 붙여 넣기 자동 인식) · WhatsApp · 텍스트 · Wi-Fi · 연락처(vCard 3.0) · 이메일 · SMS · 전화 · 위치 · 일정(iCalendar) · 결제 링크(PayPal/Venmo/Cash App… 금액 사전 입력) · 암호화폐(BIP-21/EIP-681) · PDF/파일 링크 · **지역 결제 QR 3종**(Pix BR Code · UPI · EPC/GiroCode — 공식 규격·CRC·IBAN 검증, 식별자는 저장 전 마스킹)
-- **프레임 + 안내 문구**: QR 둘레 테두리와 "Scan me"·"스캔하면 Wi-Fi 연결" 같은 문구 바를 PNG·SVG·인쇄 안내판에 포함(프리셋 5종 + 직접 입력, 9개 언어 기본 문구)
+- **프레임 13종 + 안내 문구**: 문구 아래·위, 말풍선(위·아래), 둥근 모서리, 리본, 카드, 떠 있는 문구, 원형, 얇은 선, 밑줄, 모서리 표시, 괄호. 모양별 기하를 순수 함수 하나(`src/lib/qr/frame.ts`)가 계산해 미리보기·PNG·SVG·인쇄 안내판이 픽셀 단위로 같음. 문구는 직접 입력(9개 언어 기본값), 프레임 색 12종 + 직접 선택
 - **출력**: PNG(256~2048px, 모듈 단위 정수 스케일 보정으로 픽셀 정확) · SVG · 클립보드 복사 · **인쇄용 A4 안내판**(제목/부제 편집 → 브라우저 인쇄/PDF)
 - **꾸미기**: 색 프리셋 8종 + 직접 선택, 배경(흰색/연회색/아이보리/투명), 복원력, 중앙 로고(자동 ECC H), 대비 경고
 - **일괄 생성**: 표 편집기 + 엑셀 2열 붙여 넣기, 줄별 링크/텍스트 자동 판별, 최대 200개 → `001-이름.png` ZIP + `index.csv`
 - **i18n/SEO**: 경로 기반 9개 언어(hreflang, sitemap 270 URL), 타입별 랜딩 17종 + 사용 사례 9종 × 9개 언어(언어별로 새로 쓴 본문 400~600단어, `FAQPage`·`SoftwareApplication` JSON-LD)
 - **광고**: AdSense 슬롯 6곳(상단·좌·우·하단·본문 중간·글 사이 인아티클; 일괄·소개 페이지도 포함), 팝업/오버레이 없음, 다운로드 버튼과 거리 확보, `/ads.txt` 자동
 - **방문자 기록**: PNG/SVG/복사/인쇄/일괄 저장 시에만 종류·내용·IP·브라우저 기록(입력 중 전송 없음). Wi-Fi 비밀번호는 저장 전 항상 `****`. IP당 분당 30회 제한, 보관 90일 자동 정리
-- **관리자**: 대시보드(KST 집계), 통계(언어·페이지·종류별 저장, 시간대, 선택→미리보기→저장 퍼널 — 개인 정보 없는 카운터), 기록 검색·삭제·CSV(BOM, 수식 주입 차단), 설정(사이트 URL·AdSense ID·슬롯 ID — 재배포 없이 변경), 감사 로그(변경 전/후 값)
+- **관리자**: 대시보드(KST 집계), 통계(언어·페이지·종류별 저장, 시간대, 선택→미리보기→저장 퍼널 — 개인 정보 없는 카운터), 기록 검색·삭제·CSV(BOM, 수식 주입 차단), 설정(사이트 URL·AdSense ID·슬롯 ID·광고 자리별 표시 on/off — 재배포 없이 변경), 감사 로그(변경 전/후 값)
 
 ## 관리자 3중 잠금
 
@@ -160,7 +160,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
    cd ~/qr-web && nano .env                 # ADMIN_PASSWORD 입력, DOMAIN은 DNS 연결 후
    newgrp docker && ./deploy.sh
    ```
-3. OTP 등록(**첫 로그인 전 필수** — 운영 모드는 TOTP 없이, 또는 10자 미만·예시 비밀번호로는 로그인을 거부): `docker compose exec app node scripts/totp-setup.mjs` → QR을 인증 앱으로 스캔 → `.env`에 `ADMIN_TOTP_SECRET` 추가 → `docker compose up -d`. `DOMAIN`이 비어 있는 동안(평문 HTTP)은 공개 주소로 로그인하지 말고 SSH 터널로 접속: `ssh -L 3000:127.0.0.1:3000 ubuntu@<서버IP>` → `http://localhost:3000/<ADMIN_PATH>` (앱 포트는 서버 루프백에만 바인딩)
+3. OTP 등록(**첫 로그인 전 필수** — 운영 모드는 TOTP 없이, 또는 10자 미만·예시 비밀번호로는 로그인을 거부): `docker compose exec app node scripts/totp-setup.mjs` → QR을 인증 앱으로 스캔 → `.env`에 `ADMIN_TOTP_SECRET` 추가 → `docker compose up -d`. `DOMAIN`이 비어 있는 동안(평문 HTTP)은 공개 주소로 로그인하지 말고 SSH 터널로 접속: `ssh -L 3000:127.0.0.1:3000 ubuntu@<서버IP>` → `http://localhost:3000/<ADMIN_PATH>` (앱 포트는 서버 루프백에만 바인딩). `DOMAIN`을 넣은 뒤에는 `https://<도메인>/<ADMIN_PATH>`로 바로 접속(세션 쿠키가 `Secure`라 터널로는 더 이상 로그인되지 않음)
 4. 도메인 연결 시 `.env`의 `DOMAIN=`만 채우면 Caddy가 HTTPS를 자동 발급. 관리자 설정의 **사이트 URL**도 실제 도메인으로 변경
 5. 업데이트: `./deploy.sh` (git pull + 재빌드). 새 마이그레이션은 app 컨테이너가 시작하면서 자동 적용(`docker compose logs app`에 `[migrate]` 줄)
 6. 백업: `scripts/backup.sh` → `backups/qr-YYYY-MM-DD.sql.gz` + `backups/umami-YYYY-MM-DD.sql.gz`(umami DB가 있을 때) (`pg_dump`, 30일 보관). cron 예: `30 4 * * * ~/qr-web/scripts/backup.sh`. 복원은 `gunzip -c backups/qr-….sql.gz | docker compose exec -T db psql -U qr -d qr`
@@ -200,8 +200,8 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 ## 품질 · 운영
 
 **테스트 (CI에서 모두 실행)**
-- 단위 102건 — QR 인코더(Wi-Fi 이스케이프, vCard, VEVENT, wa.me, BIP-21), 입력 검증, 비밀번호 마스킹, 로그인 잠금·IPv6 키, TOTP(RFC 6238 벡터), KST 시간 헬퍼 (`npm test`)
-- E2E 24건 — Playwright: 입력→PNG 저장→`/api/log` 기록·마스킹 검증, 일괄 ZIP 구조 파싱, 관리자 게이트/OTP/CSV, SEO(hreflang·JSON-LD·sitemap·robots), 모바일 가로 넘침 0, axe 접근성 (`npm run test:e2e`)
+- 단위 156건 — QR 인코더(Wi-Fi 이스케이프, vCard, VEVENT, wa.me, BIP-21), Pix/UPI/EPC 규격 벡터, 프레임 13종 레이아웃, 입력 검증, 비밀번호 마스킹, 로그인 잠금·IPv6 키, TOTP(RFC 6238 벡터), Accept-Language 파서, KST 시간 헬퍼 (`npm test`)
+- E2E 34건 — Playwright: 입력→PNG 저장→`/api/log` 기록·마스킹 검증, 단계 게이지·종류 해제·더보기, 퍼널 집계 조건, 언어 자동 감지(브라우저 언어·쿠키·크롤러 제외), 일괄 ZIP 구조 파싱, 관리자 게이트/OTP/CSV, 광고 자리 표시, SEO(hreflang·JSON-LD·sitemap·robots), 모바일 가로 넘침 0, axe 접근성 (`npm run test:e2e`)
 - CI: lint → 타입 → 단위 → DB 없는 빌드 → E2E(Postgres 서비스) → Docker 이미지 빌드
 
 **Lighthouse (운영 이미지, 2026-10 · 배포 후 재측정 예정)**
