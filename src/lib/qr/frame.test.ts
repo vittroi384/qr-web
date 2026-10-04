@@ -102,6 +102,45 @@ describe("frameLayout", () => {
     assert.equal(l.fillBackground, true);
   });
 
+  it("bubbleTop: the tail points up above a caption strip at the top", () => {
+    const l = frameLayout(500, { frame: "scan", frameShape: "bubbleTop", frameText: "Scan me" });
+    const tailH = Math.round(500 * 0.08);
+    const border = Math.round(500 * 0.06);
+    const barH = Math.round(500 * 0.18);
+    assert.ok(l.box && l.bar);
+    assert.equal(l.box.y, tailH);
+    assert.deepEqual(l.qr, { x: border, y: tailH + border + barH, size: 500 });
+    const tail = l.parts[0];
+    assert.ok(tail && tail.kind === "polygon");
+    assert.equal(tail.points[2][1], 0);
+    assert.equal(l.height, l.box.h + tailH);
+  });
+
+  it("circle: the box is a circle around the code's diagonal, caption below in the open", () => {
+    const l = frameLayout(500, { frame: "scan", frameShape: "circle", frameText: "Scan me" });
+    const border = Math.round(500 * 0.06);
+    const d = Math.ceil(500 * Math.SQRT2) + border * 2;
+    assert.ok(l.box && l.text);
+    assert.deepEqual(l.box, { x: 0, y: 0, w: d, h: d, radius: d / 2 });
+    assert.equal(l.qr.x, Math.round((d - 500) / 2));
+    assert.equal(l.text.color, "");
+    assert.ok(l.height > d);
+  });
+
+  it("underline and brackets: parts only, no box, caption below in the open", () => {
+    const u = frameLayout(500, { frame: "scan", frameShape: "underline", frameText: "Scan me" });
+    assert.equal(u.box, null);
+    assert.equal(u.width, 500);
+    assert.equal(u.parts.length, 1);
+    assert.ok(u.text && u.text.color === "");
+    const b = frameLayout(500, { frame: "scan", frameShape: "brackets", frameText: "Scan me" });
+    assert.equal(b.box, null);
+    assert.equal(b.parts.length, 6);
+    const inset = Math.round(500 * 0.06) + Math.round(500 * 0.05);
+    assert.equal(b.qr.x, inset);
+    assert.ok(b.text && b.text.y > b.qr.y + 500);
+  });
+
   it("sets the caption outside a thin box in the frame colour, over the code's background", () => {
     const l = frameLayout(400, { frame: "scan", frameShape: "thin", frameText: "Scan me" });
     const border = Math.max(2, Math.round(400 * 0.025));

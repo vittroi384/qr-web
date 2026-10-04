@@ -20,6 +20,10 @@ const OUTSIDE_LINE_RATIO = 1.3;
 /** Speech-bubble tail, as shares of the QR size. */
 const TAIL_W_RATIO = 0.14;
 const TAIL_H_RATIO = 0.08;
+/** Underline and brackets: stroke thickness, bracket arm length and distance from the code, as shares of the QR size. */
+const STROKE_RATIO = 0.06;
+const BRACKET_ARM_RATIO = 0.14;
+const STROKE_GAP_RATIO = 0.05;
 /** Corner marks: thickness, arm length and distance from the code, as shares of the QR size. */
 const CORNER_THICK_RATIO = 0.06;
 const CORNER_ARM_RATIO = 0.24;
@@ -147,10 +151,10 @@ function openText(c: Ctx, cx: number, bottom: number): { text: FrameLayout["text
 }
 
 /**
- * Box with a caption strip inside it, below or above the code ("label", "top", "bubble" with a
- * tail, "rounded" with a thicker border and bigger radius, "ribbon" with a bar sticking out).
+ * Box with a caption strip inside it, below or above the code ("label", "top", "bubble"/"bubbleTop"
+ * with a tail, "rounded" with a thicker border and bigger radius, "ribbon" with a bar sticking out).
  */
-function boxWithStrip(c: Ctx, o: { border: number; radius: number; top?: boolean; tail?: boolean; ribbon?: boolean }): FrameLayout {
+function boxWithStrip(c: Ctx, o: { border: number; radius: number; top?: boolean; tail?: "bottom" | "top"; ribbon?: boolean }): FrameLayout {
   const border = Math.round(c.qr * o.border);
   const radius = Math.round(border * o.radius);
   const barH = c.label ? Math.round(c.qr * BAR_RATIO) : 0;
@@ -158,11 +162,13 @@ function boxWithStrip(c: Ctx, o: { border: number; radius: number; top?: boolean
   const boxW = c.qr + border * 2;
   const boxH = boxW + barH;
   const tailH = o.tail ? Math.round(c.qr * TAIL_H_RATIO) : 0;
-  const box: FrameRect = { x: wing, y: 0, w: boxW, h: boxH, radius };
+  // A tail on top pushes the box down by its height.
+  const boxY = o.tail === "top" ? tailH : 0;
+  const box: FrameRect = { x: wing, y: boxY, w: boxW, h: boxH, radius };
   const layout: FrameLayout = {
     width: boxW + wing * 2,
     height: boxH + tailH,
-    qr: { x: wing + border, y: o.top ? border + barH : border, size: c.qr },
+    qr: { x: wing + border, y: boxY + (o.top ? border + barH : border), size: c.qr },
     box,
     parts: [],
     bar: null,
@@ -174,11 +180,15 @@ function boxWithStrip(c: Ctx, o: { border: number; radius: number; top?: boolean
   if (o.tail) {
     const tailW = Math.round(c.qr * TAIL_W_RATIO);
     const cx = layout.width / 2;
-    layout.parts.push({ kind: "polygon", points: [[cx - tailW / 2, boxH], [cx + tailW / 2, boxH], [cx, boxH + tailH]] });
+    layout.parts.push(
+      o.tail === "top"
+        ? { kind: "polygon", points: [[cx - tailW / 2, tailH], [cx + tailW / 2, tailH], [cx, 0]] }
+        : { kind: "polygon", points: [[cx - tailW / 2, boxH], [cx + tailW / 2, boxH], [cx, boxH + tailH]] },
+    );
   }
   if (!c.label) return layout;
   // The strip is the bar plus the adjacent border; the label sits in its middle.
-  const strip = o.top ? { x: wing, y: 0, w: boxW, h: border + barH } : { x: wing, y: border + c.qr, w: boxW, h: border + barH };
+  const strip = o.top ? { x: wing, y: boxY, w: boxW, h: border + barH } : { x: wing, y: boxY + border + c.qr, w: boxW, h: border + barH };
   if (wing > 0) {
     // Ribbon: the strip runs the full width, with a notch cut into each end.
     const { y, h } = strip;
@@ -282,15 +292,101 @@ function floatingLabel(c: Ctx): FrameLayout {
   return layout;
 }
 
+/** A circle around the code (the square's diagonal plus a border), caption below in the open. */
+function circleFrame(c: Ctx): FrameLayout {
+  const border = Math.round(c.qr * 0.06);
+  const d = Math.ceil(c.qr * Math.SQRT2) + border * 2;
+  const inset = Math.round((d - c.qr) / 2);
+  const layout: FrameLayout = {
+    width: d,
+    height: d,
+    qr: { x: inset, y: inset, size: c.qr },
+    box: { x: 0, y: 0, w: d, h: d, radius: d / 2 },
+    parts: [],
+    bar: null,
+    text: null,
+    fillBackground: true,
+    radius: d / 2,
+    border,
+  };
+  if (!c.label) return layout;
+  const open = openText(c, d / 2, d);
+  layout.height += open.extra;
+  layout.text = open.text;
+  return layout;
+}
+
+/** No box: a thick line under the code, caption below it in the open. */
+function underline(c: Ctx): FrameLayout {
+  const thick = Math.max(2, Math.round(c.qr * STROKE_RATIO));
+  const gap = Math.round(c.qr * STROKE_GAP_RATIO);
+  const line = { x: 0, y: c.qr + gap, w: c.qr, h: thick };
+  const layout: FrameLayout = {
+    width: c.qr,
+    height: line.y + line.h,
+    qr: { x: 0, y: 0, size: c.qr },
+    box: null,
+    parts: [{ kind: "rect", ...line, radius: thick / 2 }],
+    bar: null,
+    text: null,
+    fillBackground: true,
+    radius: 0,
+    border: thick,
+  };
+  if (!c.label) return layout;
+  const open = openText(c, c.qr / 2, layout.height);
+  layout.height += open.extra;
+  layout.text = open.text;
+  return layout;
+}
+
+/** Square brackets left and right of the code, caption below in the open. */
+function brackets(c: Ctx): FrameLayout {
+  const thick = Math.max(2, Math.round(c.qr * STROKE_RATIO));
+  const arm = Math.round(c.qr * BRACKET_ARM_RATIO);
+  const gap = Math.round(c.qr * STROKE_GAP_RATIO);
+  const inset = thick + gap;
+  const w = c.qr + inset * 2;
+  const h = c.qr + gap * 2;
+  const parts: FramePart[] = [];
+  for (const left of [true, false]) {
+    const x = left ? 0 : w - thick;
+    parts.push({ kind: "rect", x, y: 0, w: thick, h, radius: 0 });
+    parts.push({ kind: "rect", x: left ? 0 : w - arm, y: 0, w: arm, h: thick, radius: 0 });
+    parts.push({ kind: "rect", x: left ? 0 : w - arm, y: h - thick, w: arm, h: thick, radius: 0 });
+  }
+  const layout: FrameLayout = {
+    width: w,
+    height: h,
+    qr: { x: inset, y: gap, size: c.qr },
+    box: null,
+    parts,
+    bar: null,
+    text: null,
+    fillBackground: true,
+    radius: 0,
+    border: thick,
+  };
+  if (!c.label) return layout;
+  const open = openText(c, w / 2, h);
+  layout.height += open.extra;
+  layout.text = open.text;
+  return layout;
+}
+
 const BUILDERS: Record<FrameShape, (c: Ctx) => FrameLayout> = {
   label: (c) => boxWithStrip(c, { border: 0.06, radius: 2 }),
   top: (c) => boxWithStrip(c, { border: 0.06, radius: 2, top: true }),
-  bubble: (c) => boxWithStrip(c, { border: 0.06, radius: 2, tail: true }),
+  bubble: (c) => boxWithStrip(c, { border: 0.06, radius: 2, tail: "bottom" }),
+  bubbleTop: (c) => boxWithStrip(c, { border: 0.06, radius: 2, top: true, tail: "top" }),
   rounded: (c) => boxWithStrip(c, { border: 0.08, radius: 3.5 }),
   ribbon: (c) => boxWithStrip(c, { border: 0.06, radius: 2, ribbon: true }),
-  thin: thinLine,
-  corners: cornerMarks,
   floating: floatingLabel,
+  circle: circleFrame,
+  thin: thinLine,
+  underline,
+  corners: cornerMarks,
+  brackets,
 };
 
 /**

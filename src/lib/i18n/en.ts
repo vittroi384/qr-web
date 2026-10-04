@@ -429,7 +429,7 @@ export const en: Dict = {
     frameColor: "Frame color",
     frameSameAsCode: "Same as code",
     frameShape: "Frame shape",
-    frameShapes: { label: "Caption below", top: "Caption above", bubble: "Speech bubble", rounded: "Rounded", thin: "Thin line", ribbon: "Ribbon", floating: "Floating label", corners: "Corner marks" },
+    frameShapes: { label: "Caption below", top: "Caption above", bubble: "Speech bubble", rounded: "Rounded", thin: "Thin line", ribbon: "Ribbon", floating: "Floating label", corners: "Corner marks", bubbleTop: "Bubble above", circle: "Circle", underline: "Underline", brackets: "Brackets" },
     moreOptions: "More options",
     fewerOptions: "Fewer options",
     moreOptionsSummary: "Code color · Background · Error correction",

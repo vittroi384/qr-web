@@ -102,6 +102,28 @@ function ShapeIcon({ shape }: { shape: ShapeChoice }) {
           <path d="M4 10V4h6M18 4h6v6M24 18v6h-6M10 24H4v-6" {...common} strokeWidth={2.25} strokeLinecap="round" />
           <rect x="9" y="25" width="10" height="2" rx="1" fill="currentColor" />
         </>
+      ) : shape === "bubbleTop" ? (
+        <>
+          <path d="M11 6h6l-3-4z" fill="currentColor" />
+          <rect x="4" y="6" width="20" height="20" rx="3" {...common} />
+          <rect x="4" y="6" width="20" height="7" rx="2" fill="currentColor" />
+        </>
+      ) : shape === "circle" ? (
+        <>
+          <circle cx="14" cy="12" r="10" {...common} strokeWidth={2.25} />
+          <rect x="9" y="25" width="10" height="2" rx="1" fill="currentColor" />
+        </>
+      ) : shape === "underline" ? (
+        <>
+          <rect x="7" y="3" width="14" height="14" rx="1" {...common} strokeDasharray="2.5 2" strokeWidth={1.25} />
+          <rect x="5" y="20" width="18" height="2.5" rx="1.25" fill="currentColor" />
+          <rect x="9" y="25" width="10" height="2" rx="1" fill="currentColor" />
+        </>
+      ) : shape === "brackets" ? (
+        <>
+          <path d="M9 3H4v18h5M19 3h5v18h-5" {...common} strokeWidth={2.25} strokeLinecap="round" />
+          <rect x="9" y="25" width="10" height="2" rx="1" fill="currentColor" />
+        </>
       ) : (
         <>
           <rect x="5" y="3" width="18" height="18" rx="2" {...common} strokeWidth={1.25} />
@@ -123,6 +145,7 @@ function Chips<T extends string>({
   label,
   names,
   icon,
+  scroll = false,
 }: {
   items: readonly T[];
   value: T;
@@ -130,6 +153,8 @@ function Chips<T extends string>({
   label: string;
   names: Record<T, string>;
   icon?: (v: T) => ReactNode;
+  /** One row that scrolls sideways (snap points) instead of wrapping. */
+  scroll?: boolean;
 }) {
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
@@ -140,7 +165,12 @@ function Chips<T extends string>({
     e.currentTarget.querySelector<HTMLButtonElement>(`[data-chip="${next}"]`)?.focus();
   };
   return (
-    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5" onKeyDown={onKeyDown}>
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className={scroll ? "scroll-row -mx-1 flex snap-x gap-1.5 overflow-x-auto px-1 pt-0.5 pb-2" : "flex flex-wrap gap-1.5"}
+      onKeyDown={onKeyDown}
+    >
       {items.map((id) => {
         const checked = id === value;
         return (
@@ -152,7 +182,7 @@ function Chips<T extends string>({
             tabIndex={checked ? 0 : -1}
             data-chip={id}
             onClick={() => onSelect(id)}
-            className={`inline-flex min-h-11 items-center gap-2 rounded-lg border border-border-strong bg-card text-[13px] font-medium text-muted shadow-xs transition-colors hover:border-zinc-400 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-checked:border-foreground aria-checked:text-foreground aria-checked:ring-1 aria-checked:ring-foreground aria-checked:ring-inset ${
+            className={`inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-lg border border-border-strong bg-card text-[13px] font-medium whitespace-nowrap text-muted shadow-xs transition-colors hover:border-zinc-400 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-checked:border-foreground aria-checked:text-foreground aria-checked:ring-1 aria-checked:ring-foreground aria-checked:ring-inset ${
               icon ? "pr-3.5 pl-2" : "px-3.5"
             }`}
           >
@@ -223,7 +253,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
   const shapeNames: Record<ShapeChoice, string> = { none: t.frameNone, ...t.frameShapes };
 
   return (
-    <div>
+    <div className="@container">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="text-[15px] font-semibold text-foreground">{t.title}</h2>
@@ -231,15 +261,15 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
         </div>
         {edited ? <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">{t.changed}</span> : null}
       </div>
-      <div className="mt-5 grid gap-6">
+      <div className="mt-5 grid gap-6 @2xl:grid-cols-2 @2xl:gap-x-8">
         <Group label={t.frameShape} hint={hasFrame ? undefined : t.frameHint}>
-          <Chips items={SHAPE_CHOICES} value={hasFrame ? value.frameShape : "none"} onSelect={selectShape} label={t.frameShape} names={shapeNames} icon={(s) => <ShapeIcon shape={s} />} />
+          <Chips scroll items={SHAPE_CHOICES} value={hasFrame ? value.frameShape : "none"} onSelect={selectShape} label={t.frameShape} names={shapeNames} icon={(s) => <ShapeIcon shape={s} />} />
           {hasFrame ? (
-            <div className="mt-4 grid gap-4">
+            <div className="mt-3 grid gap-4">
               <Group label={t.frameText} hint={t.frameTextHint}>
-                <Chips items={CAPTION_PRESETS} value={value.frame as Exclude<FramePreset, "none">} onSelect={selectCaption} label={t.frameText} names={t.framePresets} />
+                <Chips scroll items={CAPTION_PRESETS} value={value.frame as Exclude<FramePreset, "none">} onSelect={selectCaption} label={t.frameText} names={t.framePresets} />
                 <input
-                  className="input mt-2.5"
+                  className="input mt-1.5"
                   aria-label={t.frameText}
                   value={value.frameText}
                   maxLength={FRAME_TEXT_MAX}
@@ -265,6 +295,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
           ) : null}
         </Group>
 
+        <div className="grid content-start gap-6">
         <Group label={t.logo}>
           <input
             id={fileId}
@@ -387,6 +418,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
             </Group>
           </div>
         </details>
+        </div>
       </div>
     </div>
   );

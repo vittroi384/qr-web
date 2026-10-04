@@ -391,7 +391,7 @@ export const ko = {
     frameColor: "프레임 색",
     frameSameAsCode: "코드 색과 같게",
     frameShape: "프레임 모양",
-    frameShapes: { label: "아래 문구", top: "위 문구", bubble: "말풍선", rounded: "둥근 모서리", thin: "얇은 선", ribbon: "리본", floating: "떠 있는 문구", corners: "모서리 표시" },
+    frameShapes: { label: "아래 문구", top: "위 문구", bubble: "말풍선", rounded: "둥근 모서리", thin: "얇은 선", ribbon: "리본", floating: "떠 있는 문구", corners: "모서리 표시", bubbleTop: "위 말풍선", circle: "원형", underline: "밑줄", brackets: "괄호" },
     moreOptions: "옵션 더 보기",
     fewerOptions: "옵션 접기",
     moreOptionsSummary: "코드 색 · 배경 · 복원력",
