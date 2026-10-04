@@ -2,7 +2,7 @@
 
 import { useId, useState, type DragEvent, type KeyboardEvent, type ReactNode } from "react";
 import { FRAME_TEXT_MAX } from "@/lib/qr/frame";
-import { FRAME_PRESETS, FRAME_SHAPES, type FramePreset, type QrStyleOptions } from "@/lib/qr/types";
+import { FRAME_SHAPES, type QrStyleOptions } from "@/lib/qr/types";
 import type { Dict } from "@/lib/i18n";
 import { CheckIcon, ChevronDownIcon, ImageIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
@@ -14,8 +14,6 @@ const MAX_LOGO_BYTES = 1024 * 1024;
 /** Below this contrast ratio many phone cameras struggle to read the code. */
 const MIN_CONTRAST = 4;
 
-/** Caption presets: every frame preset except "none" (that is the shape picker's job now). */
-const CAPTION_PRESETS = FRAME_PRESETS.filter((p): p is Exclude<FramePreset, "none"> => p !== "none");
 /** Shape picker entries: off, then the drawn shapes. */
 const SHAPE_CHOICES = ["none", ...FRAME_SHAPES] as const;
 type ShapeChoice = (typeof SHAPE_CHOICES)[number];
@@ -249,11 +247,6 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
     else if (hasFrame) onChange({ ...value, frameShape: shape });
     else onChange({ ...value, frame: "scan", frameShape: shape, frameText: t.frameTexts.scan });
   };
-  /** A preset fills the caption with this language's text; editing the text afterwards makes it "custom". */
-  const selectCaption = (frame: Exclude<FramePreset, "none">) => {
-    if (frame === "custom") onChange({ ...value, frame });
-    else onChange({ ...value, frame, frameText: t.frameTexts[frame] });
-  };
   const shapeNames: Record<ShapeChoice, string> = { none: t.frameNone, ...t.frameShapes };
 
   return (
@@ -271,9 +264,8 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
           {hasFrame ? (
             <div className="mt-3 grid gap-4">
               <Group label={t.frameText} hint={t.frameTextHint}>
-                <Chips items={CAPTION_PRESETS} value={value.frame as Exclude<FramePreset, "none">} onSelect={selectCaption} label={t.frameText} names={t.framePresets} />
                 <input
-                  className="input mt-1.5"
+                  className="input"
                   aria-label={t.frameText}
                   value={value.frameText}
                   maxLength={FRAME_TEXT_MAX}
