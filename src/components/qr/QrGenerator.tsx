@@ -124,9 +124,10 @@ export function QrGenerator({
         steps={t.steps.generator.map((step, i) => ({ ...step, icon: [<GridIcon key="type" />, <PencilIcon key="content" />, <DownloadIcon key="save" />][i] }))}
       />
 
-      <div className="grid rounded-xl border border-border bg-card shadow-panel lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)] lg:grid-rows-[auto_1fr]">
+      {/* Three cards: type + content, the preview (sticky at lg, sits right after the form on phones), style. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)] lg:items-start lg:gap-5">
         {/* 01 종류 · 02 내용 */}
-        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+        <div className="min-w-0 rounded-xl border border-border bg-card shadow-panel lg:col-start-1 lg:row-start-1">
           <div className="p-4 sm:px-6 sm:py-6">
             <SectionHeading step={1} title={t.generator.stepType} />
             <TypeTabs
@@ -163,9 +164,9 @@ export function QrGenerator({
           ) : null}
         </div>
 
-        {/* 미리보기 · 저장 — desktop: sticky right column. Mobile: right after the form. */}
-        <div className="min-w-0 border-t border-border bg-subtle p-4 sm:px-6 sm:py-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-r-xl lg:border-t-0 lg:border-l">
-          <div className="lg:sticky lg:top-20">
+        {/* 미리보기 · 저장 — its own card: sticky on the right at lg, right after the form on phones. */}
+        <div className="min-w-0 rounded-xl border border-border bg-subtle p-4 shadow-panel sm:px-6 sm:py-6 lg:sticky lg:top-20 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <div>
             <QrPreview
               affiliate={affiliate ?? null}
               encoded={encoded}
@@ -179,8 +180,8 @@ export function QrGenerator({
           </div>
         </div>
 
-        {/* 꾸미기 — secondary, collapsed by default */}
-        <div ref={styleRef} className="min-w-0 border-t border-border p-4 sm:px-6 sm:py-6 lg:col-start-1 lg:row-start-2">
+        {/* 꾸미기 */}
+        <div ref={styleRef} className="min-w-0 rounded-xl border border-border bg-card p-4 shadow-panel sm:px-6 sm:py-6 lg:col-start-1 lg:row-start-2">
           <StyleOptions value={style} onChange={setStyle} />
         </div>
       </div>

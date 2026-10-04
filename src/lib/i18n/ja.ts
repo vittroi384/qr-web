@@ -442,6 +442,8 @@ export const ja: Dict = {
       burgundy: "ボルドー",
       purple: "パープル",
     },
+    frameColors: { black: "黒", red: "赤", orange: "オレンジ", amber: "琥珀", green: "緑", teal: "青緑", sky: "空色", blue: "青", indigo: "藍", violet: "紫", pink: "ピンク", brown: "茶" },
+    customFrameColorLabel: "フレームの色をカスタムで選ぶ",
     customColor: "カスタム",
     customColorLabel: "コードの色を自由に選ぶ",
     background: "背景",

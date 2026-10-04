@@ -442,6 +442,8 @@ export const de: Dict = {
       burgundy: "Bordeaux",
       purple: "Lila",
     },
+    frameColors: { black: "Schwarz", red: "Rot", orange: "Orange", amber: "Bernstein", green: "Grün", teal: "Blaugrün", sky: "Himmelblau", blue: "Blau", indigo: "Indigo", violet: "Violett", pink: "Pink", brown: "Braun" },
+    customFrameColorLabel: "Eigene Rahmenfarbe wählen",
     customColor: "Eigene",
     customColorLabel: "Eigene Codefarbe wählen",
     background: "Hintergrund",

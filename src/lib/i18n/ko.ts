@@ -404,6 +404,8 @@ export const ko = {
       burgundy: "버건디",
       purple: "퍼플",
     },
+    frameColors: { black: "검정", red: "빨강", orange: "주황", amber: "호박", green: "초록", teal: "청록", sky: "하늘", blue: "파랑", indigo: "남색", violet: "보라", pink: "분홍", brown: "갈색" },
+    customFrameColorLabel: "프레임 색 직접 선택",
     customColor: "직접 선택",
     customColorLabel: "코드 색상 직접 선택",
     background: "배경",

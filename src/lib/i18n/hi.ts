@@ -442,6 +442,8 @@ export const hi: Dict = {
       burgundy: "मैरून",
       purple: "बैंगनी",
     },
+    frameColors: { black: "काला", red: "लाल", orange: "नारंगी", amber: "एम्बर", green: "हरा", teal: "टील", sky: "आसमानी", blue: "नीला", indigo: "इंडिगो", violet: "बैंगनी", pink: "गुलाबी", brown: "भूरा" },
+    customFrameColorLabel: "फ़्रेम का अपना रंग चुनें",
     customColor: "अपना रंग",
     customColorLabel: "कोड के लिए अपना रंग चुनें",
     background: "बैकग्राउंड",

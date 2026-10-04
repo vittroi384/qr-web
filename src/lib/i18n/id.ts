@@ -442,6 +442,8 @@ export const id: Dict = {
       burgundy: "Merah marun",
       purple: "Ungu",
     },
+    frameColors: { black: "Hitam", red: "Merah", orange: "Oranye", amber: "Amber", green: "Hijau", teal: "Toska", sky: "Biru langit", blue: "Biru", indigo: "Nila", violet: "Ungu", pink: "Merah muda", brown: "Cokelat" },
+    customFrameColorLabel: "Pilih warna bingkai kustom",
     customColor: "Kustom",
     customColorLabel: "Pilih warna kode kustom",
     background: "Latar",

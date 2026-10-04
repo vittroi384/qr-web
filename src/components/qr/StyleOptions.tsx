@@ -7,7 +7,7 @@ import type { Dict } from "@/lib/i18n";
 import { CheckIcon, ChevronDownIcon, ImageIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
 import { ColorSwatches } from "./ColorSwatches";
-import { BACKGROUNDS, CODE_COLORS, TRANSPARENT } from "./presets";
+import { BACKGROUNDS, CODE_COLORS, FRAME_COLORS, TRANSPARENT } from "./presets";
 import { Segmented } from "./Segmented";
 
 const MAX_LOGO_BYTES = 1024 * 1024;
@@ -42,6 +42,27 @@ function colorWarning(dark: string, light: string, t: Dict["style"]): string | n
   const ratio = (ll + 0.05) / (ld + 0.05);
   if (ratio < MIN_CONTRAST) return t.warnContrast;
   return null;
+}
+
+/**
+ * Rainbow swatch that opens the native colour picker; shows the picked colour (with a check) once
+ * it is not one of the presets.
+ */
+function CustomColor({ value, isPreset, fallback, title, label, onChange }: { value: string; isPreset: boolean; fallback: string; title: string; label: string; onChange: (hex: string) => void }) {
+  return (
+    <label
+      title={title}
+      className={`relative grid size-11 cursor-pointer place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+        isPreset ? "" : "outline-2 outline-offset-2 outline-foreground"
+      }`}
+      style={{
+        background: isPreset ? "conic-gradient(from 180deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444)" : value,
+      }}
+    >
+      <input type="color" className="sr-only" aria-label={label} value={/^#[0-9a-f]{6}$/i.test(value) ? value : fallback} onChange={(e) => onChange(e.target.value)} />
+      {isPreset ? null : <CheckIcon className="size-5 drop-shadow" />}
+    </label>
+  );
 }
 
 function Group({ label, hint, children, className = "" }: { label: string; hint?: ReactNode; children: ReactNode; className?: string }) {
@@ -235,6 +256,7 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
   };
 
   const presetColor = CODE_COLORS.some((c) => c.value === value.darkColor.toLowerCase());
+  const presetFrameColor = value.frameColor === "" || FRAME_COLORS.some((c) => c.value === value.frameColor.toLowerCase());
   const warning = colorWarning(value.darkColor, value.lightColor, t);
   const hasLogo = Boolean(value.logoDataUrl);
   const hasFrame = value.frame !== "none";
@@ -284,7 +306,15 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
                     {t.frameSameAsCode}
                   </button>
                   <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
-                  <ColorSwatches value={value.frameColor} onChange={(frameColor) => onChange({ ...value, frameColor })} />
+                  <ColorSwatches palette="frame" value={value.frameColor} onChange={(frameColor) => onChange({ ...value, frameColor })} />
+                  <CustomColor
+                    value={value.frameColor}
+                    isPreset={presetFrameColor}
+                    fallback={value.darkColor}
+                    title={t.customColor}
+                    label={t.customFrameColorLabel}
+                    onChange={(frameColor) => onChange({ ...value, frameColor })}
+                  />
                 </div>
               </Group>
             </div>
@@ -365,26 +395,14 @@ export function StyleOptions({ value, onChange }: { value: QrStyleOptions; onCha
               <div className="flex flex-wrap items-center gap-2.5">
                 <ColorSwatches value={value.darkColor} onChange={(darkColor) => onChange({ ...value, darkColor })} />
                 <span className="mx-0.5 h-6 w-px bg-border" aria-hidden="true" />
-                <label
+                <CustomColor
+                  value={value.darkColor}
+                  isPreset={presetColor}
+                  fallback="#111111"
                   title={t.customColor}
-                  className={`relative grid size-11 cursor-pointer place-items-center rounded-full text-white ring-1 ring-black/10 transition ring-inset hover:scale-105 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
-                    presetColor ? "" : "outline-2 outline-offset-2 outline-foreground"
-                  }`}
-                  style={{
-                    background: presetColor
-                      ? "conic-gradient(from 180deg, #ef4444, #f59e0b, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444)"
-                      : value.darkColor,
-                  }}
-                >
-                  <input
-                    type="color"
-                    className="sr-only"
-                    aria-label={t.customColorLabel}
-                    value={/^#[0-9a-f]{6}$/i.test(value.darkColor) ? value.darkColor : "#111111"}
-                    onChange={(e) => onChange({ ...value, darkColor: e.target.value })}
-                  />
-                  {presetColor ? null : <CheckIcon className="size-5 drop-shadow" />}
-                </label>
+                  label={t.customColorLabel}
+                  onChange={(darkColor) => onChange({ ...value, darkColor })}
+                />
                 <span className="ml-1 font-mono text-xs text-muted uppercase">{value.darkColor}</span>
               </div>
             </Group>
