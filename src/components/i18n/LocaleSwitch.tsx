@@ -73,7 +73,7 @@ export function LocaleSwitch({ locale, label }: { locale: Locale; label: string 
           className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-border bg-card p-1.5 shadow-[0_12px_32px_-8px_rgba(2,132,199,0.25),0_2px_8px_rgba(15,34,55,0.08)]"
         >
           <p className="px-2 pb-1 pt-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</p>
-          {/* Two columns keep nine languages to five short rows instead of a tall list. */}
+          {/* Two columns keep ten languages to five short rows instead of a tall list. */}
           <ul className="grid grid-cols-2 gap-x-1 gap-y-0.5">
             {LOCALES.map((l) => {
               const active = l === locale;

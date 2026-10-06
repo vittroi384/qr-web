@@ -10,6 +10,7 @@ import { fr } from "./fr";
 import { ja } from "./ja";
 import { hi } from "./hi";
 import { id } from "./id";
+import { zh } from "./zh";
 import { landingEs, useCasesEs } from "./landing.es";
 import { landingPt, useCasesPt } from "./landing.pt";
 import { landingDe, useCasesDe } from "./landing.de";
@@ -17,6 +18,7 @@ import { landingFr, useCasesFr } from "./landing.fr";
 import { landingJa, useCasesJa } from "./landing.ja";
 import { landingHi, useCasesHi } from "./landing.hi";
 import { landingId, useCasesId } from "./landing.id";
+import { landingZh, useCasesZh } from "./landing.zh";
 import { DEFAULT_LOCALE, LOCALE_CODES, LOCALE_NAMES, isLocale, localeFromPath, type Locale } from "./locales";
 import type { QrPayloadMap, QrType } from "@/lib/qr/types";
 
@@ -25,7 +27,7 @@ export { DEFAULT_LOCALE, LOCALE_NAMES, isLocale, localeFromPath };
 /** English is the primary language and lives at the root; every other locale is served under "/<code>". */
 export const LOCALES: readonly Locale[] = LOCALE_CODES;
 
-const DICTS: Record<Locale, Dict> = { en, ko, es, pt, de, fr, ja, hi, id };
+const DICTS: Record<Locale, Dict> = { en, ko, es, pt, de, fr, ja, hi, id, zh };
 
 export function getDict(locale: Locale): Dict {
   return DICTS[locale];
@@ -122,6 +124,7 @@ const LANDINGS: Record<Locale, Record<QrType, LandingCopy>> = {
   ja: landingJa,
   hi: landingHi,
   id: landingId,
+  zh: landingZh,
 };
 
 export function getLanding(locale: Locale): Record<QrType, LandingCopy> {
@@ -181,6 +184,7 @@ const USE_CASE_COPY: Record<Locale, Record<UseCaseId, LandingCopy>> = {
   ja: useCasesJa,
   hi: useCasesHi,
   id: useCasesId,
+  zh: useCasesZh,
 };
 
 export type LandingTarget =

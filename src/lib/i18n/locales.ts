@@ -1,5 +1,5 @@
 /** Locale codes only — imported by the proxy, so this file must stay free of dictionary imports. */
-export const LOCALE_CODES = ["en", "ko", "es", "pt", "de", "fr", "ja", "hi", "id"] as const;
+export const LOCALE_CODES = ["en", "ko", "es", "pt", "de", "fr", "ja", "hi", "id", "zh"] as const;
 export type Locale = (typeof LOCALE_CODES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -14,6 +14,7 @@ export const LOCALE_NAMES: Record<Locale, { short: string; full: string }> = {
   ja: { short: "JA", full: "日本語" },
   hi: { short: "HI", full: "हिन्दी" },
   id: { short: "ID", full: "Bahasa Indonesia" },
+  zh: { short: "ZH", full: "中文（简体）" },
 };
 
 export function isLocale(value: unknown): value is Locale {

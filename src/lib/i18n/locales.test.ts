@@ -14,9 +14,14 @@ describe("preferredLocale", () => {
     assert.equal(preferredLocale("es-419,es;q=0.9"), "es");
   });
 
+  it("maps every Chinese region tag to the Simplified edition", () => {
+    assert.equal(preferredLocale("zh-CN,zh;q=0.9,ja;q=0.8"), "zh");
+    assert.equal(preferredLocale("zh-TW,zh;q=0.9"), "zh");
+    assert.equal(preferredLocale("zh-Hant-HK"), "zh");
+  });
+
   it("skips unsupported languages and falls back to English", () => {
-    assert.equal(preferredLocale("zh-CN,zh;q=0.9,ja;q=0.8"), "ja");
-    assert.equal(preferredLocale("zh-CN,ru;q=0.9"), "en");
+    assert.equal(preferredLocale("th-TH,ru;q=0.9"), "en");
     assert.equal(preferredLocale(""), "en");
     assert.equal(preferredLocale(null), "en");
     assert.equal(preferredLocale("*"), "en");

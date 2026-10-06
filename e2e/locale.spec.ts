@@ -47,6 +47,17 @@ test.describe("language detection", () => {
     await ctx.close();
   });
 
+  test("Chinese browser (any region tag) → /zh, the Simplified edition", async ({ browser, baseURL }) => {
+    for (const locale of ["zh-CN", "zh-TW"]) {
+      const ctx = await browser.newContext({ baseURL, userAgent: BROWSER_UA, locale });
+      const page = await ctx.newPage();
+      await page.goto("/");
+      await expect(page, locale).toHaveURL(/\/zh$/);
+      await expect(page.locator("html"), locale).toHaveAttribute("lang", "zh");
+      await ctx.close();
+    }
+  });
+
   test("crawlers always get the English root", async ({ browser, baseURL }) => {
     const ctx = await browser.newContext({
       baseURL,
