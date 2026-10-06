@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { hardenSecretsForStorage, maskIdentifier, maskPaymentIdentifiers, maskWifiPasswords, sanitizeOptionsForStorage, sanitizePayloadForStorage } from "./sanitize";
+import { clipBody, hardenSecretsForStorage, maskEmail, maskIdentifier, maskPaymentIdentifiers, maskPhoneNumber, maskWifiPasswords, previewForStorage, sanitizeOptionsForStorage, sanitizePayloadForStorage } from "./sanitize";
 
 describe("maskWifiPasswords", () => {
   it("masks a plain WIFI: string", () => {
@@ -135,5 +135,40 @@ describe("hardenSecretsForStorage: payment identifiers", () => {
   it("masks identifiers embedded in any string field (batch samples)", () => {
     const out = hardenSecretsForStorage("url", { count: 2, mode: "mixed", sample: "upi://pay?pa=shop@okaxis&pn=S | https://a.com" });
     assert.equal(out.sample, "upi://pay?pa=sh****is&pn=S | https://a.com");
+  });
+});
+
+describe("hardenSecretsForStorage: personal data policy (2026-10-06)", () => {
+  it("keeps only the ends of phone numbers and e-mail addresses", () => {
+    assert.equal(maskPhoneNumber("010-1234-5678"), "010-****-5678");
+    assert.equal(maskPhoneNumber("+82 10 1234 5678"), "+82 1* **** 5678"); // 국가번호 포함 앞 3자리·뒤 4자리
+    assert.equal(maskPhoneNumber("1234"), "****"); // too short → whole mask
+    assert.equal(maskEmail("jooky@gmail.com"), "jo****@gmail.com");
+    assert.equal(maskEmail("a@b.co"), "a****@b.co");
+    assert.deepEqual(hardenSecretsForStorage("sms", { phone: "01012345678", message: "hi" }), { phone: "010****5678", message: "hi" });
+    assert.equal(hardenSecretsForStorage("vcard", { firstName: "길동", email: "hong@example.com", mobile: "010-9999-8888" }).email, "ho****@example.com");
+  });
+  it("clips free-text bodies to 40 characters with the original length", () => {
+    const long = "가".repeat(100);
+    assert.equal(clipBody("짧은 메모"), "짧은 메모");
+    assert.equal(clipBody(long), `${"가".repeat(40)}… (100자)`);
+    assert.equal(hardenSecretsForStorage("email", { to: "x@y.z", subject: "s", body: long }).body, `${"가".repeat(40)}… (100자)`);
+    assert.equal(hardenSecretsForStorage("text", { text: long }).text, `${"가".repeat(40)}… (100자)`);
+  });
+  it("rounds coordinates to ~1 km and shortens wallet addresses", () => {
+    assert.deepEqual(hardenSecretsForStorage("geo", { lat: "37.566535", lng: "126.9779692" }), { lat: "37.57", lng: "126.98" });
+    assert.equal(hardenSecretsForStorage("crypto", { coin: "bitcoin", address: "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq", amount: "" }).address, "bc1q****5mdq");
+  });
+  it("leaves URL-like types alone so the admin can still see domains and platforms", () => {
+    assert.deepEqual(hardenSecretsForStorage("url", { url: "https://example.com/menu" }), { url: "https://example.com/menu" });
+    assert.deepEqual(hardenSecretsForStorage("social", { platform: "instagram", handle: "mycafe" }), { platform: "instagram", handle: "mycafe" });
+  });
+  it("drops the encoded preview for types whose encoding repeats the masked fields", () => {
+    assert.equal(previewForStorage("sms", "download_png", "SMSTO:01012345678:hi"), null);
+    assert.equal(previewForStorage("vcard", "copy", "BEGIN:VCARD…"), null);
+    assert.equal(previewForStorage("url", "download_png", "https://example.com"), "https://example.com");
+    assert.equal(previewForStorage("wifi", "download_png", "WIFI:T:WPA;S:Cafe;P:hunter2;;"), "WIFI:T:WPA;S:Cafe;P:****;;");
+    assert.equal(previewForStorage("text", "batch", "a | b"), "a | b");
+    assert.equal(previewForStorage("url", "download_png", ""), null);
   });
 });

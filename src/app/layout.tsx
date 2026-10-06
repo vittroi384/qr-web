@@ -64,14 +64,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const adsenseClient = isOn(s.ads_enabled) ? s.adsense_client : "";
   // Umami (cookieless) needs both values; either one empty injects nothing.
   const analytics = s.analytics_script_url && s.analytics_website_id ? s : null;
+  // CSP nonce minted by the proxy; Next.js tags its own scripts, the two <Script> tags take it as a prop.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang={locale} className="h-full antialiased">
       <head>
         {/* Pretendard Variable (dynamic subset): the first family in --font-sans, so weights 500–700 render the same on every OS. */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" crossOrigin="anonymous" />
-        {adsenseClient ? <AdSenseScript client={adsenseClient} /> : null}
-        {analytics ? <UmamiScript src={analytics.analytics_script_url} websiteId={analytics.analytics_website_id} /> : null}
+        {adsenseClient ? <AdSenseScript client={adsenseClient} nonce={nonce} /> : null}
+        {analytics ? <UmamiScript src={analytics.analytics_script_url} websiteId={analytics.analytics_website_id} nonce={nonce} /> : null}
       </head>
       <body className="flex min-h-full flex-col">
         <ClientErrorReporter />

@@ -65,6 +65,80 @@ const EPC_IBAN_LINE = /(BCD\n[^\n]*\n[^\n]*\nSCT\n[^\n]*\n[^\n]*\n)([^\n]+)/g;
 /** Which payload field holds the account identifier for the bank-transfer types. */
 const PAYMENT_IDENTIFIER_FIELD: Partial<Record<QrType, string>> = { pix: "key", upi: "vpa", epc: "iban" };
 
+/*
+ * Personal data policy (2026-10-06, ADR-004 extension): contact details are kept only in part and
+ * free-text bodies only up to BODY_KEEP characters, so the admin can still tell what kind of QR was
+ * made (domain, platform, type) without the log being a list of phone numbers and messages.
+ */
+const PHONE_FIELDS: Partial<Record<QrType, readonly string[]>> = { whatsapp: ["phone"], sms: ["phone"], phone: ["phone"], vcard: ["phone", "mobile"] };
+const EMAIL_FIELDS: Partial<Record<QrType, readonly string[]>> = { email: ["to"], vcard: ["email"] };
+/** Long opaque identifiers: first and last four characters stay. */
+const LONG_ID_FIELDS: Partial<Record<QrType, readonly string[]>> = { crypto: ["address"], payment: ["handle"] };
+const BODY_FIELDS: Partial<Record<QrType, readonly string[]>> = {
+  text: ["text"],
+  email: ["subject", "body"],
+  sms: ["message"],
+  whatsapp: ["message"],
+  event: ["description"],
+  vcard: ["note", "address"],
+  pix: ["description"],
+  upi: ["note"],
+  epc: ["remittance", "info"],
+  crypto: ["label"],
+};
+const BODY_KEEP = 40;
+/** Coordinates rounded to 2 decimals (~1 km): enough to see the region, not the doorstep. */
+const GEO_DECIMALS = 2;
+
+/** "010-1234-5678" → "010-****-5678": first three and last four digits stay, other digits become "*". */
+export function maskPhoneNumber(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length < 8) return maskIdentifier(value);
+  let seen = 0;
+  return value.replace(/\d/g, (d) => {
+    seen++;
+    return seen <= 3 || seen > digits.length - 4 ? d : "*";
+  });
+}
+
+/** "jooky@gmail.com" → "jo****@gmail.com"; anything without "@" falls back to the identifier mask. */
+export function maskEmail(value: string): string {
+  const at = value.indexOf("@");
+  if (at <= 0) return maskIdentifier(value);
+  return `${value.slice(0, Math.min(2, at))}${FIXED_MASK}${value.slice(at)}`;
+}
+
+/** Long identifier: first and last four characters stay (wallet addresses are 26–62 characters). */
+export function maskLongIdentifier(value: string): string {
+  const v = value.trim();
+  return v.length <= 12 ? maskIdentifier(v) : `${v.slice(0, 4)}${FIXED_MASK}${v.slice(-4)}`;
+}
+
+/** Free text: the first BODY_KEEP characters plus the original length. */
+export function clipBody(value: string): string {
+  const chars = Array.from(value);
+  return chars.length <= BODY_KEEP ? value : `${chars.slice(0, BODY_KEEP).join("")}… (${chars.length}자)`;
+}
+
+function roundCoordinate(value: string): string {
+  const n = Number.parseFloat(value);
+  return Number.isFinite(n) ? n.toFixed(GEO_DECIMALS) : value;
+}
+
+/** Types whose encoded string is safe to keep as a 200-character preview after the payload masks above. */
+const PREVIEW_KEPT: ReadonlySet<QrType> = new Set<QrType>(["url", "social", "file", "wifi", "pix", "upi", "epc"]);
+
+/**
+ * What goes into encoded_preview. Batch samples are already masked strings; URL-like types keep the
+ * (masked) client string; every other type would repeat the contact or body we just masked, so it
+ * keeps no preview at all. The preview only feeds the admin text search.
+ */
+export function previewForStorage(type: QrType, event: LogEvent, clientEncoded: unknown): string | null {
+  if (typeof clientEncoded !== "string" || !clientEncoded) return null;
+  if (event === "batch" || PREVIEW_KEPT.has(type)) return maskPaymentIdentifiers(maskWifiPasswords(clientEncoded)).slice(0, 200);
+  return null;
+}
+
 /**
  * Masks the Pix key, UPI ID or IBAN wherever it appears inside an encoded string (the stored
  * preview, batch samples). Strings without one of the three formats come back unchanged. The
@@ -136,6 +210,14 @@ export function hardenSecretsForStorage(
   if (type === "wifi" && out.password !== undefined && out.password !== "") out.password = FIXED_MASK;
   const identifier = PAYMENT_IDENTIFIER_FIELD[type];
   if (identifier && typeof out[identifier] === "string") out[identifier] = maskIdentifier(out[identifier] as string);
+  const apply = (fields: readonly string[] | undefined, fn: (v: string) => string) => {
+    for (const f of fields ?? []) if (typeof out[f] === "string" && out[f]) out[f] = fn(out[f] as string);
+  };
+  apply(PHONE_FIELDS[type], maskPhoneNumber);
+  apply(EMAIL_FIELDS[type], maskEmail);
+  apply(LONG_ID_FIELDS[type], maskLongIdentifier);
+  apply(BODY_FIELDS[type], clipBody);
+  if (type === "geo") apply(["lat", "lng"], roundCoordinate);
   return out;
 }
 

@@ -6,8 +6,7 @@ import {
   hardenSecretsForStorage,
   isLogEvent,
   isQrType,
-  maskPaymentIdentifiers,
-  maskWifiPasswords,
+  previewForStorage,
   sanitizeOptionsForStorage,
   sanitizePayloadForStorage,
 } from "@/lib/qr/sanitize";
@@ -70,7 +69,7 @@ export async function POST(req: NextRequest) {
     sanitizePayloadForStorage(body.type, body.payload, { maskWifiPassword: true, event: body.event }),
   );
   const options = sanitizeOptionsForStorage(body.options);
-  const encodedPreview = typeof body.encoded === "string" ? maskPaymentIdentifiers(maskWifiPasswords(body.encoded)).slice(0, 200) : null;
+  const encodedPreview = previewForStorage(body.type, body.event, body.encoded);
 
   // Which page (and UI language) the save happened on — only trusted from a same-origin Referer.
   const context = pageContextFromReferer(meta.referer, req.headers.get("x-forwarded-host") ?? req.headers.get("host"));

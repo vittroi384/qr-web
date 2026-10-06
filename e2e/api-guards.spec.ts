@@ -36,6 +36,28 @@ test.describe("public API guards", () => {
     expect(log.status()).toBe(403);
   });
 
+  test("CSP is delivered report-only with a per-request nonce that Next puts on its scripts", async ({ request }) => {
+    const res = await request.get("/");
+    const csp = res.headers()["content-security-policy-report-only"];
+    expect(csp).toBeTruthy();
+    const nonce = csp.match(/'nonce-([A-Za-z0-9+/=]+)'/)?.[1];
+    expect(nonce).toBeTruthy();
+    expect(csp).toContain("report-uri /api/csp-report");
+    expect(csp).toContain("frame-ancestors 'self'");
+    expect(res.headers()["content-security-policy"]).toBeUndefined(); // not enforcing yet
+    const html = await res.text();
+    expect(html).toContain(`nonce="${nonce}"`);
+    // Two requests, two nonces.
+    const again = (await request.get("/")).headers()["content-security-policy-report-only"];
+    expect(again).not.toContain(`'nonce-${nonce}'`);
+
+    const report = await request.post("/api/csp-report", {
+      headers: { "content-type": "application/csp-report" },
+      data: JSON.stringify({ "csp-report": { "document-uri": "https://x/", "effective-directive": "script-src", "blocked-uri": "https://evil.example/x.js" } }),
+    });
+    expect(report.status()).toBe(204);
+  });
+
   test("security headers are sent by Next itself, not only by Caddy", async ({ request }) => {
     for (const path of ["/", "/ko", "/api/health"]) {
       const res = await request.get(path);

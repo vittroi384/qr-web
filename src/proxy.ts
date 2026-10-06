@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ADMIN_MARKER_HEADER, GATE_COOKIE, GATE_TTL_SEC, adminEntryPath, adminMarker, createGateToken, gateSatisfied, ipAllowedForAdmin } from "@/lib/adminAccess";
 import { REMEMBER_TTL_SEC, SESSION_COOKIE, createSessionToken, sessionCookieOptionsFor, sessionRenewalDue, verifySessionToken } from "@/lib/auth";
 import { LANG_COOKIE, isLocale, localeFromPath, preferredLocale } from "@/lib/i18n/locales";
+import { buildCsp, makeNonce } from "@/lib/csp";
 import { getClientIpFromHeaders, isFromThisSite } from "@/lib/ip";
 
 const HTTPS = process.env.NODE_ENV === "production" && Boolean(process.env.DOMAIN);
@@ -10,15 +11,32 @@ const LANG_COOKIE_TTL_SEC = 60 * 60 * 24 * 365;
 /** Crawlers and audit tools must always see the English root (hreflang does the rest). */
 const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|preview|lighthouse|headless/i;
 
+/**
+ * CSP (Report-Only, see src/lib/csp.ts): the nonce travels to the renderer in the request header
+ * (Next.js reads it from content-security-policy-report-only) and the policy goes out on the response.
+ */
+function applyCsp(requestHeaders: Headers, nonce: string, admin: boolean): string {
+  const policy = buildCsp(nonce, { admin, dev: process.env.NODE_ENV === "development" });
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("content-security-policy-report-only", policy);
+  return policy;
+}
+
+function withCsp(res: NextResponse, policy: string): NextResponse {
+  res.headers.set("Content-Security-Policy-Report-Only", policy);
+  return res;
+}
+
 /** Serve the app's ordinary 404 page so a protected path looks exactly like a missing one. */
-function notFound(req: NextRequest): NextResponse {
+function notFound(req: NextRequest, nonce: string): NextResponse {
   const url = req.nextUrl.clone();
   url.pathname = "/__not_found__";
   url.search = "";
   // Drop any client-sent admin marker so the 404 renders with the public chrome, like any 404.
   const headers = new Headers(req.headers);
   headers.delete(ADMIN_MARKER_HEADER);
-  return NextResponse.rewrite(url, { status: 404, request: { headers } });
+  const policy = applyCsp(headers, nonce, false);
+  return withCsp(NextResponse.rewrite(url, { status: 404, request: { headers } }), policy);
 }
 
 function withAdminHeaders(res: NextResponse): NextResponse {
@@ -36,11 +54,12 @@ function withAdminHeaders(res: NextResponse): NextResponse {
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const entry = adminEntryPath();
+  const nonce = makeNonce();
 
   if (entry && pathname === entry) {
-    if (!ipAllowedForAdmin(getClientIpFromHeaders(req.headers))) return notFound(req);
+    if (!ipAllowedForAdmin(getClientIpFromHeaders(req.headers))) return notFound(req, nonce);
     const token = await createGateToken();
-    if (!token) return notFound(req); // SESSION_SECRET missing → gate cannot be issued safely
+    if (!token) return notFound(req, nonce); // SESSION_SECRET missing → gate cannot be issued safely
     const res = NextResponse.redirect(new URL("/admin/login", req.url));
     res.cookies.set(GATE_COOKIE, token, {
       httpOnly: true,
@@ -80,7 +99,8 @@ export async function proxy(req: NextRequest) {
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set("x-locale", locale);
     requestHeaders.delete(ADMIN_MARKER_HEADER); // never trust a client-sent marker on public pages
-    const res = NextResponse.next({ request: { headers: requestHeaders } });
+    const policy = applyCsp(requestHeaders, nonce, false);
+    const res = withCsp(NextResponse.next({ request: { headers: requestHeaders } }), policy);
     // Navigating inside the site (including the language menu) makes that edition the remembered one.
     if (internal && saved !== locale) res.cookies.set(LANG_COOKIE, locale, { sameSite: "lax", secure: HTTPS, path: "/", maxAge: LANG_COOKIE_TTL_SEC });
     if (pathname === "/") res.headers.set("Vary", "Accept-Language, Cookie");
@@ -88,22 +108,23 @@ export async function proxy(req: NextRequest) {
   }
 
   // ---- /admin/* ----
-  if (!ipAllowedForAdmin(getClientIpFromHeaders(req.headers))) return notFound(req);
-  if (!(await gateSatisfied(req.cookies.get(GATE_COOKIE)?.value))) return notFound(req);
+  if (!ipAllowedForAdmin(getClientIpFromHeaders(req.headers))) return notFound(req, nonce);
+  if (!(await gateSatisfied(req.cookies.get(GATE_COOKIE)?.value))) return notFound(req, nonce);
 
   // Admin UI is Korean only; also neutralise any spoofed x-locale header.
   const adminHeaders = new Headers(req.headers);
   adminHeaders.set("x-locale", "ko");
   adminHeaders.set(ADMIN_MARKER_HEADER, adminMarker()); // root layout: compact admin footer
+  const adminPolicy = applyCsp(adminHeaders, nonce, true);
   if (pathname === "/admin/login") {
-    return withAdminHeaders(NextResponse.next({ request: { headers: adminHeaders } }));
+    return withAdminHeaders(withCsp(NextResponse.next({ request: { headers: adminHeaders } }), adminPolicy));
   }
 
   const sessionToken = req.cookies.get(SESSION_COOKIE)?.value;
   const userAgent = req.headers.get("user-agent");
   const ok = await verifySessionToken(sessionToken, userAgent);
   if (ok) {
-    const res = NextResponse.next({ request: { headers: adminHeaders } });
+    const res = withCsp(NextResponse.next({ request: { headers: adminHeaders } }), adminPolicy);
     // Sliding expiry for "remember this device": a remembered session used at least once a month
     // never asks for the password again. The gate cookie slides with it so the entry stays open too.
     if (await sessionRenewalDue(sessionToken)) {
