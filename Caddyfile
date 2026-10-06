@@ -18,7 +18,10 @@
 		format json
 	}
 
+	# "defer" applies these after the upstream response arrives, so they replace (not duplicate)
+	# the same headers Next sets itself (next.config.ts) for requests that bypass Caddy.
 	header {
+		defer
 		X-Content-Type-Options nosniff
 		X-Frame-Options SAMEORIGIN
 		Referrer-Policy strict-origin-when-cross-origin

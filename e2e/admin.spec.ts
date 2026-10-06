@@ -12,11 +12,12 @@ test.describe("admin area", () => {
     expect((await request.get("/api/admin/logs/export")).status()).toBe(404);
   });
 
-  test("gate → login (password + TOTP) → dashboard, logs, CSV → logout", async ({ page, request }) => {
+  test("gate → login (password + TOTP) → dashboard, logs, CSV → logout", async ({ page, request, baseURL }) => {
     // A Wi-Fi log sent with a plaintext password (as a non-masking client would): the server must mask it.
     const marker = `E2E-${Date.now().toString(36)}`;
     const plain = `Plain-${marker}-pw`;
     const logged = await request.post("/api/log", {
+      headers: { origin: new URL(baseURL!).origin },
       data: {
         type: "wifi",
         event: "download_png",

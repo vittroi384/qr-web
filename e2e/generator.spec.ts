@@ -55,12 +55,15 @@ test.describe("QR generator (/)", () => {
     await page.waitForTimeout(500);
     expect(logRequests).toHaveLength(0);
 
-    const [download, logRequest] = await Promise.all([
+    const [download, logRequest, logResponse] = await Promise.all([
       page.waitForEvent("download"),
       page.waitForRequest(isLogRequest),
+      page.waitForResponse((r) => isLogRequest(r.request())),
       page.getByRole("button", { name: "Save image (PNG)" }).click(),
     ]);
     expect(download.suggestedFilename()).toMatch(/\.png$/);
+    // The browser's own sendBeacon/fetch passes the same-origin + JSON guard.
+    expect(logResponse.status()).toBe(200);
 
     const raw =
       logRequest.postData() ??

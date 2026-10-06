@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { hardenSecretsForStorage, maskIdentifier, maskPaymentIdentifiers, maskWifiPasswords, sanitizeOptionsForStorage } from "./sanitize";
+import { hardenSecretsForStorage, maskIdentifier, maskPaymentIdentifiers, maskWifiPasswords, sanitizeOptionsForStorage, sanitizePayloadForStorage } from "./sanitize";
 
 describe("maskWifiPasswords", () => {
   it("masks a plain WIFI: string", () => {
@@ -61,11 +61,38 @@ describe("hardenSecretsForStorage", () => {
   });
 });
 
+describe("sanitizePayloadForStorage: key whitelist and size budget", () => {
+  it("keeps only the fields the QR type has — a flooding client cannot store arbitrary keys", () => {
+    const out = sanitizePayloadForStorage("url", { url: "https://x.com", junk1: "a".repeat(100), password: "p", __proto__x: 1 }, { maskWifiPassword: true });
+    assert.deepEqual(out, { url: "https://x.com" });
+  });
+  it("accepts the batch summary fields only for a batch event", () => {
+    const batch = { count: 3, mode: "mixed", sample: "https://a.com | https://b.com" };
+    assert.deepEqual(sanitizePayloadForStorage("url", batch, { maskWifiPassword: true, event: "batch" }), batch);
+    assert.deepEqual(sanitizePayloadForStorage("url", batch, { maskWifiPassword: true, event: "download_png" }), {});
+  });
+  it("caps the whole payload at 3000 characters, spent in field order", () => {
+    const big = "x".repeat(5000);
+    const out = sanitizePayloadForStorage("vcard", { firstName: "a".repeat(2500), lastName: big, note: big }, { maskWifiPassword: true });
+    assert.equal((out.firstName as string).length, 2500);
+    assert.equal((out.lastName as string).length, 500);
+    assert.equal(out.note, "");
+    // A single-field type keeps everything a QR can hold.
+    assert.equal((sanitizePayloadForStorage("text", { text: "t".repeat(2953) }, { maskWifiPassword: true }).text as string).length, 2953);
+    const total = Object.values(out).reduce<number>((n, v) => n + (typeof v === "string" ? v.length : 0), 0);
+    assert.equal(total, 3000);
+  });
+});
+
 describe("sanitizeOptionsForStorage", () => {
   it("keeps the frame preset and colour but only the length of the label text", () => {
     const out = sanitizeOptionsForStorage({ size: 512, frame: "custom", frameColor: "#881337", frameText: "우리 가게 Wi-Fi", logoDataUrl: "data:..." });
     assert.deepEqual(out, { size: 512, frame: "custom", frameColor: "#881337", frameTextLength: 11, hasLogo: true });
     assert.equal(sanitizeOptionsForStorage({ frameText: 42 }).frameTextLength, 0);
+  });
+  it("drops unknown option keys but keeps the browser-reported label length", () => {
+    const out = sanitizeOptionsForStorage({ size: 512, frameTextLength: 7, logoDataUrl: "1", anything: "x".repeat(60), more: 1 });
+    assert.deepEqual(out, { size: 512, frameTextLength: 7, hasLogo: true });
   });
 });
 

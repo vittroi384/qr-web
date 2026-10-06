@@ -1,7 +1,19 @@
-import { LOG_EVENTS, QR_TYPES, type LogEvent, type QrType } from "./types";
+import { DEFAULT_PAYLOADS, DEFAULT_STYLE, LOG_EVENTS, QR_TYPES, type LogEvent, type QrType } from "./types";
 
-const MAX_STRING = 4000;
+/**
+ * Total characters kept across all string fields of one row (and the cap for any single field).
+ * A QR code holds at most 2953 bytes (version 40, binary), so no honest save needs more; the cap
+ * keeps a flooding client from storing ~16 KB per request (Content-Length cap) and filling the
+ * disk at 30 rows/min per IP.
+ */
+const MAX_PAYLOAD_CHARS = 3000;
+const MAX_STRING = MAX_PAYLOAD_CHARS;
 const FIXED_MASK = "****";
+
+/** Fields a batch export reports (under the dominant type "url" or "text"). */
+const BATCH_PAYLOAD_KEYS: readonly string[] = ["count", "mode", "sample"];
+/** Option keys the client may report; the logo and the label text are reduced to a flag / a length. */
+const OPTION_KEYS: readonly string[] = [...Object.keys(DEFAULT_STYLE), "frameTextLength"];
 
 /**
  * One WIFI: block: from "WIFI:" to its ";;" terminator, or to the end of the string when the
@@ -77,18 +89,28 @@ export function maskPaymentIdentifiers(value: string): string {
   return out;
 }
 
-/** Keep only primitive fields, clamp string length, optionally mask secrets before persisting. */
+/**
+ * Keep only the fields this QR type actually has (plus the batch summary fields for a batch
+ * event), primitives only, with per-field and total length caps; optionally mask secrets.
+ * Unknown keys are dropped so a row can never carry more than the type's own data.
+ */
 export function sanitizePayloadForStorage(
   type: QrType,
   payload: unknown,
-  opts: { maskWifiPassword: boolean },
+  opts: { maskWifiPassword: boolean; event?: LogEvent },
 ): Record<string, string | number | boolean> {
   const out: Record<string, string | number | boolean> = {};
   if (!payload || typeof payload !== "object") return out;
+  const allowed = new Set<string>(Object.keys(DEFAULT_PAYLOADS[type]));
+  if (opts.event === "batch") for (const k of BATCH_PAYLOAD_KEYS) allowed.add(k);
+  let budget = MAX_PAYLOAD_CHARS;
   for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]{0,40}$/.test(key)) continue;
-    if (typeof value === "string") out[key] = value.slice(0, MAX_STRING);
-    else if (typeof value === "number" || typeof value === "boolean") out[key] = value;
+    if (!allowed.has(key)) continue;
+    if (typeof value === "string") {
+      const kept = value.slice(0, Math.min(MAX_STRING, budget));
+      budget -= kept.length;
+      out[key] = kept;
+    } else if (typeof value === "number" || typeof value === "boolean") out[key] = value;
   }
   if (type === "wifi" && opts.maskWifiPassword && typeof out.password === "string" && out.password) {
     out.password = "*".repeat(Math.min(out.password.length, 12));
@@ -125,6 +147,7 @@ export function sanitizeOptionsForStorage(options: unknown): Record<string, stri
   const out: Record<string, string | number | boolean> = {};
   if (!options || typeof options !== "object") return out;
   for (const [key, value] of Object.entries(options as Record<string, unknown>)) {
+    if (!OPTION_KEYS.includes(key)) continue;
     if (key === "logoDataUrl") {
       out.hasLogo = Boolean(value);
       continue;

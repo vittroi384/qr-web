@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { pageContextFromReferer } from "@/lib/analytics";
-import { getRequestMeta, ipLimitKey } from "@/lib/ip";
+import { getRequestMeta, ipLimitKey, publicPostRejection } from "@/lib/ip";
 import { insertLog } from "@/lib/logs";
 import {
   hardenSecretsForStorage,
@@ -19,7 +19,9 @@ import { incrementFunnel } from "@/lib/stats";
 export const runtime = "nodejs";
 
 const MAX_BODY_BYTES = 16 * 1024;
-const RATE_LIMIT = 30; // requests
+const RATE_LIMIT = 30; // requests per IP
+/** Whole-site ceiling: a flood from many addresses (or a rotated IPv6 prefix) cannot fill the disk. */
+const SITE_RATE_LIMIT = 300; // rows per minute
 const RATE_WINDOW_MS = 60_000;
 
 export async function POST(req: NextRequest) {
@@ -27,6 +29,10 @@ export async function POST(req: NextRequest) {
   if (!isOn(settings.logging_enabled)) {
     return NextResponse.json({ ok: true, skipped: true });
   }
+
+  // Only pages of this site may write here (see publicPostRejection); checked before any work.
+  const rejection = publicPostRejection(req);
+  if (rejection) return NextResponse.json({ ok: false, error: rejection.error }, { status: rejection.status });
 
   const meta = getRequestMeta(req);
   const limit = rateLimit(`log:${ipLimitKey(meta.ip)}`, RATE_LIMIT, RATE_WINDOW_MS);
@@ -61,13 +67,21 @@ export async function POST(req: NextRequest) {
   // Secrets are always masked before anything touches the database — no setting turns this off.
   const payload = hardenSecretsForStorage(
     body.type,
-    sanitizePayloadForStorage(body.type, body.payload, { maskWifiPassword: true }),
+    sanitizePayloadForStorage(body.type, body.payload, { maskWifiPassword: true, event: body.event }),
   );
   const options = sanitizeOptionsForStorage(body.options);
   const encodedPreview = typeof body.encoded === "string" ? maskPaymentIdentifiers(maskWifiPasswords(body.encoded)).slice(0, 200) : null;
 
   // Which page (and UI language) the save happened on — only trusted from a same-origin Referer.
   const context = pageContextFromReferer(meta.referer, req.headers.get("x-forwarded-host") ?? req.headers.get("host"));
+
+  // Site-wide ceiling, charged only for a row that would actually be written, so malformed
+  // requests cannot spend the budget honest visitors share.
+  const siteLimit = rateLimit("log:all", SITE_RATE_LIMIT, RATE_WINDOW_MS);
+  if (!siteLimit.ok) {
+    logEvent("warn", "log.rate_limited_site", { ip: meta.ip });
+    return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429, headers: { "Retry-After": String(siteLimit.retryAfterSec) } });
+  }
 
   try {
     await insertLog({
