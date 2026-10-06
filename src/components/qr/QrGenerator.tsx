@@ -109,24 +109,25 @@ export function QrGenerator({
 
   return (
     <section aria-labelledby="generator-heading">
-      <header className="mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+      <header className="mb-4 flex flex-wrap items-baseline gap-x-5 gap-y-1.5">
         <h1 id="generator-heading" className="text-2xl font-bold tracking-tight text-foreground">
           {heading?.title ?? t.generator.title}
         </h1>
-        {heading?.subtitle ? <p className="text-sm text-muted">{heading.subtitle}</p> : null}
+        {/* The product promise (free · no sign-up · never expires) on the heading's baseline: plain text
+            with a check mark each, no background, so it reads as one line and sits under the title on
+            phones. The list is labelled with the full-sentence tagline for screen readers. */}
+        <ul aria-label={t.generator.tagline} className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-foreground/80">
+          {t.generator.promises.map((promise) => (
+            <li key={promise} className="inline-flex items-center gap-1">
+              <svg viewBox="0 0 20 20" className="size-4 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 10.5l4 4 8-9" />
+              </svg>
+              {promise}
+            </li>
+          ))}
+        </ul>
+        {heading?.subtitle ? <p className="w-full text-sm text-muted">{heading.subtitle}</p> : null}
       </header>
-      {/* The product promise as three pills (free · no sign-up · never expires). The list is labelled
-          with the full-sentence tagline so screen readers hear one sentence, not three fragments. */}
-      <ul aria-label={t.generator.tagline} className="mb-4 flex flex-wrap gap-2">
-        {t.generator.promises.map((promise) => (
-          <li key={promise} className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-sm font-semibold text-accent">
-            <svg viewBox="0 0 20 20" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M4 10.5l4 4 8-9" />
-            </svg>
-            {promise}
-          </li>
-        ))}
-      </ul>
 
       <StepGuide
         slim
