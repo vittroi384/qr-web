@@ -73,6 +73,8 @@ export const ko = {
   generator: {
     title: "QR 코드 만들기",
     tagline: "회원가입 없이 무료 · 만료되지 않는 QR",
+    /** Three pills under the heading — the product promise, kept to one or two words each. */
+    promises: ["무료", "가입 없음", "만료 없음"],
     stepType: "종류",
     reset: "초기화",
     typeGroupLabel: "QR 종류",

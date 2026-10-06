@@ -69,6 +69,8 @@ export const en: Dict = {
   generator: {
     title: "Create a QR code",
     tagline: "Free, no sign-up. Codes never expire.",
+    /** Three pills under the heading — the product promise, kept to one or two words each. */
+    promises: ["Free", "No sign-up", "Never expires"],
     stepType: "Type",
     reset: "Reset",
     typeGroupLabel: "QR code type",

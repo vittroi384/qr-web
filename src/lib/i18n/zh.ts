@@ -69,6 +69,8 @@ export const zh: Dict = {
   generator: {
     title: "生成二维码",
     tagline: "免费，无需注册，永不过期",
+    /** Three pills under the heading — the product promise, kept to one or two words each. */
+    promises: ["免费", "无需注册", "永不过期"],
     stepType: "类型",
     reset: "重置",
     typeGroupLabel: "二维码类型",

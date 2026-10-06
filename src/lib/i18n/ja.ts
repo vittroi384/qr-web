@@ -69,6 +69,8 @@ export const ja: Dict = {
   generator: {
     title: "QRコードを作成",
     tagline: "無料・登録不要。有効期限はありません。",
+    /** Three pills under the heading — the product promise, kept to one or two words each. */
+    promises: ["無料", "登録不要", "期限なし"],
     stepType: "種類",
     reset: "リセット",
     typeGroupLabel: "QRコードの種類",
