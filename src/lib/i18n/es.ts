@@ -169,12 +169,18 @@ export const es: Dict = {
       hint: "También puedes pegar la URL completa del perfil.",
       result: "Abre",
       platformNames: {
+        naver_map: "Naver Map",
+        kakao_map: "KakaoMap",
+        google_maps: "Google Maps",
         kakao_openchat: "KakaoTalk Chat abierto",
         kakao_channel: "Canal de KakaoTalk",
         naver_blog: "Naver Blog",
         naver_smartstore: "Naver SmartStore",
       },
       platformPlaceholders: {
+        naver_map: "Código al final del enlace compartido, o el enlace completo",
+        kakao_map: "Código al final del enlace compartido, o el enlace completo",
+        google_maps: "Código al final del enlace compartido, o el enlace completo",
         kakao_openchat: "Código después de open.kakao.com/o/ (p. ej. gAbCdEf)",
         kakao_channel: "ID del canal (p. ej. _AbCdE)",
         naver_blog: "ID del blog",
@@ -341,6 +347,7 @@ export const es: Dict = {
       lat: "Latitud",
       lng: "Longitud",
       locate: "Usar mi ubicación",
+      mapLinkHint: "¿Tienes un enlace de Google Maps? Pégalo en el tipo Redes sociales / enlace de app. Este QR de coordenadas abre la app de mapas predeterminada del teléfono.",
     },
     event: {
       title: "Título del evento",

@@ -169,12 +169,18 @@ export const zh: Dict = {
       hint: "也可以直接粘贴完整的主页链接。",
       result: "打开的地址",
       platformNames: {
+        naver_map: "Naver 地图",
+        kakao_map: "KakaoMap",
+        google_maps: "Google 地图",
         kakao_openchat: "KakaoTalk 开放聊天室",
         kakao_channel: "KakaoTalk 频道",
         naver_blog: "Naver 博客",
         naver_smartstore: "Naver SmartStore",
       },
       platformPlaceholders: {
+        naver_map: "分享链接末尾的代码，或整个链接",
+        kakao_map: "分享链接末尾的代码，或整个链接",
+        google_maps: "分享链接末尾的代码，或整个链接",
         kakao_openchat: "open.kakao.com/o/ 后面的代码（例：gAbCdEf）",
         kakao_channel: "频道 ID（例：_AbCdE）",
         naver_blog: "博客 ID",
@@ -341,6 +347,7 @@ export const zh: Dict = {
       lat: "纬度",
       lng: "经度",
       locate: "使用当前位置",
+      mapLinkHint: "有 Google 地图等地图应用的分享链接？请粘贴到“社交 / 应用链接”类型。此坐标二维码扫描后会打开手机默认地图应用。",
     },
     event: {
       title: "日程标题",

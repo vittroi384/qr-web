@@ -169,12 +169,18 @@ export const hi: Dict = {
       hint: "पूरा प्रोफ़ाइल URL भी पेस्ट कर सकते हैं।",
       result: "खुलेगा",
       platformNames: {
+        naver_map: "Naver Map",
+        kakao_map: "KakaoMap",
+        google_maps: "Google Maps",
         kakao_openchat: "KakaoTalk Open Chat",
         kakao_channel: "KakaoTalk Channel",
         naver_blog: "Naver Blog",
         naver_smartstore: "Naver SmartStore",
       },
       platformPlaceholders: {
+        naver_map: "शेयर लिंक के अंत का कोड, या पूरा लिंक",
+        kakao_map: "शेयर लिंक के अंत का कोड, या पूरा लिंक",
+        google_maps: "शेयर लिंक के अंत का कोड, या पूरा लिंक",
         kakao_openchat: "open.kakao.com/o/ के बाद वाला कोड (जैसे gAbCdEf)",
         kakao_channel: "चैनल ID (जैसे _AbCdE)",
         naver_blog: "ब्लॉग ID",
@@ -341,6 +347,7 @@ export const hi: Dict = {
       lat: "अक्षांश (Latitude)",
       lng: "देशांतर (Longitude)",
       locate: "मेरी लोकेशन लें",
+      mapLinkHint: "Google Maps का शेयर लिंक है? उसे सोशल / ऐप लिंक प्रकार में पेस्ट करें। यह निर्देशांक QR फ़ोन का डिफ़ॉल्ट मैप ऐप खोलता है।",
     },
     event: {
       title: "इवेंट का नाम",

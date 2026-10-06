@@ -169,12 +169,18 @@ export const de: Dict = {
       hint: "Sie können auch die vollständige Profil-URL einfügen.",
       result: "Öffnet",
       platformNames: {
+        naver_map: "Naver Map",
+        kakao_map: "KakaoMap",
+        google_maps: "Google Maps",
         kakao_openchat: "KakaoTalk Open Chat",
         kakao_channel: "KakaoTalk Channel",
         naver_blog: "Naver Blog",
         naver_smartstore: "Naver SmartStore",
       },
       platformPlaceholders: {
+        naver_map: "Code am Ende des Teilen-Links oder der ganze Link",
+        kakao_map: "Code am Ende des Teilen-Links oder der ganze Link",
+        google_maps: "Code am Ende des Teilen-Links oder der ganze Link",
         kakao_openchat: "Code nach open.kakao.com/o/ (z. B. gAbCdEf)",
         kakao_channel: "Kanal-ID (z. B. _AbCdE)",
         naver_blog: "Blog-ID",
@@ -341,6 +347,7 @@ export const de: Dict = {
       lat: "Breitengrad",
       lng: "Längengrad",
       locate: "Meinen Standort verwenden",
+      mapLinkHint: "Sie haben einen Google-Maps-Link? Fügen Sie ihn beim Typ Social Media / App-Link ein. Dieser Koordinaten-QR öffnet die Standard-Karten-App des Handys.",
     },
     event: {
       title: "Titel",

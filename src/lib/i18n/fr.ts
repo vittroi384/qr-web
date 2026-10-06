@@ -169,12 +169,18 @@ export const fr: Dict = {
       hint: "Vous pouvez aussi coller l'URL complète du profil.",
       result: "Ouvre",
       platformNames: {
+        naver_map: "Naver Map",
+        kakao_map: "KakaoMap",
+        google_maps: "Google Maps",
         kakao_openchat: "KakaoTalk Open Chat",
         kakao_channel: "KakaoTalk Channel",
         naver_blog: "Naver Blog",
         naver_smartstore: "Naver SmartStore",
       },
       platformPlaceholders: {
+        naver_map: "Code à la fin du lien de partage, ou le lien entier",
+        kakao_map: "Code à la fin du lien de partage, ou le lien entier",
+        google_maps: "Code à la fin du lien de partage, ou le lien entier",
         kakao_openchat: "Code après open.kakao.com/o/ (ex. gAbCdEf)",
         kakao_channel: "ID de la chaîne (ex. _AbCdE)",
         naver_blog: "ID du blog",
@@ -341,6 +347,7 @@ export const fr: Dict = {
       lat: "Latitude",
       lng: "Longitude",
       locate: "Utiliser ma position",
+      mapLinkHint: "Vous avez un lien de partage Google Maps ? Collez-le dans le type Réseaux sociaux / lien d'app. Ce QR de coordonnées ouvre l'application de cartes par défaut du téléphone.",
     },
     event: {
       title: "Titre de l'événement",

@@ -102,6 +102,12 @@ const HOST_ALIASES: Record<string, string> = {
   "discord.com": "discord.gg",
   "paypal.com": "paypal.me",
   "account.venmo.com": "venmo.com",
+  // Map apps: full share links from the web/app versions resolve to the short-link platform.
+  "map.naver.com": "naver.me",
+  "m.map.naver.com": "naver.me",
+  "map.kakao.com": "kko.kakao.com",
+  "place.map.kakao.com": "kko.kakao.com",
+  "maps.google.com": "maps.app.goo.gl",
 };
 
 /**

@@ -169,12 +169,18 @@ export const ja: Dict = {
       hint: "プロフィールのURLをそのまま貼り付けることもできます。",
       result: "開くページ",
       platformNames: {
+        naver_map: "NAVERマップ",
+        kakao_map: "カカオマップ",
+        google_maps: "Googleマップ",
         kakao_openchat: "カカオトーク オープンチャット",
         kakao_channel: "カカオトーク チャンネル",
         naver_blog: "NAVERブログ",
         naver_smartstore: "NAVERスマートストア",
       },
       platformPlaceholders: {
+        naver_map: "共有リンク末尾のコード、またはリンク全体",
+        kakao_map: "共有リンク末尾のコード、またはリンク全体",
+        google_maps: "共有リンク末尾のコード、またはリンク全体",
         kakao_openchat: "open.kakao.com/o/ の後ろのコード（例：gAbCdEf）",
         kakao_channel: "チャンネルID（例：_AbCdE）",
         naver_blog: "ブログID",
@@ -341,6 +347,7 @@ export const ja: Dict = {
       lat: "緯度",
       lng: "経度",
       locate: "現在地を使う",
+      mapLinkHint: "Googleマップの共有リンクを使うなら「SNS / アプリリンク」の種類に貼り付けてください。この座標QRはスマホの標準地図アプリで開きます。",
     },
     event: {
       title: "予定のタイトル",

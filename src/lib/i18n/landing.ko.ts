@@ -6,7 +6,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   url: {
     title: "URL QR 코드 만들기",
     subtitle: "웹사이트 주소를 스캔 한 번에 열리는 QR 코드로 바꿉니다.",
-    metaTitle: "URL QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "URL QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "웹사이트 주소를 넣으면 바로 QR 코드가 만들어집니다. 만료 없는 정적 QR이라 계속 쓸 수 있고, PNG·SVG 저장과 A4 안내판 인쇄까지 무료로 할 수 있습니다.",
     sections: {
@@ -54,7 +54,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   social: {
     title: "SNS QR 코드 만들기",
     subtitle: "인스타그램, 유튜브, 카카오톡 채널을 아이디만으로 QR 코드로 만듭니다.",
-    metaTitle: "SNS QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "SNS QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "인스타그램, 유튜브, 카카오톡 오픈채팅·채널, 네이버 블로그·스마트스토어 아이디를 넣으면 프로필로 연결되는 QR 코드가 만들어집니다. 무료, 회원가입 없음.",
     sections: {
@@ -102,7 +102,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   whatsapp: {
     title: "WhatsApp QR 코드 만들기",
     subtitle: "스캔하면 내 번호와 첫 메시지가 채워진 WhatsApp 대화가 열립니다.",
-    metaTitle: "WhatsApp QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "WhatsApp QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "WhatsApp 번호와 첫 메시지를 넣으면 wa.me 링크 QR 코드를 만듭니다. 외국인 손님 문의나 해외 바이어 연락에 쓰기 좋습니다. 무료, 회원가입 없음.",
     sections: {
@@ -150,7 +150,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   text: {
     title: "텍스트 QR 코드 만들기",
     subtitle: "인터넷 연결 없이도 읽히는 짧은 글을 QR 코드에 담습니다.",
-    metaTitle: "텍스트 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "텍스트 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "메모, 안내문, 관리 번호처럼 짧은 글을 그대로 QR 코드에 담습니다. 스캔하면 인터넷 연결 없이도 글이 보입니다. 무료, 회원가입 없음, 만료 없는 정적 QR.",
     sections: {
@@ -199,7 +199,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   wifi: {
     title: "Wi-Fi QR 코드 만들기",
     subtitle: "비밀번호를 불러 줄 필요 없이 스캔 한 번으로 Wi-Fi에 접속합니다.",
-    metaTitle: "Wi-Fi QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "Wi-Fi QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "네트워크 이름과 비밀번호를 넣으면 스캔 한 번으로 연결되는 Wi-Fi QR 코드를 만듭니다. 카페·매장용 안내판도 A4로 바로 인쇄할 수 있습니다. 무료, 회원가입 없음.",
     sections: {
@@ -251,7 +251,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   vcard: {
     title: "연락처(vCard) QR 코드 만들기",
     subtitle: "명함 정보를 스캔 한 번에 주소록에 저장되는 QR 코드로 만듭니다.",
-    metaTitle: "연락처(vCard) QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "연락처(vCard) QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "이름, 전화번호, 이메일, 회사를 넣으면 주소록에 바로 저장되는 vCard QR 코드를 만듭니다. 명함 뒷면이나 행사 이름표에 넣기 좋습니다. 무료, 회원가입 없음.",
     sections: {
@@ -299,7 +299,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   email: {
     title: "이메일 QR 코드 만들기",
     subtitle: "받는 사람과 제목이 채워진 메일 작성 화면을 바로 엽니다.",
-    metaTitle: "이메일 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "이메일 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "받는 사람, 제목, 본문을 넣으면 스캔하자마자 메일 작성 화면이 열리는 QR 코드를 만듭니다. 문의 접수나 지원서 제출 안내에 쓰기 좋습니다. 무료, 회원가입 없음.",
     sections: {
@@ -347,7 +347,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   sms: {
     title: "문자(SMS) QR 코드 만들기",
     subtitle: "번호와 내용이 채워진 문자 작성 화면을 스캔 한 번에 엽니다.",
-    metaTitle: "문자(SMS) QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "문자(SMS) QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "받는 번호와 메시지를 넣으면 스캔하자마자 문자 작성 화면이 열리는 QR 코드를 만듭니다. 대기 접수, 경품 응모, 민원 접수 안내에 씁니다. 무료, 회원가입 없음.",
     sections: {
@@ -395,7 +395,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   phone: {
     title: "전화번호 QR 코드 만들기",
     subtitle: "번호를 누를 필요 없이 스캔 한 번으로 전화를 겁니다.",
-    metaTitle: "전화번호 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "전화번호 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "전화번호를 넣으면 스캔해서 바로 전화를 걸 수 있는 QR 코드를 만듭니다. 배달 주문, 매장 예약, 관리실 연락처 안내에 씁니다. 무료, 회원가입 없음, 만료 없음.",
     sections: {
@@ -443,7 +443,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   geo: {
     title: "위치 QR 코드 만들기",
     subtitle: "위도와 경도를 담아, 스캔하면 지도 앱에서 그 지점을 보여 줍니다.",
-    metaTitle: "위치 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "위치 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "위도와 경도를 넣으면 스캔해서 지도 앱으로 위치를 여는 QR 코드를 만듭니다. 주소로 찾기 어려운 행사장 입구, 주차장, 등산로 들머리 안내에 씁니다. 무료, 회원가입 없음.",
     sections: {
@@ -491,7 +491,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   event: {
     title: "일정 QR 코드 만들기",
     subtitle: "스캔하면 행사 일정이 휴대폰 캘린더에 바로 추가됩니다.",
-    metaTitle: "일정 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "일정 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "일정 제목, 시간, 장소를 넣으면 스캔해서 캘린더에 추가하는 QR 코드를 만듭니다. 청첩장, 설명회, 학부모 모임 안내에 쓰기 좋습니다. 무료, 회원가입 없음.",
     sections: {
@@ -539,7 +539,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   payment: {
     title: "PayPal·결제 링크 QR 코드 만들기",
     subtitle: "PayPal.Me 같은 해외 결제 링크를 금액까지 담아 QR 코드로 만듭니다.",
-    metaTitle: "PayPal·결제 링크 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "PayPal·결제 링크 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "PayPal.Me, Venmo, Cash App, Ko-fi, Buy Me a Coffee 등 결제·후원 링크를 QR 코드로 만듭니다. 해외 고객 결제나 후원 안내에 씁니다. 무료, 회원가입 없음.",
     sections: {
@@ -587,7 +587,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   crypto: {
     title: "비트코인·암호화폐 QR 코드 만들기",
     subtitle: "지갑 주소와 금액을 담아, 스캔하면 지갑 앱 송금 화면에 채워집니다.",
-    metaTitle: "비트코인·암호화폐 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "비트코인·암호화폐 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "비트코인, 이더리움, 라이트코인, 도지코인, 솔라나 지갑 주소를 QR 코드로 만듭니다. 비트코인은 BIP-21 형식이라 금액도 함께 담을 수 있습니다. 무료, 회원가입 없음.",
     sections: {
@@ -634,7 +634,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   file: {
     title: "PDF QR 코드 만들기",
     subtitle: "드라이브에 올려 둔 PDF의 공유 링크를 QR 코드로 만듭니다.",
-    metaTitle: "PDF QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "PDF QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "Google Drive나 Dropbox에 올린 PDF 공유 링크를 QR 코드로 만듭니다. 메뉴판, 사용 설명서, 카탈로그를 스캔 한 번에 열 수 있습니다. 무료, 회원가입 없음.",
     sections: {
@@ -683,7 +683,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   pix: {
     title: "Pix QR 코드 만들기",
     subtitle: "브라질 Pix 키와 이름, 금액(선택)으로 브라질 은행 앱이 한 번에 읽는 정적 Pix 코드를 만듭니다.",
-    metaTitle: "Pix QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "Pix QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "브라질 Pix 키, 이름, 도시, 금액(선택)으로 정적 Pix QR 코드(BR Code)를 만듭니다. 브라질 중앙은행 규격을 따르며 브라우저에서 바로 생성됩니다. 무료, 회원가입 없음.",
     sections: {
@@ -731,7 +731,7 @@ export const landingKo: Record<QrType, LandingCopy> = {
   upi: {
     title: "UPI QR 코드 만들기",
     subtitle: "인도 UPI ID를 PhonePe, Google Pay, Paytm 등 모든 UPI 앱이 읽는 결제 QR 코드로 만듭니다.",
-    metaTitle: "UPI QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "UPI QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "인도 UPI ID와 이름, 금액·메모(선택)로 UPI 결제 QR 코드를 만듭니다. NPCI의 upi://pay 형식을 따르며 브라우저에서 바로 생성됩니다. 무료, 회원가입 없음.",
     sections: {
@@ -830,7 +830,7 @@ export const useCasesKo: Record<UseCaseId, LandingCopy> = {
   restaurant_menu: {
     title: "식당 메뉴판 QR 코드 만들기",
     subtitle: "테이블에서 스캔하면 온라인 메뉴가 열리는 QR 코드를 만듭니다.",
-    metaTitle: "식당 메뉴판 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "식당 메뉴판 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "식당 메뉴 링크를 QR 코드로 만들어 테이블 안내판과 창문 스티커로 인쇄합니다. 만료 없는 정적 QR이라 메뉴 주소만 그대로면 계속 쓸 수 있습니다. 무료, 회원가입 없음.",
     sections: {
@@ -878,7 +878,7 @@ export const useCasesKo: Record<UseCaseId, LandingCopy> = {
   wedding: {
     title: "청첩장·결혼식 QR 코드 만들기",
     subtitle: "종이 청첩장에 모바일 청첩장과 오시는 길을 이어 줍니다.",
-    metaTitle: "청첩장·결혼식 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "청첩장·결혼식 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "종이 청첩장에 모바일 청첩장, 오시는 길 지도, 사진 공유 앨범 링크를 QR 코드로 넣습니다. 인쇄소에 넘기기 좋은 SVG 파일로 받을 수 있습니다. 무료, 회원가입 없음.",
     sections: {
@@ -927,7 +927,7 @@ export const useCasesKo: Record<UseCaseId, LandingCopy> = {
   business_card: {
     title: "명함 QR 코드 만들기",
     subtitle: "명함을 받은 사람이 스캔 한 번에 내 연락처를 저장합니다.",
-    metaTitle: "명함 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "명함 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "명함 뒷면에 넣을 연락처 QR 코드를 만듭니다. 스캔하면 이름, 전화번호, 이메일이 채워진 주소록 저장 화면이 열립니다. 90×50mm 명함에 맞는 크기도 안내합니다. 무료, 회원가입 없음.",
     sections: {
@@ -976,7 +976,7 @@ export const useCasesKo: Record<UseCaseId, LandingCopy> = {
   google_review: {
     title: "구글 리뷰 QR 코드 만들기",
     subtitle: "스캔하면 우리 가게의 구글 리뷰 작성 화면이 바로 열립니다.",
-    metaTitle: "구글 리뷰 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "구글 리뷰 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "Place ID나 Google 비즈니스 프로필의 리뷰 요청 링크로 구글 리뷰 작성 화면을 여는 QR 코드를 만듭니다. 계산대, 영수증, 포장 스티커에 넣으세요. 무료, 회원가입 없음.",
     sections: {
@@ -1024,7 +1024,7 @@ export const useCasesKo: Record<UseCaseId, LandingCopy> = {
   wifi_cafe: {
     title: "카페·숙소 Wi-Fi QR 코드 만들기",
     subtitle: "손님이 비밀번호를 묻지 않고 매장 Wi-Fi에 접속하게 합니다.",
-    metaTitle: "카페·숙소 Wi-Fi QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "카페·숙소 Wi-Fi QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "카페, 식당, 펜션, 게스트하우스의 손님용 Wi-Fi QR 코드를 만듭니다. 네트워크 이름이 들어간 A4 안내판을 바로 인쇄해 테이블과 객실에 둘 수 있습니다. 무료, 회원가입 없음.",
     sections: {
@@ -1072,7 +1072,7 @@ export const useCasesKo: Record<UseCaseId, LandingCopy> = {
   with_logo: {
     title: "로고 넣은 QR 코드 만들기",
     subtitle: "QR 코드 가운데에 로고를 넣고도 잘 읽히게 만들어 PNG나 SVG로 저장합니다.",
-    metaTitle: "로고 넣은 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "로고 넣은 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "QR 코드 가운데에 회사나 가게 로고를 넣어도 스캔되게 만듭니다. PNG, JPG, SVG, WEBP 로고 업로드, 색상 선택, 인쇄용 PNG·SVG 저장까지 무료, 회원가입 없음.",
     sections: {
@@ -1120,7 +1120,7 @@ export const useCasesKo: Record<UseCaseId, LandingCopy> = {
   instagram: {
     title: "인스타그램 QR 코드 만들기",
     subtitle: "인스타그램 아이디만 넣으면 프로필이 열리는 QR 코드를 만들어 명함, 메뉴판, 쇼윈도에 씁니다.",
-    metaTitle: "인스타그램 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "인스타그램 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "인스타그램 @아이디만 넣으면 어떤 휴대폰에서도 instagram.com/아이디 프로필이 열리는 QR 코드를 만듭니다. 명함과 안내판용 PNG·SVG 저장. 무료, 회원가입 없음.",
     sections: {
@@ -1168,7 +1168,7 @@ export const useCasesKo: Record<UseCaseId, LandingCopy> = {
   youtube: {
     title: "유튜브 QR 코드 만들기",
     subtitle: "유튜브 채널 핸들(@아이디)로 채널이 열리는 QR 코드를 만들어 포장, 포스터, 명함에 씁니다.",
-    metaTitle: "유튜브 QR 코드 만들기 — 무료, 회원가입 없음",
+    metaTitle: "유튜브 QR 코드 생성기 — 무료, 회원가입 없음",
     metaDescription:
       "유튜브 채널 @핸들을 넣거나 영상·재생목록 링크를 붙여 넣어 QR 코드를 만듭니다. 유튜브 앱에서 바로 열립니다. PNG·SVG 저장. 무료, 회원가입 없음.",
     sections: {

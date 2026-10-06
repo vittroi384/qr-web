@@ -169,12 +169,18 @@ export const en: Dict = {
       hint: "You can also paste the full profile URL.",
       result: "Opens",
       platformNames: {
+        naver_map: "Naver Map",
+        kakao_map: "KakaoMap",
+        google_maps: "Google Maps",
         kakao_openchat: "KakaoTalk Open Chat",
         kakao_channel: "KakaoTalk Channel",
         naver_blog: "Naver Blog",
         naver_smartstore: "Naver SmartStore",
       },
       platformPlaceholders: {
+        naver_map: "Code at the end of the share link, or the whole link",
+        kakao_map: "Code at the end of the share link, or the whole link",
+        google_maps: "Code at the end of the share link, or the whole link",
         kakao_openchat: "Code after open.kakao.com/o/ (e.g. gAbCdEf)",
         kakao_channel: "Channel ID (e.g. _AbCdE)",
         naver_blog: "Blog ID",
@@ -341,6 +347,7 @@ export const en: Dict = {
       lat: "Latitude",
       lng: "Longitude",
       locate: "Use my location",
+      mapLinkHint: "Got a Google Maps, Naver Map or KakaoMap share link? Paste it under the Social / app link type instead. This coordinate QR opens the phone's default map app.",
     },
     event: {
       title: "Event title",

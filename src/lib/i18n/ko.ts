@@ -7,7 +7,7 @@ import type { UseCaseId } from "./index";
  */
 export const ko = {
   meta: {
-    defaultTitle: (site: string) => `${site} — 무엇이든 QR 코드로`,
+    defaultTitle: (site: string) => `${site} — 무료 QR 코드 생성기`,
     description: "URL, 텍스트, Wi-Fi, 연락처, 이메일, 위치, 일정 등 무엇이든 QR 코드로 바꿔주는 무료 QR 코드 생성기.",
     ogLocale: "ko_KR",
   },
@@ -303,6 +303,7 @@ export const ko = {
       lat: "위도 (latitude)",
       lng: "경도 (longitude)",
       locate: "현재 위치",
+      mapLinkHint: "네이버 지도·카카오맵·구글 지도의 공유 링크를 쓰려면 'SNS / 앱 링크' 종류에 붙여 넣으세요. 이 좌표 QR은 스캔하면 기본 지도 앱이 열립니다.",
     },
     event: {
       title: "일정 제목",

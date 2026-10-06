@@ -71,6 +71,10 @@ export const SOCIAL_PLATFORMS: readonly SocialPlatform[] = [
   { id: "kakao_channel", label: "카카오톡 채널", template: "https://pf.kakao.com/{handle}", placeholder: "채널 ID (예: _AbCdE)", stripAt: false },
   { id: "naver_blog", label: "네이버 블로그", template: "https://blog.naver.com/{handle}", placeholder: "블로그 ID", stripAt: true },
   { id: "naver_smartstore", label: "네이버 스마트스토어", template: "https://smartstore.naver.com/{handle}", placeholder: "스토어 ID", stripAt: true },
+  // Map share links: the short code after the share URL, or the whole link pasted (auto-detected).
+  { id: "naver_map", label: "네이버 지도", template: "https://naver.me/{handle}", placeholder: "공유 링크 끝 코드 (예: 5abCdEfG) 또는 전체 링크", stripAt: false },
+  { id: "kakao_map", label: "카카오맵", template: "https://kko.kakao.com/{handle}", placeholder: "공유 링크 끝 코드 또는 전체 링크", stripAt: false },
+  { id: "google_maps", label: "Google 지도", template: "https://maps.app.goo.gl/{handle}", placeholder: "공유 링크 끝 코드 또는 전체 링크", stripAt: false },
   { id: "github", label: "GitHub", template: "https://github.com/{handle}", placeholder: "username", stripAt: true },
   { id: "telegram", label: "Telegram", template: "https://t.me/{handle}", placeholder: "@username", stripAt: true },
   { id: "line", label: "LINE", template: "https://line.me/R/ti/p/{handle}", placeholder: "@line-id", stripAt: false },

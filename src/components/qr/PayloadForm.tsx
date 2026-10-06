@@ -7,6 +7,7 @@ import { TEXT_MAX, type ValidationIssue } from "@/lib/qr/validate";
 import { CheckIcon, LocateIcon, WarningIcon } from "../icons";
 import { PlatformPicker, detectPlatform, withScheme } from "./PlatformPicker";
 import { useI18n } from "../i18n/I18nProvider";
+import type { Locale } from "@/lib/i18n";
 
 type FormProps<T extends QrType> = {
   value: QrPayloadMap[T];
@@ -146,7 +147,23 @@ function UrlForm({ value, onChange, issue }: FormProps<"url">) {
 }
 
 /** Shown first; the rest sit behind "More". */
-const POPULAR_SOCIAL = ["instagram", "youtube", "tiktok", "x", "facebook", "linkedin", "kakao_openchat", "telegram"] as const;
+/**
+ * The eight tiles shown before "More", per UI language: Korean visitors see KakaoTalk, Naver and the
+ * Korean map apps first; Japanese visitors see LINE first; everyone else the global set.
+ */
+const POPULAR_SOCIAL: Record<"default" | Locale, readonly string[]> = {
+  default: ["instagram", "youtube", "tiktok", "x", "facebook", "linkedin", "google_maps", "telegram"],
+  en: ["instagram", "youtube", "tiktok", "x", "facebook", "linkedin", "google_maps", "telegram"],
+  ko: ["kakao_openchat", "kakao_channel", "naver_blog", "naver_smartstore", "naver_map", "kakao_map", "instagram", "youtube"],
+  ja: ["line", "instagram", "x", "youtube", "tiktok", "google_maps", "facebook", "linkedin"],
+  es: ["instagram", "youtube", "tiktok", "x", "facebook", "linkedin", "google_maps", "telegram"],
+  pt: ["instagram", "youtube", "tiktok", "x", "facebook", "linkedin", "google_maps", "telegram"],
+  de: ["instagram", "youtube", "tiktok", "x", "facebook", "linkedin", "google_maps", "telegram"],
+  fr: ["instagram", "youtube", "tiktok", "x", "facebook", "linkedin", "google_maps", "telegram"],
+  hi: ["instagram", "youtube", "whatsapp_channel", "facebook", "x", "telegram", "google_maps", "linkedin"],
+  id: ["instagram", "tiktok", "youtube", "facebook", "whatsapp_channel", "x", "google_maps", "telegram"],
+  zh: ["instagram", "youtube", "tiktok", "x", "facebook", "linkedin", "google_maps", "telegram"],
+};
 
 /** "Recognized as an Instagram link" under the field after a pasted link picked the platform. */
 function Recognized({ text }: { text: string }) {
@@ -159,7 +176,7 @@ function Recognized({ text }: { text: string }) {
 }
 
 function SocialForm({ value, onChange }: FormProps<"social">) {
-  const { t: all } = useI18n();
+  const { t: all, locale } = useI18n();
   const t = all.forms.social;
   const picker = all.forms.picker;
   const resultId = useId();
@@ -184,7 +201,7 @@ function SocialForm({ value, onChange }: FormProps<"social">) {
           options={options}
           value={platform.id}
           onChange={(id) => onChange({ ...value, platform: id })}
-          popular={POPULAR_SOCIAL}
+          popular={POPULAR_SOCIAL[locale] ?? POPULAR_SOCIAL.default}
           moreLabel={picker.more}
           lessLabel={picker.less}
         />
@@ -610,6 +627,7 @@ function GeoForm({ value, onChange, issue }: FormProps<"geo">) {
         <LocateIcon />
         {t.locate}
       </button>
+      <p className="hint sm:col-span-3">{t.mapLinkHint}</p>
     </div>
   );
 }

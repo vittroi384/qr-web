@@ -169,12 +169,18 @@ export const id: Dict = {
       hint: "Anda juga bisa menempelkan URL profil lengkap.",
       result: "Membuka",
       platformNames: {
+        naver_map: "Naver Map",
+        kakao_map: "KakaoMap",
+        google_maps: "Google Maps",
         kakao_openchat: "KakaoTalk Open Chat",
         kakao_channel: "KakaoTalk Channel",
         naver_blog: "Naver Blog",
         naver_smartstore: "Naver SmartStore",
       },
       platformPlaceholders: {
+        naver_map: "Kode di akhir tautan berbagi, atau seluruh tautan",
+        kakao_map: "Kode di akhir tautan berbagi, atau seluruh tautan",
+        google_maps: "Kode di akhir tautan berbagi, atau seluruh tautan",
         kakao_openchat: "Kode setelah open.kakao.com/o/ (mis. gAbCdEf)",
         kakao_channel: "ID channel (mis. _AbCdE)",
         naver_blog: "ID blog",
@@ -341,6 +347,7 @@ export const id: Dict = {
       lat: "Lintang",
       lng: "Bujur",
       locate: "Pakai lokasi saya",
+      mapLinkHint: "Punya tautan berbagi Google Maps? Tempel di jenis Media sosial / tautan aplikasi. QR koordinat ini membuka aplikasi peta bawaan ponsel.",
     },
     event: {
       title: "Nama acara",
