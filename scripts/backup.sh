@@ -21,7 +21,7 @@ notify() {
 }
 fail() {
   rm -f "${tmp:-}"
-  notify "QR Maker backup FAILED on $(hostname): $1"
+  notify "GetQRMaker backup FAILED on $(hostname): $1"
   echo "$(date '+%F %T') backup failed: $1" >&2
   exit 1
 }
@@ -48,4 +48,4 @@ if [ "$(docker compose exec -T db psql -U qr -d qr -tAc "SELECT 1 FROM pg_databa
 fi
 find backups \( -name 'qr-*.sql.gz' -o -name 'umami-*.sql.gz' \) -mtime +"$KEEP_DAYS" -delete
 
-notify "QR Maker backup OK on $(hostname): $summary"
+notify "GetQRMaker backup OK on $(hostname): $summary"

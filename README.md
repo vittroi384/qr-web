@@ -1,4 +1,4 @@
-# QR Maker — 무엇이든 QR 코드로 바꾸는 무료 생성기
+# GetQRMaker — 무엇이든 QR 코드로 바꾸는 무료 생성기
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)

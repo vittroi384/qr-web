@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Allow the QR Maker origin port (host 8080 → Caddy container :80) only from Cloudflare's edge.
+# Allow the GetQRMaker origin port (host 8080 → Caddy container :80) only from Cloudflare's edge.
 #
 # Why: the site is reached through the Cloudflare proxy (docker-compose.cloudflare.yml). A visitor who
 # hits http://<server-ip>:8080 directly skips Cloudflare's TLS, WAF and rate limiting, and Caddy then

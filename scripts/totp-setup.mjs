@@ -16,7 +16,7 @@ function base32(bytes) {
   return out;
 }
 
-const issuer = process.argv[2] || "QR Maker";
+const issuer = process.argv[2] || "GetQRMaker";
 const account = process.argv[3] || "admin";
 const secret = base32(randomBytes(20));
 const uri = `otpauth://totp/${encodeURIComponent(`${issuer}:${account}`)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;

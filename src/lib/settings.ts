@@ -48,7 +48,7 @@ function defaultSiteUrl(): string {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  site_name: "QR Maker",
+  site_name: "GetQRMaker",
   site_url: defaultSiteUrl(),
   site_description: "Free QR code generator for links, Wi-Fi, vCards, WhatsApp, social profiles, crypto payments, files and more. No sign-up, codes never expire.",
   footer_notice: "What you enter may be stored on our server to improve the service.",
