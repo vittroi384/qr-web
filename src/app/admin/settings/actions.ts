@@ -53,7 +53,7 @@ export async function saveSettingsAction(formData: FormData) {
     patch.log_retention_days = String(Number.parseInt(patch.log_retention_days, 10));
   }
   // Monetisation links open in a new tab from public pages: only http(s), or empty to hide.
-  for (const key of ["affiliate_print_url", "donate_url"] as const) {
+  for (const key of ["affiliate_print_url", "donate_url", "donate_url_ko"] as const) {
     const v = patch[key];
     if (!v) continue;
     try {

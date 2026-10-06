@@ -35,8 +35,8 @@ const GROUPS: { title: string; description?: string; keys: SettingKey[] }[] = [
   {
     title: "수익화",
     description:
-      "인쇄 제휴 링크는 인쇄용 안내판 창과 랜딩 페이지 팁 아래에 '제휴' 표시와 함께 작은 카드로 나옵니다. 후원 링크는 푸터에 표시됩니다. URL을 비우면 해당 항목은 아무것도 표시되지 않습니다. 문구가 기본값이면 한국어 페이지에서는 한국어 기본 문구로 바뀌어 보입니다.",
-    keys: ["affiliate_print_url", "donate_url", "affiliate_print_label", "affiliate_print_note"],
+      "인쇄 제휴 링크는 인쇄용 안내판 창과 랜딩 페이지 팁 아래에 '제휴' 표시와 함께 작은 카드로 나옵니다. 후원 링크는 푸터와, 방문자가 QR을 저장·복사·인쇄한 직후 미리보기 아래 한 줄('이 QR은 계속 작동해요. 도움이 됐다면 커피 한 잔')에 표시됩니다. 한국어 페이지 전용 링크(토스 등)를 넣으면 한국어판에서는 그 링크가 우선합니다. URL을 비우면 해당 항목은 아무것도 표시되지 않습니다. 문구가 기본값이면 한국어 페이지에서는 한국어 기본 문구로 바뀌어 보입니다.",
+    keys: ["affiliate_print_url", "donate_url", "donate_url_ko", "affiliate_print_label", "affiliate_print_note"],
   },
   {
     title: "방문자 입력 기록",

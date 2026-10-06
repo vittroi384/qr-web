@@ -43,6 +43,7 @@ export function QrGenerator({
   initialUi,
   heading,
   affiliate,
+  donateUrl,
 }: {
   /** Type selected on first render (landing pages); visitors can still switch. */
   initialType?: QrType;
@@ -54,6 +55,8 @@ export function QrGenerator({
   heading?: { title: string; subtitle: string };
   /** Print-partner slot shown inside the print-sheet dialog; omitted when not configured. */
   affiliate?: AffiliateInfo | null;
+  /** Support link shown under the preview once a code has been saved (admin setting, locale-resolved). */
+  donateUrl?: string;
 } = {}) {
   const { t, locale } = useI18n();
   const [type, setType] = useState<QrType>(initialType);
@@ -181,6 +184,7 @@ export function QrGenerator({
           <div>
             <QrPreview
               affiliate={affiliate ?? null}
+              donateUrl={donateUrl}
               encoded={encoded}
               invalid={selected && Boolean(issue)}
               style={style}

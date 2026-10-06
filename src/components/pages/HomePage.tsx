@@ -6,6 +6,7 @@ import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { resolveAffiliate } from "@/components/affiliate";
 import { QrGenerator } from "@/components/qr/QrGenerator";
 import { getDict, localePath, type Locale } from "@/lib/i18n";
+import { donateUrlFor } from "@/lib/donate";
 import { getSettings } from "@/lib/settings";
 
 /** FAQ entries shown before the in-article ad. */
@@ -49,7 +50,7 @@ export async function HomePage({ locale }: { locale: Locale }) {
 
         <div className="min-w-0 flex-1">
           <I18nProvider locale={locale}>
-            <QrGenerator affiliate={resolveAffiliate(s, locale)} />
+            <QrGenerator affiliate={resolveAffiliate(s, locale)} donateUrl={donateUrlFor(s, locale)} />
           </I18nProvider>
 
           {/*

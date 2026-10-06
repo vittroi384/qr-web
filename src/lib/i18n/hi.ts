@@ -384,6 +384,9 @@ export const hi: Dict = {
   },
   preview: {
     title: "प्रीव्यू",
+    /** Quiet thank-you line under the buttons after the first save; the link text follows. */
+    thanksLine: "यह QR बिना एक्सपायरी के काम करता रहेगा। अगर मदद मिली हो तो",
+    thanksCta: "एक कॉफ़ी पिलाएँ",
     badgeError: "गड़बड़ी",
     badgeLive: "लाइव",
     badgeIdle: "इंतज़ार",

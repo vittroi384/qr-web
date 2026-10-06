@@ -340,6 +340,9 @@ export const ko = {
   },
   preview: {
     title: "미리보기",
+    /** Quiet thank-you line under the buttons after the first save; the link text follows. */
+    thanksLine: "이 QR은 만료 없이 계속 작동해요. 도움이 됐다면",
+    thanksCta: "커피 한 잔 어때요?",
     badgeError: "오류",
     badgeLive: "실시간 반영",
     badgeIdle: "입력 대기",

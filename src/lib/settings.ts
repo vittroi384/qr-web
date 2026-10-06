@@ -29,6 +29,7 @@ export const SETTING_KEYS = [
   "affiliate_print_label",
   "affiliate_print_note",
   "donate_url",
+  "donate_url_ko",
   "analytics_script_url",
   "analytics_website_id",
 ] as const;
@@ -77,6 +78,8 @@ export const DEFAULT_SETTINGS: Settings = {
   affiliate_print_label: "Print stickers & table tents",
   affiliate_print_note: "Affiliate link — we may earn a commission at no extra cost to you.",
   donate_url: "",
+  // Korean pages only (e.g. a Toss transfer link); empty = fall back to donate_url.
+  donate_url_ko: "",
   // Umami visitor analytics: both empty = no script injected.
   analytics_script_url: "",
   analytics_website_id: "",
@@ -108,7 +111,8 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   affiliate_print_url: "인쇄 제휴 링크 URL (비우면 숨김)",
   affiliate_print_label: "인쇄 제휴 링크 문구",
   affiliate_print_note: "인쇄 제휴 고지 문구",
-  donate_url: "후원 링크 URL (Buy Me a Coffee 등, 비우면 숨김)",
+  donate_url: "후원 링크 URL (Ko-fi·Buy Me a Coffee 등, 비우면 숨김)",
+  donate_url_ko: "한국어 페이지 후원 링크 URL (토스 송금 링크 등, 비우면 위 링크 사용)",
   analytics_script_url: "Umami 스크립트 URL (https://example.com/umami/script.js)",
   analytics_website_id: "Umami 웹사이트 ID (UUID)",
 };

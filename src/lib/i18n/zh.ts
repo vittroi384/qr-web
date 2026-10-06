@@ -384,6 +384,9 @@ export const zh: Dict = {
   },
   preview: {
     title: "预览",
+    /** Quiet thank-you line under the buttons after the first save; the link text follows. */
+    thanksLine: "这个二维码永不过期，会一直有效。如果对你有帮助，",
+    thanksCta: "请我喝杯咖啡",
     badgeError: "出错",
     badgeLive: "实时更新",
     badgeIdle: "等待输入",

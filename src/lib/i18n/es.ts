@@ -384,6 +384,9 @@ export const es: Dict = {
   },
   preview: {
     title: "Vista previa",
+    /** Quiet thank-you line under the buttons after the first save; the link text follows. */
+    thanksLine: "Este QR seguirá funcionando, sin caducidad. Si te sirvió,",
+    thanksCta: "invítame a un café",
     badgeError: "Error",
     badgeLive: "En vivo",
     badgeIdle: "En espera",

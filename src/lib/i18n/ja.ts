@@ -384,6 +384,9 @@ export const ja: Dict = {
   },
   preview: {
     title: "プレビュー",
+    /** Quiet thank-you line under the buttons after the first save; the link text follows. */
+    thanksLine: "このQRは期限なしでずっと使えます。役に立ったら",
+    thanksCta: "コーヒーをおごる",
     badgeError: "エラー",
     badgeLive: "表示中",
     badgeIdle: "入力待ち",

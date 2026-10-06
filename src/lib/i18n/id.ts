@@ -384,6 +384,9 @@ export const id: Dict = {
   },
   preview: {
     title: "Pratinjau",
+    /** Quiet thank-you line under the buttons after the first save; the link text follows. */
+    thanksLine: "QR ini akan terus berfungsi, tanpa kedaluwarsa. Kalau membantu,",
+    thanksCta: "traktir kopi",
     badgeError: "Galat",
     badgeLive: "Langsung",
     badgeIdle: "Menunggu",

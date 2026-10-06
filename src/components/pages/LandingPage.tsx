@@ -11,6 +11,7 @@ import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { QrGenerator } from "@/components/qr/QrGenerator";
 import { alternatesFor, getDict, localePath, resolveLanding, type LandingTarget, type Locale } from "@/lib/i18n";
 import type { QrType } from "@/lib/qr/types";
+import { donateUrlFor } from "@/lib/donate";
 import { getSettings } from "@/lib/settings";
 
 /** Copy may mark formats with backticks (`WIFI:T:WPA;…`); render those as inline code. */
@@ -146,6 +147,7 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
                 initialUi={target.initialUi}
                 heading={{ title: c.title, subtitle: c.subtitle }}
                 affiliate={affiliate}
+                donateUrl={donateUrlFor(s, locale)}
               />
             </I18nProvider>
           )}

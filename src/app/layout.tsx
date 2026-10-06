@@ -9,6 +9,7 @@ import { ADMIN_MARKER_HEADER, adminMarker } from "@/lib/adminAccess";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { DEFAULT_LOCALE, getDict, isLocale, type Locale } from "@/lib/i18n";
+import { donateUrlFor } from "@/lib/donate";
 import { DEFAULT_SETTINGS, getSettings, isOn } from "@/lib/settings";
 
 // Settings live in PostgreSQL and can change at runtime, so never bake pages at build time.
@@ -79,7 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ClientErrorReporter />
         <SiteHeader siteName={s.site_name} locale={locale} />
         <div className="flex-1">{children}</div>
-        {isAdmin ? <AdminFooter siteName={s.site_name} /> : <SiteFooter siteName={s.site_name} notice={notice} locale={locale} donateUrl={s.donate_url} />}
+        {isAdmin ? <AdminFooter siteName={s.site_name} /> : <SiteFooter siteName={s.site_name} notice={notice} locale={locale} donateUrl={donateUrlFor(s, locale)} />}
       </body>
     </html>
   );

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { frameLayout } from "@/lib/qr/frame";
 import type { QrStyleOptions } from "@/lib/qr/types";
-import { CheckIcon, ChevronDownIcon, CodeIcon, CopyIcon, DownloadIcon, PrinterIcon, QrMarkIcon, WarningIcon } from "../icons";
+import { CoffeeIcon, CheckIcon, ChevronDownIcon, CodeIcon, CopyIcon, DownloadIcon, PrinterIcon, QrMarkIcon, WarningIcon } from "../icons";
 import { useI18n } from "../i18n/I18nProvider";
 import type { AffiliateInfo } from "../AffiliateCard";
 import { PrintSheetDialog, type SheetText } from "./PrintSheet";
@@ -20,6 +20,8 @@ type Props = {
   /** Starting text for the print sheet (depends on the QR type and its content). */
   sheetDefaults: SheetText;
   affiliate: AffiliateInfo | null;
+  /** Support link; when set, one quiet line appears under the buttons after the first save. */
+  donateUrl?: string;
   onAction: (event: "download_png" | "download_svg" | "copy" | "print") => void;
 };
 
@@ -27,7 +29,14 @@ type Props = {
 type Feedback = "saved" | "copied" | "copyFailed";
 const FEEDBACK_MS: Record<Feedback, number> = { saved: 2000, copied: 2000, copyFailed: 6000 };
 
-export function QrPreview({ encoded, invalid = false, style, onStyleChange, fileBase, sheetDefaults, affiliate, onAction }: Props) {
+export function QrPreview({ encoded, invalid = false, style, onStyleChange, fileBase, sheetDefaults, affiliate, donateUrl, onAction }: Props) {
+  // Set on the first successful save/copy/print and never reset: the thank-you line is shown after
+  // the visitor has got what they came for, not before, and never as a popup.
+  const [savedOnce, setSavedOnce] = useState(false);
+  const act = (event: "download_png" | "download_svg" | "copy" | "print") => {
+    setSavedOnce(true);
+    onAction(event);
+  };
   const { t } = useI18n();
   const p = t.preview;
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,7 +118,7 @@ export function QrPreview({ encoded, invalid = false, style, onStyleChange, file
     if (!canvas || !encoded) return;
     triggerDownload(canvas.toDataURL("image/png"), `${fileBase}.png`);
     notify("saved");
-    onAction("download_png");
+    act("download_png");
   };
 
   const downloadSvg = async () => {
@@ -119,7 +128,7 @@ export function QrPreview({ encoded, invalid = false, style, onStyleChange, file
     triggerDownload(url, `${fileBase}.svg`);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     notify("saved");
-    onAction("download_svg");
+    act("download_svg");
   };
 
   const copyPng = async () => {
@@ -132,7 +141,7 @@ export function QrPreview({ encoded, invalid = false, style, onStyleChange, file
       if (!blob) throw new Error("blob");
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
       notify("copied");
-      onAction("copy");
+      act("copy");
     } catch {
       notify("copyFailed");
     }
@@ -262,6 +271,16 @@ export function QrPreview({ encoded, invalid = false, style, onStyleChange, file
       </div>
       {feedback ? null : <p className="mt-3 text-xs leading-relaxed text-muted">{encoded ? p.tip : p.disabledWhy}</p>}
 
+      {savedOnce && donateUrl ? (
+        <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs leading-relaxed text-muted">
+          <CoffeeIcon className="size-3.5 shrink-0" />
+          <span>{p.thanksLine}</span>
+          <a href={donateUrl} target="_blank" rel="noopener" className="font-medium text-accent underline-offset-2 hover:underline">
+            {p.thanksCta}
+          </a>
+        </p>
+      ) : null}
+
       {encoded ? (
         <details className="mt-3 border-t border-border pt-2 text-xs text-muted">
           <summary className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded font-medium transition-colors hover:text-foreground">
@@ -313,7 +332,7 @@ export function QrPreview({ encoded, invalid = false, style, onStyleChange, file
           defaults={sheetDefaults}
           affiliate={affiliate}
           onClose={() => setSheetOpen(false)}
-          onPrint={() => onAction("print")}
+          onPrint={() => act("print")}
         />
       ) : null}
     </div>
