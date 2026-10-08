@@ -40,11 +40,11 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
 - **QR 17종**: URL · SNS/앱 링크(31개 플랫폼 프리셋 — 네이버 지도·카카오맵·Google 지도 공유 링크 포함, 링크 붙여 넣기 자동 인식, UI 언어별로 먼저 보이는 8칸이 다름) · WhatsApp · 텍스트 · Wi-Fi · 연락처(vCard 3.0) · 이메일 · SMS · 전화 · 위치 · 일정(iCalendar) · 결제 링크(PayPal/Venmo/Cash App… 금액 사전 입력) · 암호화폐(BIP-21/EIP-681) · PDF/파일 링크 · **지역 결제 QR 3종**(Pix BR Code · UPI · EPC/GiroCode — 공식 규격·CRC·IBAN 검증, 식별자는 저장 전 마스킹)
 - **프레임 13종 + 안내 문구**: 문구 아래·위, 말풍선(위·아래), 둥근 모서리, 리본, 카드, 떠 있는 문구, 원형, 얇은 선, 밑줄, 모서리 표시, 괄호. 모양별 기하를 순수 함수 하나(`src/lib/qr/frame.ts`)가 계산해 미리보기·PNG·SVG·인쇄 안내판이 픽셀 단위로 같음. 문구는 직접 입력(10개 언어 기본값), 프레임 색 12종 + 직접 선택
 - **출력**: PNG(256~2048px, 모듈 단위 정수 스케일 보정으로 픽셀 정확) · SVG · 클립보드 복사 · **인쇄용 A4 안내판**(제목/부제 편집 → 브라우저 인쇄/PDF)
-- **꾸미기**: 색 프리셋 8종 + 직접 선택, 배경(흰색/연회색/아이보리/투명), 복원력, 중앙 로고(자동 ECC H), 대비 경고
+- **꾸미기**: 색 프리셋 9종 + 직접 선택, 배경(흰색/연회색/아이보리/투명), 복원력, 중앙 로고(자동 ECC H), 대비 경고
 - **일괄 생성**: 표 편집기 + 엑셀 2열 붙여 넣기, 줄별 링크/텍스트 자동 판별, 최대 200개 → `001-이름.png` ZIP + `index.csv`
 - **i18n/SEO**: 경로 기반 10개 언어(hreflang, sitemap 300 URL), 타입별 랜딩 17종 + 사용 사례 9종 × 10개 언어(언어별로 새로 쓴 본문 400~600단어, `FAQPage`·`SoftwareApplication` JSON-LD)
 - **광고**: AdSense 슬롯 6곳(상단·좌·우·하단·본문 중간·글 사이 인아티클; 일괄·소개 페이지도 포함), 팝업/오버레이 없음, 다운로드 버튼과 거리 확보, `/ads.txt` 자동
-- **방문자 기록**: PNG/SVG/복사/인쇄/일괄 저장 시에만 종류·내용·IP·브라우저 기록(입력 중 전송 없음). Wi-Fi 비밀번호는 저장 전 항상 `****`, 전화·이메일·지갑 주소는 앞뒤만, 메시지 본문은 40자까지, 좌표는 소수 2자리. 종류별 필드만 저장(행당 3,000자 상한), 이 사이트 페이지의 JSON 요청만 수락, IP당 분당 30회 + 전체 분당 300회 제한, 보관 90일 자동 정리
+- **방문자 기록**: PNG/SVG/복사/인쇄/일괄 저장 시에만 종류·내용·IP·브라우저 기록(입력 중 전송 없음). Wi-Fi 비밀번호는 저장 전 항상 `****`, 전화·이메일·지갑 주소는 앞뒤만, 메시지 본문은 40자까지, 좌표는 소수 2자리. URL·SNS 아이디·이름·SSID와 IP·브라우저는 평문. 종류별 필드만 저장(행당 3,000자 상한), 이 사이트 페이지의 JSON 요청만 수락, IP당 분당 30회 + 전체 분당 300회 제한, 보관 90일 자동 정리
 - **관리자**: 대시보드(KST 집계), 통계(언어·페이지·종류별 저장, 시간대, 선택→미리보기→저장 퍼널 — 개인 정보 없는 카운터), 기록 검색·삭제·CSV(BOM, 수식 주입 차단), 설정(사이트 URL·AdSense ID·슬롯 ID·광고 자리별 표시 on/off — 재배포 없이 변경), 감사 로그(변경 전/후 값)
 
 ## 관리자 3중 잠금
@@ -53,12 +53,12 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
 |---|---|---|
 | 비밀 입구 URL | 입구를 거치지 않은 브라우저에는 `/admin`이 404 | `ADMIN_PATH` |
 | 비밀번호 + OTP | 인증 앱 6자리 코드, 5회 실패 시 10분 잠금 | `ADMIN_PASSWORD`, `ADMIN_TOTP_SECRET` |
-| IP 허용 목록(선택) | 지정 IP/CIDR 외에는 입구 URL도 404 | `ADMIN_ALLOWED_IPS` |
+| IP 허용 목록(선택) | 지정 IPv4 CIDR 또는 IP(IPv6는 단일 주소) 외에는 입구 URL도 404. SSH 터널 접속과 병용 불가 | `ADMIN_ALLOWED_IPS` |
 
 - **비밀 입구 URL**: `/admin`은 누구에게나 **일반 404와 동일한 응답**입니다. `https://<도메인>/<ADMIN_PATH>`를 먼저 열면 30일 게이트 쿠키가 생기고, 그 브라우저에서만 `/admin`이 열립니다.
 - **OTP**: Google Authenticator 등 인증 앱용 RFC 6238을 직접 구현(재사용 차단). 비밀키는 `npm run totp-setup`으로 생성하며, 실패할 때마다 응답을 지연합니다.
 
-세션 쿠키는 HTTPS에서 `__Host-` 접두 + `SameSite=Strict` + 브라우저 지문 바인딩, 24시간 만료. 관리자 응답 `noindex`/`no-store`, robots.txt에 관리자 경로 미노출. `X-Real-IP`는 Caddy가 덮어쓰며(Cloudflare 뒤에서는 Cloudflare 대역만 신뢰해 실제 방문자 IP), 앱 포트는 외부에 publish하지 않습니다.
+세션 쿠키는 HTTPS에서 `__Host-` 접두 + `SameSite=Strict` + User-Agent 바인딩(보조), 24시간 만료(기기 기억 시 30일, 사용 시 연장). 관리자 응답 `noindex`/`no-store`, robots.txt에 관리자 경로 미노출. `X-Real-IP`는 Caddy가 덮어쓰며(Cloudflare 뒤에서는 Cloudflare 대역만 신뢰해 실제 방문자 IP), 앱 포트는 외부에 publish하지 않습니다.
 
 ## 아키텍처 (오라클 클라우드 배포 구성)
 
@@ -114,7 +114,7 @@ flowchart TD
   I -- 아니오 --> N
   I -- 예 --> L["로그인 화면"] --> PW{"비밀번호 + 인증 앱 OTP"}
   PW -- 5회 실패 --> LOCK["10분 잠금"]
-  PW -- 성공 --> SES["세션 쿠키 (브라우저 지문 바인딩, 24h)"] --> ADM["대시보드 · 통계 · 기록 · 설정 · 감사 로그"]
+  PW -- 성공 --> SES["세션 쿠키 (User-Agent 바인딩, 24h)"] --> ADM["대시보드 · 통계 · 기록 · 설정 · 감사 로그"]
 ```
 
 
@@ -199,17 +199,10 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 ## 품질 · 운영
 
 **테스트 (CI에서 모두 실행)**
-- 단위 156건 — QR 인코더(Wi-Fi 이스케이프, vCard, VEVENT, wa.me, BIP-21), Pix/UPI/EPC 규격 벡터, 프레임 13종 레이아웃, 입력 검증, 비밀번호 마스킹, 로그인 잠금·IPv6 키, TOTP(RFC 6238 벡터), Accept-Language 파서, KST 시간 헬퍼 (`npm test`)
-- E2E 34건 — Playwright: 입력→PNG 저장→`/api/log` 기록·마스킹 검증, 단계 게이지·종류 해제·더보기, 퍼널 집계 조건, 언어 자동 감지(브라우저 언어·쿠키·크롤러 제외), 일괄 ZIP 구조 파싱, 관리자 게이트/OTP/CSV, 광고 자리 표시, SEO(hreflang·JSON-LD·sitemap·robots), 모바일 가로 넘침 0, axe 접근성 (`npm run test:e2e`)
+- 단위 177건 — QR 인코더(Wi-Fi 이스케이프, vCard, VEVENT, wa.me, BIP-21), Pix/UPI/EPC 규격 벡터, 프레임 13종 레이아웃, 입력 검증, 비밀번호 마스킹, 로그인 잠금·IPv6 키, TOTP(RFC 6238 벡터), Accept-Language 파서, KST 시간 헬퍼 (`npm test`)
+- E2E 40건 — Playwright: 입력→PNG 저장→`/api/log` 기록·마스킹 검증, 단계 게이지·종류 해제·더보기, 퍼널 집계 조건, 언어 자동 감지(브라우저 언어·쿠키·크롤러 제외), 일괄 ZIP 구조 파싱, 관리자 게이트/OTP/CSV, 광고 자리 표시, SEO(hreflang·JSON-LD·sitemap·robots), 모바일 가로 넘침 0, axe 접근성 (`npm run test:e2e`)
 - CI: lint → 타입 → 단위 → DB 없는 빌드 → E2E(Postgres 서비스) → Docker 이미지 빌드
-
-**Lighthouse (운영 이미지, 2026-10 · 배포 후 재측정 예정)**
-
-| 페이지 | 성능 (모바일/데스크톱) | 접근성 | 모범 사례 | SEO |
-| --- | --- | --- | --- | --- |
-| `/` | 98 / 100 | 100 | 100 | 100 |
-| `/wifi-qr-code` | 98 / 100 | 100 | 100 | 100 |
-| `/batch` | 98 / 100 | 100 | 100 | 100 |
+- 건수는 `src/**/*.test.ts`의 it/test 정의 수, `e2e/*.spec.ts`의 test 정의 수(루프 전개 포함)
 
 **관측성**
 - `GET /api/health` — DB 핑 포함 (200 / 503). compose 헬스체크와 외부 업타임 모니터(UptimeRobot 등 무료, 5분 간격)에 이 주소를 등록
@@ -234,7 +227,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 | `ADMIN_PASSWORD` | 관리자 비밀번호 |
 | `ADMIN_TOTP_SECRET` | OTP 비밀키. 운영 모드에서는 필수(없으면 로그인 API가 503으로 거부), 개발 모드에서만 생략 가능 |
 | `SITE_URL` | `DOMAIN`이 없을 때의 기본 사이트 URL(선택). 관리자 설정에 저장된 값이 항상 우선 |
-| `ADMIN_ALLOWED_IPS` | 관리자 접근 허용 IP/CIDR 목록 (선택) |
+| `ADMIN_ALLOWED_IPS` | 관리자 접근 허용 목록 (선택). IPv4 CIDR 또는 IP, IPv6는 단일 주소. SSH 터널 접속과 병용 불가 |
 | `SESSION_SECRET` | 세션·게이트 쿠키 서명 키 (`openssl rand -hex 32`) |
 | `POSTGRES_PASSWORD` | DB 사용자 `qr`의 비밀번호. compose가 DB 생성과 앱의 `DATABASE_URL`에 사용 (server-setup.sh가 생성) |
 | `UMAMI_APP_SECRET` | Umami 로그인 토큰 서명 키 (`openssl rand -hex 32`, server-setup.sh·deploy.sh가 없으면 생성). compose 필수 |
@@ -252,9 +245,19 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 - 다음에 추가할 기능과 하지 않을 것은 [`docs/기능-로드맵.md`](docs/기능-로드맵.md)
 - 서버 배포·운영 절차는 [`docs/배포-절차.md`](docs/배포-절차.md)
 
+## 알려진 한계
+
+- **엣지→원본 구간 평문(Cloudflare Flexible)**: 이 서버의 80/443을 다른 서비스가 써서 8080 + Cloudflare 프록시로 시작한 과도기 구성. 8080은 Cloudflare 대역에만 열려 있음. Origin CA 인증서로 Full(strict) 전환 예정([`docs/배포-절차.md`](docs/배포-절차.md) 2-C)
+- **세션 무효화 부재**: 세션은 HS256 서명 JWT(stateless)라 서버 쪽 세션 목록이 없음. 로그아웃은 쿠키 삭제이며, 발급된 세션을 전부 폐기하려면 `SESSION_SECRET`을 교체
+- **잠금·OTP 재사용 차단·레이트리밋은 프로세스 메모리**: 로그인 실패 카운터(`src/lib/auth.ts`), 사용한 OTP 스텝(`src/lib/totp.ts`), 토큰 버킷(`src/lib/rateLimit.ts`)이 Map에 있어 재시작 시 초기화되고 단일 인스턴스를 전제
+- **기록에 평문으로 남는 항목**: URL·SNS 아이디·이름·SSID와 IP·User-Agent는 마스킹 없이 90일 보관(`qr_logs`, `src/lib/db/schema.ts`)
+- **관리자 비밀번호는 env 평문 비교**: 해시 없이 `ADMIN_PASSWORD`와 상수 시간 비교. 운영자 1명, `.env`는 서버 접근자만 읽는 전제
+
 ## 만든 방식
 
 1인 개발이며, 구현 과정에서 AI 코딩 도구를 보조로 사용했습니다. 무엇을 만들지와 설계 결정(정적 QR만, 회원가입 없음, 10개 언어, 관리자에 무엇을 기록할지)은 직접 내렸고 그 근거를 [`docs/결정-기록`](docs/결정-기록/README.md)에 남겼습니다. 모든 변경은 CI(lint → 타입 → 단위 → 빌드 → E2E → Docker 빌드)를 통과한 뒤 main에 올립니다.
+
+랜딩 본문은 도구로 초안을 만들고 사실 관계를 검토했으며, 원어민 검수 전입니다.
 
 ## 라이선스
 

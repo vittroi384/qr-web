@@ -143,7 +143,7 @@ describe("hardenSecretsForStorage: personal data policy (2026-10-06)", () => {
     assert.equal(maskPhoneNumber("010-1234-5678"), "010-****-5678");
     assert.equal(maskPhoneNumber("+82 10 1234 5678"), "+82 1* **** 5678"); // 국가번호 포함 앞 3자리·뒤 4자리
     assert.equal(maskPhoneNumber("1234"), "****"); // too short → whole mask
-    assert.equal(maskEmail("jooky@gmail.com"), "jo****@gmail.com");
+    assert.equal(maskEmail("user@example.com"), "us****@example.com");
     assert.equal(maskEmail("a@b.co"), "a****@b.co");
     assert.deepEqual(hardenSecretsForStorage("sms", { phone: "01012345678", message: "hi" }), { phone: "010****5678", message: "hi" });
     assert.equal(hardenSecretsForStorage("vcard", { firstName: "길동", email: "hong@example.com", mobile: "010-9999-8888" }).email, "ho****@example.com");

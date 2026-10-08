@@ -101,7 +101,7 @@ export function maskPhoneNumber(value: string): string {
   });
 }
 
-/** "jooky@gmail.com" → "jo****@gmail.com"; anything without "@" falls back to the identifier mask. */
+/** "user@example.com" → "us****@example.com"; anything without "@" falls back to the identifier mask. */
 export function maskEmail(value: string): string {
   const at = value.indexOf("@");
   if (at <= 0) return maskIdentifier(value);
