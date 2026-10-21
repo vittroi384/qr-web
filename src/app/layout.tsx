@@ -8,6 +8,7 @@ import { AdminFooter } from "@/components/admin/AdminFooter";
 import { ADMIN_MARKER_HEADER, adminMarker } from "@/lib/adminAccess";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { VisitBeacon } from "@/components/VisitBeacon";
 import { DEFAULT_LOCALE, getDict, isLocale, type Locale } from "@/lib/i18n";
 import { donateUrlFor } from "@/lib/donate";
 import { DEFAULT_SETTINGS, getSettings, isOn } from "@/lib/settings";
@@ -78,6 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="flex min-h-full flex-col">
         <ClientErrorReporter />
+        {isAdmin ? null : <VisitBeacon locale={locale} />}
         <SiteHeader siteName={s.site_name} locale={locale} />
         <div className="flex-1">{children}</div>
         {isAdmin ? <AdminFooter siteName={s.site_name} /> : <SiteFooter siteName={s.site_name} notice={notice} locale={locale} donateUrl={donateUrlFor(s, locale)} />}

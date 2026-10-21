@@ -6,6 +6,7 @@ import { QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
 import { requireAdmin } from "@/lib/adminSession";
 import { getStatsExclusion } from "@/lib/logs";
 import { getStats } from "@/lib/stats";
+import { SOURCE_GROUP_LABELS, crawlerLabel, isAiCrawler, sourceGroup, sourceLabel, type SourceGroup } from "@/lib/traffic";
 
 /** Save methods shown as matrix columns ("generate" is never logged). */
 const SAVE_EVENTS = ["download_png", "download_svg", "copy", "print", "batch"] as const;
@@ -112,6 +113,12 @@ export default async function StatsPage() {
     .map(([qrType, cells]) => ({ qrType, cells, total: Object.values(cells).reduce((a, b) => a + b, 0) }))
     .sort((a, b) => b.total - a.total);
 
+  // Visits per source group (AI, search, …) for the summary line above the sources table.
+  const GROUPS: SourceGroup[] = ["ai", "search", "social", "direct", "other"];
+  const groupVisits = GROUPS.map((g) => ({ g, visits: s.sources.filter((r) => sourceGroup(r.source) === g).reduce((sum, r) => sum + r.visits, 0) }));
+  const totalVisits = groupVisits.reduce((sum, g) => sum + g.visits, 0);
+  const maxVisits = Math.max(1, ...s.sources.map((r) => r.visits));
+
   const funnelTotals = s.funnel.reduce(
     (acc, r) => ({ select: acc.select + r.select, preview: acc.preview + r.preview, save: acc.save + r.save }),
     { select: 0, preview: 0, save: 0 },
@@ -150,6 +157,66 @@ export default async function StatsPage() {
           </div>
         )}
       </Section>
+
+      <Section title="유입 출처" hint="방문자가 어디서 왔는지(브라우저 세션의 첫 페이지 기준). utm_source 꼬리표가 있으면 그것을, 없으면 이전 페이지 주소를 봅니다.">
+        {s.sources.length === 0 ? (
+          <Empty />
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-x-5 gap-y-1 px-5 py-3 text-sm">
+              {groupVisits.map(({ g, visits }) => (
+                <span key={g} className={g === "ai" ? "font-semibold text-accent" : "text-muted"}>
+                  {SOURCE_GROUP_LABELS[g]} {n(visits)} <span className="text-xs">({pct(visits, totalVisits)})</span>
+                </span>
+              ))}
+            </div>
+            <div className="table-scroll border-t border-border [--table-offset:20rem]">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>출처</th>
+                    <th>분류</th>
+                    <th className="text-right">방문</th>
+                    <th className="text-right">저장한 사람</th>
+                    <th className="text-right">저장</th>
+                    <th className="text-right">저장한 사람/방문</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.sources.map((r) => (
+                    <tr key={r.source}>
+                      <td className="max-w-xs truncate whitespace-nowrap">{sourceLabel(r.source)}</td>
+                      <td className="whitespace-nowrap text-muted">{SOURCE_GROUP_LABELS[sourceGroup(r.source)]}</td>
+                      <td className="text-right tabular-nums">
+                        <span className="flex items-center justify-end gap-2">
+                          <Meter value={r.visits} max={maxVisits} />
+                          <span className="w-10 font-semibold">{n(r.visits)}</span>
+                        </span>
+                      </td>
+                      <td className="text-right tabular-nums">{n(r.users)}</td>
+                      <td className="text-right tabular-nums">{n(r.saves)}</td>
+                      <td className="text-right text-muted tabular-nums">{pct(r.users, r.visits)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+        <p className="border-t border-border px-5 py-3 text-xs text-muted">
+          방문은 브라우저 세션당 1회, IP 없이 숫자만 셉니다(그래서 내 IP 제외가 방문에는 적용되지 않습니다). 저장한 사람·저장은 입력 기록 기준입니다. 이 집계는 기능을 배포한 날부터 시작되었습니다. 앱 안 브라우저나 메신저에서 연 링크는 이전 페이지 주소가 없어
+          &lsquo;직접&rsquo;으로 잡힙니다.
+        </p>
+      </Section>
+
+      {s.legacySources.length > 0 ? (
+        <Section title="예전 저장 기록의 utm_source" hint="출처 집계를 배포하기 전에 저장된 기록 중, 페이지 주소에 utm_source 꼬리표가 남아 있던 것만 (ChatGPT 링크에 붙음). 실제보다 적게 잡힙니다.">
+          <UsersTable
+            head="utm_source"
+            rows={s.legacySources.map((r) => ({ key: r.source, label: `${sourceLabel(r.source)} · ${SOURCE_GROUP_LABELS[sourceGroup(r.source)]}`, users: r.users, saves: r.saves }))}
+          />
+        </Section>
+      ) : null}
 
       <Section title="종류별 사용자" hint="어떤 기능을 몇 명이 썼는지. 1인당이 높으면 한 사람이 여러 번 뽑은 것입니다.">
         {s.usersByType.length === 0 ? (
@@ -282,6 +349,33 @@ export default async function StatsPage() {
           선택은 방문자가 실제로 종류를 고른 때(타일 클릭·입력 시작·종류별 랜딩 진입)만, 미리보기는 QR이 처음 그려진 때만 세며 둘 다 브라우저 세션당 종류별 1회입니다. 저장은 모든 저장 건수(일괄 생성 포함)라 100%를 넘을 수 있습니다. 퍼널 집계는
           이 기능을 배포한 날부터 시작되었으며, IP·브라우저 등 개인 정보는 저장하지 않습니다. 그래서 내 IP 제외가 퍼널에는 적용되지 않습니다.
         </p>
+      </Section>
+
+      <Section title="크롤러 방문 (AI·검색)" hint="AI와 검색 엔진의 수집 봇이 페이지를 몇 번 가져갔는지. AI 답변에 인용되려면 먼저 이 봇들이 읽어 가야 합니다.">
+        {s.crawlers.length === 0 ? (
+          <Empty />
+        ) : (
+          <div className="table-scroll [--table-offset:20rem]">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>크롤러</th>
+                  <th>분류</th>
+                  <th className="text-right">페이지 요청</th>
+                </tr>
+              </thead>
+              <tbody>
+                {s.crawlers.map((r) => (
+                  <tr key={r.crawler}>
+                    <td className="whitespace-nowrap">{crawlerLabel(r.crawler)}</td>
+                    <td className={`whitespace-nowrap ${isAiCrawler(r.crawler) ? "text-accent" : "text-muted"}`}>{isAiCrawler(r.crawler) ? "AI" : "검색"}</td>
+                    <td className="text-right font-medium tabular-nums">{n(r.c)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Section>
     </div>
   );

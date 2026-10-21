@@ -3,6 +3,7 @@ import { ADMIN_MARKER_HEADER, GATE_COOKIE, GATE_TTL_SEC, adminEntryPath, adminMa
 import { REMEMBER_TTL_SEC, SESSION_COOKIE, createSessionToken, sessionCookieOptionsFor, sessionRenewalDue, verifySessionToken } from "@/lib/auth";
 import { LANG_COOKIE, isLocale, localeFromPath, preferredLocale } from "@/lib/i18n/locales";
 import { buildCsp, makeNonce } from "@/lib/csp";
+import { countCrawlerVisit } from "@/lib/crawlerCount";
 import { getClientIpFromHeaders, isFromThisSite } from "@/lib/ip";
 
 const HTTPS = process.env.NODE_ENV === "production" && Boolean(process.env.DOMAIN);
@@ -60,7 +61,9 @@ export async function proxy(req: NextRequest) {
     if (!ipAllowedForAdmin(getClientIpFromHeaders(req.headers))) return notFound(req, nonce);
     const token = await createGateToken();
     if (!token) return notFound(req, nonce); // SESSION_SECRET missing → gate cannot be issued safely
-    const res = NextResponse.redirect(new URL("/admin/login", req.url));
+    // Already signed in (e.g. "remember this device") → straight to the dashboard, no second login.
+    const signedIn = await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value, req.headers.get("user-agent"));
+    const res = NextResponse.redirect(new URL(signedIn ? "/admin" : "/admin/login", req.url));
     res.cookies.set(GATE_COOKIE, token, {
       httpOnly: true,
       sameSite: "strict",
@@ -72,6 +75,7 @@ export async function proxy(req: NextRequest) {
   }
 
   if (!pathname.startsWith("/admin")) {
+    if (req.method === "GET") countCrawlerVisit(req.headers.get("user-agent"));
     // Old English URLs lived under /en; English is now the root.
     if (pathname === "/en" || pathname.startsWith("/en/")) {
       const url = req.nextUrl.clone();
@@ -116,13 +120,13 @@ export async function proxy(req: NextRequest) {
   adminHeaders.set("x-locale", "ko");
   adminHeaders.set(ADMIN_MARKER_HEADER, adminMarker()); // root layout: compact admin footer
   const adminPolicy = applyCsp(adminHeaders, nonce, true);
-  if (pathname === "/admin/login") {
-    return withAdminHeaders(withCsp(NextResponse.next({ request: { headers: adminHeaders } }), adminPolicy));
-  }
-
   const sessionToken = req.cookies.get(SESSION_COOKIE)?.value;
   const userAgent = req.headers.get("user-agent");
   const ok = await verifySessionToken(sessionToken, userAgent);
+  if (pathname === "/admin/login") {
+    if (ok && req.method === "GET") return withAdminHeaders(NextResponse.redirect(new URL("/admin", req.url)));
+    return withAdminHeaders(withCsp(NextResponse.next({ request: { headers: adminHeaders } }), adminPolicy));
+  }
   if (ok) {
     const res = withCsp(NextResponse.next({ request: { headers: adminHeaders } }), adminPolicy);
     // Sliding expiry for "remember this device": a remembered session used at least once a month

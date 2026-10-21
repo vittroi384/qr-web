@@ -100,6 +100,7 @@ export async function insertLog(entry: {
   acceptLanguage: string | null;
   locale: string | null;
   page: string | null;
+  source: string | null;
 }): Promise<void> {
   await db.insert(qrLogs).values({
     qrType: entry.qrType,
@@ -113,6 +114,7 @@ export async function insertLog(entry: {
     acceptLanguage: entry.acceptLanguage,
     locale: entry.locale,
     page: entry.page,
+    source: entry.source,
   });
 }
 

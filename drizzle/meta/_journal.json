@@ -15,6 +15,13 @@
       "when": 1790941359260,
       "tag": "0001_analytics",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792602429292,
+      "tag": "0002_traffic",
+      "breakpoints": true
     }
   ]
 }

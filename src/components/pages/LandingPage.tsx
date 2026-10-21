@@ -13,6 +13,7 @@ import { alternatesFor, getDict, localePath, resolveLanding, type LandingTarget,
 import type { QrType } from "@/lib/qr/types";
 import { donateUrlFor } from "@/lib/donate";
 import { getSettings } from "@/lib/settings";
+import { jsonLd, plain } from "@/lib/jsonLd";
 
 /** Copy may mark formats with backticks (`WIFI:T:WPA;…`); render those as inline code. */
 function rich(text: string): ReactNode {
@@ -27,13 +28,6 @@ function rich(text: string): ReactNode {
       part
     ),
   );
-}
-
-const plain = (text: string) => text.replace(/`([^`]+)`/g, "$1");
-
-/** JSON for a <script type="application/ld+json">: "<" is escaped so no string can close the tag. */
-function jsonLd(data: unknown): string {
-  return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
 /** Types where a printed sign is the usual outcome, so the print partner slot is relevant. */

@@ -54,4 +54,24 @@ test.describe("SEO surface", () => {
     expect(txt).not.toContain("/admin");
     expect(txt).not.toContain(ADMIN.path);
   });
+
+  test("home JSON-LD, llms.txt and the IndexNow key file", async ({ page, request }) => {
+    await page.goto("/ko");
+    const blocks = (await page.locator('script[type="application/ld+json"]').allTextContents()).map((b) => JSON.parse(b));
+    expect(blocks.map((b) => b["@type"])).toEqual(["WebApplication", "FAQPage"]);
+    expect(blocks[0].offers.price).toBe("0");
+    expect(blocks[1].mainEntity.length).toBe(await page.locator('section[aria-labelledby="faq-heading"] details').count());
+
+    const llms = await request.get("/llms.txt");
+    expect(llms.status()).toBe(200);
+    expect(llms.headers()["content-type"]).toContain("text/plain");
+    const text = await llms.text();
+    expect(text).toMatch(/^# /);
+    expect(text).toContain("/wifi-qr-code)");
+    expect(text).not.toContain(ADMIN.path);
+
+    const key = await request.get("/indexnow-key.txt");
+    expect(key.status()).toBe(200);
+    expect((await key.text()).trim()).toMatch(/^[0-9a-f]{32}$/);
+  });
 });

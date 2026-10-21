@@ -40,3 +40,35 @@ test.describe("funnel counters", () => {
     await expect.poll(() => sent).toEqual([{ step: "select", type: "wifi", locale: "en" }]);
   });
 });
+
+test.describe("visit source", () => {
+  test("first page of a session reports its source once; saves carry it", async ({ page, baseURL }) => {
+    const visits: unknown[] = [];
+    const logs: { source?: string }[] = [];
+    await page.route("**/api/visit", async (route) => {
+      visits.push(JSON.parse(route.request().postData() ?? "{}"));
+      await route.fulfill({ status: 204, body: "" });
+    });
+    await page.route("**/api/log", async (route) => {
+      logs.push(JSON.parse(route.request().postData() ?? "{}"));
+      await route.fulfill({ status: 204, body: "" });
+    });
+
+    await page.goto("/ko?utm_source=chatgpt.com");
+    await expect.poll(() => visits).toEqual([{ source: "chatgpt", locale: "ko" }]);
+    await page.goto("/ko/wifi-qr-code");
+    await page.waitForLoadState("networkidle");
+    expect(visits).toHaveLength(1);
+
+    await page.goto("/ko");
+    await page.getByPlaceholder("example.com 또는 https://example.com/page").fill("example.com/visit");
+    await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "이미지로 저장 (PNG)" }).click()]);
+    await expect.poll(() => logs.map((l) => l.source)).toEqual(["chatgpt"]);
+
+    // The real endpoint accepts a valid body and rejects junk.
+    const origin = new URL(baseURL!).origin;
+    expect((await page.request.post("/api/visit", { headers: { origin }, data: { source: "google", locale: "en" } })).status()).toBe(200);
+    expect((await page.request.post("/api/visit", { headers: { origin }, data: { source: "Bad Key", locale: "en" } })).status()).toBe(400);
+    expect((await page.request.post("/api/visit", { headers: { origin }, data: { source: "google", locale: "xx" } })).status()).toBe(400);
+  });
+});

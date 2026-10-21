@@ -19,6 +19,8 @@ export const qrLogs = pgTable(
     locale: text("locale"),
     /** Unprefixed path of that page, e.g. "/", "/wifi-qr-code", "/batch". */
     page: text("page"),
+    /** Where the visitor's session came from (src/lib/traffic.ts key, e.g. "chatgpt", "google", "direct"). */
+    source: text("source"),
   },
   (t) => [index("idx_qr_logs_created").on(t.createdAt), index("idx_qr_logs_type").on(t.qrType)],
 );
@@ -60,6 +62,29 @@ export const funnelDaily = pgTable(
     count: integer("count").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.day, t.locale, t.qrType, t.step] })],
+);
+
+/** Anonymous visit counters: one row per KST day × locale × source, first page of a browser session only. */
+export const sourceDaily = pgTable(
+  "source_daily",
+  {
+    day: date("day", { mode: "string" }).notNull(),
+    locale: text("locale").notNull(),
+    source: text("source").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.locale, t.source] })],
+);
+
+/** Page fetches by known AI and search crawlers (User-Agent), one row per KST day × crawler. */
+export const crawlerDaily = pgTable(
+  "crawler_daily",
+  {
+    day: date("day", { mode: "string" }).notNull(),
+    crawler: text("crawler").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.crawler] })],
 );
 
 export type QrLog = typeof qrLogs.$inferSelect;

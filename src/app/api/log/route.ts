@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { pageContextFromReferer } from "@/lib/analytics";
+import { isSourceKey } from "@/lib/traffic";
 import { getRequestMeta, ipLimitKey, publicPostRejection } from "@/lib/ip";
 import { insertLog } from "@/lib/logs";
 import {
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest) {
       options,
       ...meta,
       ...context,
+      source: isSourceKey(body.source) ? body.source : null,
     });
   } catch (err) {
     logEvent("error", "log.insert_failed", { ip: meta.ip, type: body.type, ...errorFields(err) });

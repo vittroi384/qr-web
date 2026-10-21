@@ -41,6 +41,12 @@ test.describe("admin area", () => {
     await expect(page).toHaveURL(/\/admin$/);
     await expect(page.getByRole("navigation", { name: "관리자 메뉴" })).toBeVisible();
 
+    // Signed in: the entry path (desktop shortcut) and the login page go straight to the dashboard.
+    expect((await page.goto(ADMIN.path))?.status()).toBe(200);
+    await expect(page).toHaveURL(/\/admin$/);
+    expect((await page.goto("/admin/login"))?.status()).toBe(200);
+    await expect(page).toHaveURL(/\/admin$/);
+
     // Dashboard and logs render for the session.
     expect((await page.goto("/admin"))?.status()).toBe(200);
     const logsRes = await page.goto(`/admin/logs?q=${encodeURIComponent(marker)}`);
@@ -54,7 +60,7 @@ test.describe("admin area", () => {
     // Stats page: heading and all seven sections render.
     expect((await page.goto("/admin/stats"))?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1, name: /통계/ })).toBeVisible();
-    for (const name of ["일별 사용자", "종류별 사용자", "언어별 사용자", "페이지별 사용자", "종류 × 저장 방식", "시간대 분포", "퍼널"]) {
+    for (const name of ["일별 사용자", "유입 출처", "종류별 사용자", "언어별 사용자", "페이지별 사용자", "종류 × 저장 방식", "시간대 분포", "퍼널", "크롤러 방문"]) {
       await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^${name}`) })).toBeVisible();
     }
 

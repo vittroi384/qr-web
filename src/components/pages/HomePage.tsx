@@ -5,12 +5,10 @@ import { adSlots } from "@/components/ads/adConfig";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { resolveAffiliate } from "@/components/affiliate";
 import { QrGenerator } from "@/components/qr/QrGenerator";
-import { getDict, localePath, type Locale } from "@/lib/i18n";
+import { DEFAULT_LOCALE, getDict, localePath, type Locale } from "@/lib/i18n";
+import { jsonLd, plain } from "@/lib/jsonLd";
 import { donateUrlFor } from "@/lib/donate";
 import { getSettings } from "@/lib/settings";
-
-/** FAQ entries shown before the in-article ad. */
-const FAQ_BEFORE_AD = 3;
 
 export async function HomePage({ locale }: { locale: Locale }) {
   const t = getDict(locale);
@@ -33,8 +31,41 @@ export async function HomePage({ locale }: { locale: Locale }) {
     },
   ];
 
+  // What the tool is and its FAQ, as schema.org data for search engines and AI assistants.
+  const base = s.site_url.replace(/\/$/, "");
+  const privacyAnswer = `${t.home.faqPrivacy.before}${t.home.faqPrivacy.link}${t.home.faqPrivacy.after}`;
+  const structured = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: s.site_name,
+      url: `${base}${localePath(locale, "/")}`,
+      inLanguage: locale,
+      description: locale === DEFAULT_LOCALE ? s.site_description : t.meta.description,
+      applicationCategory: "UtilitiesApplication",
+      operatingSystem: "Any (web browser)",
+      isAccessibleForFree: true,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      inLanguage: locale,
+      mainEntity: [...t.home.faq.map((f) => ({ q: f.q, a: f.a })), { q: t.home.faqPrivacy.q, a: privacyAnswer }].map((f) => ({
+        "@type": "Question",
+        name: plain(f.q),
+        acceptedAnswer: { "@type": "Answer", text: plain(f.a) },
+      })),
+    },
+  ];
+
   return (
     <main className="mx-auto w-full max-w-[1400px] px-4 pt-4 pb-16 sm:px-6 sm:pt-5">
+      {structured.map((data, i) => (
+        // Static, server-built JSON (no user input); "<" is escaped regardless.
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(data) }} />
+      ))}
+
       {/* 1. 상단 가로 광고 */}
       <AdSlot config={ads.top} name="top" shape="horizontal" compact className="mb-5" />
 
@@ -67,16 +98,10 @@ export async function HomePage({ locale }: { locale: Locale }) {
                 <h2 id="faq-heading" className="section-title">
                   {t.home.faqTitle}
                 </h2>
-                {/* The in-article unit sits between the first questions and the rest, like a break in a long article. */}
                 <div className="mt-4">
-                  <FaqList items={faqItems.slice(0, FAQ_BEFORE_AD)} />
+                  <FaqList items={faqItems} />
                 </div>
                 <AdSlot config={ads.inarticle} name="in-article" shape="inarticle" className="mt-8" />
-                {faqItems.length > FAQ_BEFORE_AD ? (
-                  <div className="mt-8">
-                    <FaqList items={faqItems.slice(FAQ_BEFORE_AD)} defaultOpen={-1} />
-                  </div>
-                ) : null}
               </section>
             </div>
 

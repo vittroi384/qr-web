@@ -1,8 +1,9 @@
-import { and, count, countDistinct, desc, gte, sql, type SQL } from "drizzle-orm";
+import { and, count, countDistinct, desc, gte, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 import type { FunnelStep } from "./analytics";
 import { db } from "./db";
-import { funnelDaily, qrLogs } from "./db/schema";
+import { crawlerDaily, funnelDaily, qrLogs, sourceDaily } from "./db/schema";
 import { DISPLAY_TZ, kstDayStart, kstToday } from "./time";
+import { classifySource } from "./traffic";
 
 /** Funnel row key used when the locale is unknown (no same-origin Referer on a save). */
 export const UNKNOWN_LOCALE = "unknown";
@@ -15,6 +16,28 @@ export async function incrementFunnel(step: FunnelStep, qrType: string, locale: 
     .onConflictDoUpdate({
       target: [funnelDaily.day, funnelDaily.locale, funnelDaily.qrType, funnelDaily.step],
       set: { count: sql`${funnelDaily.count} + 1` },
+    });
+}
+
+/** Adds 1 to today's (KST) visit counter for this locale × source (first page of a session). */
+export async function incrementSource(source: string, locale: string | null): Promise<void> {
+  await db
+    .insert(sourceDaily)
+    .values({ day: kstToday(), locale: locale ?? UNKNOWN_LOCALE, source, count: 1 })
+    .onConflictDoUpdate({
+      target: [sourceDaily.day, sourceDaily.locale, sourceDaily.source],
+      set: { count: sql`${sourceDaily.count} + 1` },
+    });
+}
+
+/** Adds 1 to today's (KST) page-fetch counter for this crawler. */
+export async function incrementCrawler(crawler: string): Promise<void> {
+  await db
+    .insert(crawlerDaily)
+    .values({ day: kstToday(), crawler, count: 1 })
+    .onConflictDoUpdate({
+      target: [crawlerDaily.day, crawlerDaily.crawler],
+      set: { count: sql`${crawlerDaily.count} + 1` },
     });
 }
 
@@ -31,6 +54,7 @@ export function lastKstDays(days: number, today = kstToday()): string[] {
 }
 
 export type FunnelRow = { qrType: string; select: number; preview: number; save: number };
+export type SourceRow = { source: string; visits: number; users: number; saves: number };
 
 /**
  * Everything the /admin/stats page shows, over the last 30 KST days (today included).
@@ -44,7 +68,10 @@ export async function getStats(exclude?: SQL) {
   // "Users" = distinct IPs: one person on two networks counts twice, a shared network once.
   const users = countDistinct(qrLogs.ip);
 
-  const [byDayRows, byLocale, byPage, byTypeEvent, byHourRows, funnelRows, usersRows, usersByType] = await Promise.all([
+  // Saves made before the source column existed: the page URL may still carry ?utm_source=… (ChatGPT adds one).
+  const legacyUtm = sql<string>`lower(substring(${qrLogs.referer} from 'utm_source=([^&#]+)'))`;
+
+  const [byDayRows, byLocale, byPage, byTypeEvent, byHourRows, funnelRows, usersRows, usersByType, visitRows, savesBySource, legacyRows, crawlerRows] = await Promise.all([
     db.select({ day: kstDay, c: count(), users }).from(qrLogs).where(since).groupBy(sql`1`),
     db
       .select({ locale: qrLogs.locale, users, c: count() })
@@ -77,6 +104,27 @@ export async function getStats(exclude?: SQL) {
       .where(since)
       .groupBy(qrLogs.qrType)
       .orderBy(desc(users), desc(count())),
+    db
+      .select({ source: sourceDaily.source, c: sql<number>`sum(${sourceDaily.count})::int` })
+      .from(sourceDaily)
+      .where(gte(sourceDaily.day, days[0]))
+      .groupBy(sourceDaily.source),
+    db
+      .select({ source: qrLogs.source, users, saves: count() })
+      .from(qrLogs)
+      .where(and(since, isNotNull(qrLogs.source)))
+      .groupBy(qrLogs.source),
+    db
+      .select({ utm: legacyUtm, users, saves: count() })
+      .from(qrLogs)
+      .where(and(since, isNull(qrLogs.source), sql`${qrLogs.referer} like '%utm_source=%'`))
+      .groupBy(sql`1`),
+    db
+      .select({ crawler: crawlerDaily.crawler, c: sql<number>`sum(${crawlerDaily.count})::int` })
+      .from(crawlerDaily)
+      .where(gte(crawlerDaily.day, days[0]))
+      .groupBy(crawlerDaily.crawler)
+      .orderBy(desc(sql`2`)),
   ]);
 
   // Fill empty days/hours with zero so the charts keep a fixed axis.
@@ -95,7 +143,47 @@ export async function getStats(exclude?: SQL) {
   }
   const funnel = [...funnelMap.values()].sort((a, b) => b.select - a.select || b.save - a.save);
 
-  return { days: STATS_DAYS, total, users: usersRows[0]?.c ?? 0, usersByType, byDay, byLocale, byPage, byTypeEvent, byHour, funnel };
+  // One row per source: visits (anonymous counter) next to saves and saving users (qr_logs).
+  const sourceMap = new Map<string, SourceRow>();
+  const sourceRow = (key: string) => sourceMap.get(key) ?? { source: key, visits: 0, users: 0, saves: 0 };
+  for (const r of visitRows) sourceMap.set(r.source, { ...sourceRow(r.source), visits: Number(r.c) });
+  for (const r of savesBySource) {
+    if (r.source) sourceMap.set(r.source, { ...sourceRow(r.source), users: r.users, saves: r.saves });
+  }
+  const sources = [...sourceMap.values()].sort((a, b) => b.visits - a.visits || b.users - a.users);
+
+  // Older saves, attributed by their utm_source only (one person counted per utm value).
+  const legacyMap = new Map<string, { source: string; users: number; saves: number }>();
+  for (const r of legacyRows) {
+    let utm = r.utm ?? "";
+    try {
+      utm = decodeURIComponent(utm);
+    } catch {
+      // keep the raw value
+    }
+    const key = classifySource(null, utm, "") ?? "direct";
+    const row = legacyMap.get(key) ?? { source: key, users: 0, saves: 0 };
+    legacyMap.set(key, { source: key, users: row.users + r.users, saves: row.saves + r.saves });
+  }
+  const legacySources = [...legacyMap.values()].sort((a, b) => b.users - a.users || b.saves - a.saves);
+
+  const crawlers = crawlerRows.map((r) => ({ crawler: r.crawler, c: Number(r.c) }));
+
+  return {
+    days: STATS_DAYS,
+    total,
+    users: usersRows[0]?.c ?? 0,
+    usersByType,
+    byDay,
+    byLocale,
+    byPage,
+    byTypeEvent,
+    byHour,
+    funnel,
+    sources,
+    legacySources,
+    crawlers,
+  };
 }
 
 export type Stats = Awaited<ReturnType<typeof getStats>>;

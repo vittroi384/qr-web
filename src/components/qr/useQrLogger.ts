@@ -56,11 +56,22 @@ export type LogBody = {
  * Only ever call this from an explicit user action (download, copy, print, batch export).
  */
 export function sendLog(log: LogBody) {
-  beacon("/api/log", JSON.stringify({ ...log, encoded: log.encoded.slice(0, 200) }));
+  beacon("/api/log", JSON.stringify({ ...log, encoded: log.encoded.slice(0, 200), source: sessionSource() }));
+}
+
+/** sessionStorage key holding where this browser session came from (set by VisitBeacon). */
+export const SOURCE_SESSION_KEY = "qrm.source";
+
+function sessionSource(): string | null {
+  try {
+    return sessionStorage.getItem(SOURCE_SESSION_KEY);
+  } catch {
+    return null;
+  }
 }
 
 /** Fire-and-forget JSON POST: sendBeacon, falling back to a keepalive fetch. Never throws. */
-function beacon(url: string, body: string) {
+export function beacon(url: string, body: string) {
   try {
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: "application/json" });
