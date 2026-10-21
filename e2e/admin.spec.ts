@@ -51,10 +51,10 @@ test.describe("admin area", () => {
     await expect(table).not.toContainText(plain);
     expect(await page.content()).not.toContain(plain);
 
-    // Stats page: heading and all six sections render.
+    // Stats page: heading and all seven sections render.
     expect((await page.goto("/admin/stats"))?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1, name: /통계/ })).toBeVisible();
-    for (const name of ["일별 저장 수", "언어별 저장 수", "페이지별 저장 수", "종류 × 저장 방식", "시간대 분포", "퍼널"]) {
+    for (const name of ["일별 사용자", "종류별 사용자", "언어별 사용자", "페이지별 사용자", "종류 × 저장 방식", "시간대 분포", "퍼널"]) {
       await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^${name}`) })).toBeVisible();
     }
 

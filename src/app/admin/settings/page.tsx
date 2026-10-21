@@ -1,9 +1,12 @@
+import { headers } from "next/headers";
+import { getRequestMetaFromHeaders } from "@/lib/ip";
 import { BOOLEAN_SETTINGS, PRIVACY_CONTACT_MAX, SETTING_LABELS, type SettingKey, getSettings } from "@/lib/settings";
+import { IP_LIST_MAX } from "@/lib/visitors";
 import { saveSettingsAction } from "./actions";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-const GROUPS: { title: string; description?: string; keys: SettingKey[] }[] = [
+const GROUPS: { id?: string; title: string; description?: string; keys: SettingKey[] }[] = [
   {
     title: "사이트",
     description:
@@ -49,6 +52,13 @@ const GROUPS: { title: string; description?: string; keys: SettingKey[] }[] = [
       "직접 운영하는 Umami로 페이지뷰·국가·기기 같은 방문 통계를 모읍니다. 쿠키를 쓰지 않고 개인을 식별하지 않으므로 동의 배너가 필요 없습니다. Umami 대시보드(서버 루프백 전용, SSH 터널로 접속 — README 참고)에서 웹사이트를 추가한 뒤 웹사이트 ID를 넣고, 스크립트 URL은 https://도메인/umami/script.js 로 넣으세요(추적 요청은 같은 도메인의 /umami/api/send 로 갑니다). 두 칸 중 하나라도 비우면 아무것도 삽입되지 않으며, 관리자 페이지에는 항상 넣지 않습니다.",
     keys: ["analytics_script_url", "analytics_website_id"],
   },
+  {
+    id: "stats",
+    title: "관리자 통계",
+    description:
+      "내가 테스트로 만든 기록이 사용자 수에 섞이지 않게, 여기 적은 IP는 대시보드·통계 숫자에서 빠집니다. 입력 기록 목록에서는 기본으로 숨기고 '제외 IP 포함'을 누르면 보입니다. 기록 자체는 지워지지 않습니다. 휴대폰처럼 IPv6 뒷부분이 자주 바뀌면 앞 네 덩어리 뒤에 * 를 붙이세요 (예: 2001:4430:d245:411e:*).",
+    keys: ["stats_exclude_ips"],
+  },
 ];
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -60,6 +70,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   monetize_url: "제휴·후원 링크는 http:// 또는 https:// 로 시작하는 주소여야 합니다. (다른 변경도 함께 저장되지 않았습니다)",
   analytics_script_url: "Umami 스크립트 URL은 http:// 또는 https:// 로 시작하는 주소여야 합니다. 예: https://<도메인>/umami/script.js (다른 변경도 함께 저장되지 않았습니다)",
   analytics_website_id: "Umami 웹사이트 ID는 UUID 형식이어야 합니다. 예: 3f8c2a1e-5b7d-4c9a-8e21-0d6f4b9a7c13 (다른 변경도 함께 저장되지 않았습니다)",
+  stats_exclude_ips: `통계에서 뺄 IP는 숫자·점·콜론으로 된 IP만, 최대 ${IP_LIST_MAX}개까지 적을 수 있습니다. 끝에만 * 를 붙일 수 있습니다. (다른 변경도 함께 저장되지 않았습니다)`,
 };
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -67,6 +78,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const s = await getSettings();
   const saved = typeof sp.saved === "string" ? Number.parseInt(sp.saved, 10) : null;
   const error = typeof sp.error === "string" ? ERROR_MESSAGES[sp.error] : null;
+  const myIp = getRequestMetaFromHeaders(await headers()).ip;
 
   return (
     <form action={saveSettingsAction} className="mx-auto max-w-4xl space-y-6">
@@ -94,7 +106,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       ) : null}
 
       {GROUPS.map((g) => (
-        <section key={g.title} className="overflow-hidden rounded-xl border border-border bg-card">
+        <section key={g.title} id={g.id} className="scroll-mt-6 overflow-hidden rounded-xl border border-border bg-card">
           <div className="border-b border-border px-5 py-4 sm:px-6">
             <h2 className="text-[15px] font-semibold">{g.title}</h2>
             {g.description ? <p className="mt-1 text-[13px] leading-relaxed text-muted">{g.description}</p> : null}
@@ -112,10 +124,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               ) : (
                 <label
                   key={key}
-                  className={`block ${key === "site_description" || key === "footer_notice" || key === "affiliate_print_note" ? "sm:col-span-2" : ""}`}
+                  className={`block ${key === "site_description" || key === "footer_notice" || key === "affiliate_print_note" || key === "stats_exclude_ips" ? "sm:col-span-2" : ""}`}
                 >
                   <span className="label">{SETTING_LABELS[key]}</span>
-                  {key === "site_description" || key === "footer_notice" ? (
+                  {key === "stats_exclude_ips" ? (
+                    <>
+                      <textarea name={key} className="input min-h-24 font-mono" defaultValue={s[key]} spellCheck={false} placeholder="116.125.175.155" />
+                      <span className="hint">
+                        지금 접속한 내 IP: <code className="rounded bg-surface px-1 py-0.5 font-mono text-foreground select-all">{myIp ?? "(알 수 없음)"}</code>
+                      </span>
+                    </>
+                  ) : key === "site_description" || key === "footer_notice" ? (
                     <textarea name={key} className="input min-h-16" defaultValue={s[key]} />
                   ) : (
                     <input

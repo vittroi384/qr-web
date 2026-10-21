@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { formatKst, isValidDay, kstDayEndExclusive, kstDayStart, kstToday, toKstIso, toUtcIso } from "./time";
+import { formatKst, isValidDay, kstDayEndExclusive, kstDayStart, kstToday, timeAgo, toKstIso, toUtcIso } from "./time";
 
 describe("time (KST helpers)", () => {
   it("maps a KST calendar day to its UTC instants", () => {
@@ -26,5 +26,15 @@ describe("time (KST helpers)", () => {
     assert.equal(isValidDay("2026-02-28"), true);
     assert.equal(isValidDay("2026-02-30"), false);
     assert.equal(isValidDay("2026-1-01"), false);
+  });
+
+  it("timeAgo: minutes, hours, days, then the KST date", () => {
+    const now = new Date("2026-10-21T12:00:00Z");
+    assert.equal(timeAgo(new Date("2026-10-21T11:59:30Z"), now), "방금");
+    assert.equal(timeAgo(new Date("2026-10-21T11:55:00Z"), now), "5분 전");
+    assert.equal(timeAgo(new Date("2026-10-21T09:00:00Z"), now), "3시간 전");
+    assert.equal(timeAgo(new Date("2026-10-19T12:00:00Z"), now), "2일 전");
+    assert.equal(timeAgo(new Date("2026-08-01T20:00:00Z"), now), "2026-08-02");
+    assert.equal(timeAgo(new Date("2026-10-21T12:05:00Z"), now), "방금"); // clock skew never goes negative
   });
 });

@@ -18,9 +18,11 @@ export async function deleteLogsAction(formData: FormData) {
   if (!(await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value, h.get("user-agent")))) {
     throw new Error("Unauthorized");
   }
+  // A grouped row ("×19") carries all its ids in one checkbox value: "51,52,53".
   const ids = formData
     .getAll("ids")
-    .map((v) => Number.parseInt(String(v), 10))
+    .flatMap((v) => String(v).split(","))
+    .map((v) => Number.parseInt(v, 10))
     .filter((n) => Number.isInteger(n) && n > 0 && n <= 2_147_483_647) // int4 range
     .slice(0, 2000); // safety cap: the list shows at most 2000 rows, so this never limits a real selection
   if (ids.length === 0) return;

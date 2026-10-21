@@ -1,4 +1,4 @@
-import { count, desc, gte, sql } from "drizzle-orm";
+import { and, count, countDistinct, desc, gte, sql, type SQL } from "drizzle-orm";
 import type { FunnelStep } from "./analytics";
 import { db } from "./db";
 import { funnelDaily, qrLogs } from "./db/schema";
@@ -32,29 +32,32 @@ export function lastKstDays(days: number, today = kstToday()): string[] {
 
 export type FunnelRow = { qrType: string; select: number; preview: number; save: number };
 
-/** Everything the /admin/stats page shows, over the last 30 KST days (today included). */
-export async function getStats() {
+/**
+ * Everything the /admin/stats page shows, over the last 30 KST days (today included).
+ * `exclude` (from ipNotExcluded) leaves the owner's test IPs out; the funnel has no IPs, so it can't.
+ */
+export async function getStats(exclude?: SQL) {
   const days = lastKstDays(STATS_DAYS);
-  const since = gte(qrLogs.createdAt, kstDayStart(days[0]));
+  const since = and(gte(qrLogs.createdAt, kstDayStart(days[0])), exclude);
   const kstDay = sql<string>`to_char(${qrLogs.createdAt} AT TIME ZONE ${DISPLAY_TZ}, 'YYYY-MM-DD')`;
   const kstHour = sql<number>`extract(hour from ${qrLogs.createdAt} AT TIME ZONE ${DISPLAY_TZ})::int`;
-
-  const distinctIps = sql<number>`count(distinct ${qrLogs.ip})::int`;
+  // "Users" = distinct IPs: one person on two networks counts twice, a shared network once.
+  const users = countDistinct(qrLogs.ip);
 
   const [byDayRows, byLocale, byPage, byTypeEvent, byHourRows, funnelRows, usersRows, usersByType] = await Promise.all([
-    db.select({ day: kstDay, c: count() }).from(qrLogs).where(since).groupBy(sql`1`),
+    db.select({ day: kstDay, c: count(), users }).from(qrLogs).where(since).groupBy(sql`1`),
     db
-      .select({ locale: qrLogs.locale, c: count() })
+      .select({ locale: qrLogs.locale, users, c: count() })
       .from(qrLogs)
       .where(since)
       .groupBy(qrLogs.locale)
-      .orderBy(desc(count())),
+      .orderBy(desc(users), desc(count())),
     db
-      .select({ page: qrLogs.page, c: count() })
+      .select({ page: qrLogs.page, users, c: count() })
       .from(qrLogs)
       .where(since)
       .groupBy(qrLogs.page)
-      .orderBy(desc(count()))
+      .orderBy(desc(users), desc(count()))
       .limit(15),
     db
       .select({ qrType: qrLogs.qrType, event: qrLogs.event, c: count() })
@@ -67,19 +70,18 @@ export async function getStats() {
       .from(funnelDaily)
       .where(gte(funnelDaily.day, days[0]))
       .groupBy(funnelDaily.qrType, funnelDaily.step),
-    // "Users" = distinct IPs: one person on two networks counts twice, a shared network once.
-    db.select({ c: distinctIps }).from(qrLogs).where(since),
+    db.select({ c: users }).from(qrLogs).where(since),
     db
-      .select({ qrType: qrLogs.qrType, users: distinctIps, saves: count() })
+      .select({ qrType: qrLogs.qrType, users, saves: count() })
       .from(qrLogs)
       .where(since)
       .groupBy(qrLogs.qrType)
-      .orderBy(desc(distinctIps), desc(count())),
+      .orderBy(desc(users), desc(count())),
   ]);
 
   // Fill empty days/hours with zero so the charts keep a fixed axis.
-  const dayCounts = new Map(byDayRows.map((r) => [r.day, r.c]));
-  const byDay = days.map((day) => ({ day, c: dayCounts.get(day) ?? 0 }));
+  const dayCounts = new Map(byDayRows.map((r) => [r.day, r]));
+  const byDay = days.map((day) => ({ day, c: dayCounts.get(day)?.c ?? 0, users: dayCounts.get(day)?.users ?? 0 }));
   const hourCounts = new Map(byHourRows.map((r) => [Number(r.hour), r.c]));
   const byHour = Array.from({ length: 24 }, (_, hour) => ({ hour, c: hourCounts.get(hour) ?? 0 }));
 
@@ -93,9 +95,7 @@ export async function getStats() {
   }
   const funnel = [...funnelMap.values()].sort((a, b) => b.select - a.select || b.save - a.save);
 
-  const users = usersRows[0]?.c ?? 0;
-
-  return { days: STATS_DAYS, total, users, usersByType, byDay, byLocale, byPage, byTypeEvent, byHour, funnel };
+  return { days: STATS_DAYS, total, users: usersRows[0]?.c ?? 0, usersByType, byDay, byLocale, byPage, byTypeEvent, byHour, funnel };
 }
 
 export type Stats = Awaited<ReturnType<typeof getStats>>;

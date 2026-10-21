@@ -8,6 +8,7 @@ import { writeAudit } from "@/lib/audit";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { getRequestMetaFromHeaders } from "@/lib/ip";
 import { AD_SLOT_NAMES, BOOLEAN_SETTINGS, SETTING_KEYS, type Settings, isValidPrivacyContact, updateSettings } from "@/lib/settings";
+import { formatIpList, parseIpList } from "@/lib/visitors";
 
 const AD_SLOT_KEYS = AD_SLOT_NAMES.map((n) => `ad_slot_${n}` as const);
 
@@ -86,6 +87,11 @@ export async function saveSettingsAction(formData: FormData) {
   }
   for (const key of ["site_name", "site_description", "footer_notice"] as const) {
     if (patch[key] !== undefined) patch[key] = patch[key]!.slice(0, 500);
+  }
+  if (patch.stats_exclude_ips !== undefined) {
+    const list = parseIpList(patch.stats_exclude_ips);
+    if (!list) redirect("/admin/settings?error=stats_exclude_ips");
+    patch.stats_exclude_ips = formatIpList(list);
   }
   // Rendered inside a sentence on the public privacy page: one line, at most 200 characters.
   if (patch.privacy_contact !== undefined && !isValidPrivacyContact(patch.privacy_contact)) {

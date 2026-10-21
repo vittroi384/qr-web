@@ -48,6 +48,20 @@ export function formatKst(value: Date | string): string {
   return `${kstWallClock(d).replace("T", " ")} KST`;
 }
 
+/** "방금", "5분 전", "3시간 전", "2일 전"; a month or older falls back to the KST date. */
+export function timeAgo(value: Date | string, now = new Date()): string {
+  const d = toDate(value);
+  if (!d) return String(value);
+  const min = Math.floor(Math.max(0, now.getTime() - d.getTime()) / 60_000);
+  if (min < 1) return "방금";
+  if (min < 60) return `${min}분 전`;
+  const hours = Math.floor(min / 60);
+  if (hours < 24) return `${hours}시간 전`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}일 전`;
+  return kstWallClock(d).slice(0, 10);
+}
+
 /** UTC ISO 8601 without milliseconds for exports, e.g. "2026-10-02T11:39:33Z". */
 export function toUtcIso(value: Date | string): string {
   const d = toDate(value);

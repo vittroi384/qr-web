@@ -32,6 +32,7 @@ export const SETTING_KEYS = [
   "donate_url_ko",
   "analytics_script_url",
   "analytics_website_id",
+  "stats_exclude_ips",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
@@ -83,6 +84,8 @@ export const DEFAULT_SETTINGS: Settings = {
   // Umami visitor analytics: both empty = no script injected.
   analytics_script_url: "",
   analytics_website_id: "",
+  // Owner's own IPs, one per line (trailing * = prefix); left out of the admin dashboard and stats.
+  stats_exclude_ips: "",
 };
 
 export const SETTING_LABELS: Record<SettingKey, string> = {
@@ -115,6 +118,7 @@ export const SETTING_LABELS: Record<SettingKey, string> = {
   donate_url_ko: "한국어 페이지 후원 링크 URL (토스 송금 링크 등, 비우면 위 링크 사용)",
   analytics_script_url: "Umami 스크립트 URL (https://example.com/umami/script.js)",
   analytics_website_id: "Umami 웹사이트 ID (UUID)",
+  stats_exclude_ips: "통계에서 뺄 IP (한 줄에 하나, 끝에 * 를 붙이면 앞부분이 같은 IP 전부)",
 };
 
 export const AD_SLOT_NAMES = ["top", "left", "right", "bottom", "incontent", "inarticle"] as const;

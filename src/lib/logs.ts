@@ -1,8 +1,10 @@
-import { and, count, countDistinct, desc, eq, gte, ilike, inArray, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gte, ilike, inArray, isNull, lt, notIlike, notInArray, or, sql, type SQL } from "drizzle-orm";
 import { db } from "./db";
 import { adminAudit, qrLogs, type QrLog } from "./db/schema";
 import type { LogEvent, QrType } from "./qr/types";
+import { getSettings } from "./settings";
 import { DISPLAY_TZ, isValidDay, kstDayEndExclusive, kstDayStart, kstToday } from "./time";
+import { parseIpList, type IpList } from "./visitors";
 
 export type LogFilter = {
   type?: string;
@@ -14,7 +16,7 @@ export type LogFilter = {
 
 /**
  * A log row as the admin UI and CSV export see it: column names as in the table, jsonb columns
- * serialised back to JSON text (PayloadSummary, the detail view and CSV cells work on strings).
+ * serialised back to JSON text (the summary line, the detail view and CSV cells work on strings).
  */
 export type QrLogRow = {
   id: number;
@@ -53,6 +55,21 @@ function toRow(r: QrLog): QrLogRow {
 /** Escape LIKE wildcards so a search for "50%" matches literally. */
 function likePattern(q: string): string {
   return `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+}
+
+/** Keeps rows whose IP is not on the owner's exclusion list (rows without an IP always stay). */
+export function ipNotExcluded(list: IpList | null): SQL | undefined {
+  if (!list || (list.exact.length === 0 && list.prefixes.length === 0)) return undefined;
+  const keep: SQL[] = [];
+  if (list.exact.length) keep.push(notInArray(sql`lower(${qrLogs.ip})`, list.exact));
+  for (const p of list.prefixes) keep.push(notIlike(qrLogs.ip, `${p.replace(/[\\%_]/g, (c) => `\\${c}`)}%`));
+  return or(isNull(qrLogs.ip), and(...keep));
+}
+
+/** The "통계에서 뺄 IP" setting, ready for queries (`where`) and for the page note (`count`). */
+export async function getStatsExclusion(): Promise<{ list: IpList; where: SQL | undefined; count: number }> {
+  const list = parseIpList((await getSettings()).stats_exclude_ips) ?? { exact: [], prefixes: [] };
+  return { list, where: ipNotExcluded(list), count: list.exact.length + list.prefixes.length };
 }
 
 function buildWhere(filter: LogFilter): SQL | undefined {
@@ -112,8 +129,13 @@ export async function pruneOldAudit(retentionDays: number): Promise<void> {
   await db.delete(adminAudit).where(olderThanDays(adminAudit.createdAt, retentionDays));
 }
 
-export async function listLogs(filter: LogFilter, page: number, pageSize: number): Promise<{ rows: QrLogRow[]; total: number }> {
-  const where = buildWhere(filter);
+export async function listLogs(
+  filter: LogFilter,
+  page: number,
+  pageSize: number,
+  extra?: SQL,
+): Promise<{ rows: QrLogRow[]; total: number }> {
+  const where = and(buildWhere(filter), extra);
   const [[{ c: total }], rows] = await Promise.all([
     db.select({ c: count() }).from(qrLogs).where(where),
     db
@@ -157,43 +179,51 @@ export async function deleteLogs(ids: number[]): Promise<number> {
 
 export const AUDIT_RETENTION_DAYS = 365;
 
-export async function getDashboardStats(logRetentionDays = 0) {
+/** Rows the dashboard groups into its "최근 사용자" feed (newest first, last 30 days). */
+const RECENT_SAMPLE = 1000;
+
+/** Dashboard numbers. `exclude` (from ipNotExcluded) leaves the owner's own test IPs out of everything. */
+export async function getDashboardStats(logRetentionDays = 0, exclude?: SQL) {
   // Retention cleanup also runs here so it happens even when logging is off or traffic is idle.
   await Promise.all([pruneOldLogs(logRetentionDays), pruneOldAudit(AUDIT_RETENTION_DAYS)]);
 
   const since = (days: number) => gte(qrLogs.createdAt, sql`now() - make_interval(days => ${days})`);
-  const countWhere = async (where?: SQL) => (await db.select({ c: count() }).from(qrLogs).where(where))[0].c;
+  // Saves and distinct IPs ("users") in one pass.
+  const window = async (where?: SQL) =>
+    (await db.select({ saves: count(), users: countDistinct(qrLogs.ip) }).from(qrLogs).where(and(where, exclude)))[0];
   // Group by KST calendar day so the chart matches what the owner sees.
   const kstDay = sql<string>`to_char(date_trunc('day', ${qrLogs.createdAt} AT TIME ZONE ${DISPLAY_TZ}), 'YYYY-MM-DD')`;
 
-  const [total, today, last7, last30, uniqueIps30, byType, byEvent, byDay, recent] = await Promise.all([
-    countWhere(),
-    countWhere(gte(qrLogs.createdAt, kstDayStart(kstToday()))),
-    countWhere(since(7)),
-    countWhere(since(30)),
+  const [all, today, last7, last30, byType, byEvent, byDay, recent] = await Promise.all([
+    window(),
+    window(gte(qrLogs.createdAt, kstDayStart(kstToday()))),
+    window(since(7)),
+    window(since(30)),
     db
-      .select({ c: countDistinct(qrLogs.ip) })
+      .select({ qr_type: qrLogs.qrType, users: countDistinct(qrLogs.ip), c: count() })
       .from(qrLogs)
-      .where(since(30))
-      .then((r) => r[0].c),
-    db
-      .select({ qr_type: qrLogs.qrType, c: count() })
-      .from(qrLogs)
+      .where(and(since(30), exclude))
       .groupBy(qrLogs.qrType)
-      .orderBy(desc(count())),
+      .orderBy(desc(countDistinct(qrLogs.ip)), desc(count())),
     db
       .select({ event: qrLogs.event, c: count() })
       .from(qrLogs)
+      .where(exclude)
       .groupBy(qrLogs.event)
       .orderBy(desc(count())),
     db
-      .select({ day: kstDay, c: count() })
+      .select({ day: kstDay, c: count(), users: countDistinct(qrLogs.ip) })
       .from(qrLogs)
-      .where(since(14))
+      .where(and(since(14), exclude))
       .groupBy(sql`1`)
       .orderBy(sql`1`),
-    db.select().from(qrLogs).orderBy(desc(qrLogs.id)).limit(20),
+    db
+      .select()
+      .from(qrLogs)
+      .where(and(since(30), exclude))
+      .orderBy(desc(qrLogs.id))
+      .limit(RECENT_SAMPLE),
   ]);
 
-  return { total, today, last7, last30, uniqueIps30, byType, byEvent, byDay, recent: recent.map(toRow) };
+  return { all, today, last7, last30, byType, byEvent, byDay, recent: recent.map(toRow) };
 }
