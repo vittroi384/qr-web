@@ -148,12 +148,15 @@ describe("hardenSecretsForStorage: personal data policy (2026-10-06)", () => {
     assert.deepEqual(hardenSecretsForStorage("sms", { phone: "01012345678", message: "hi" }), { phone: "010****5678", message: "hi" });
     assert.equal(hardenSecretsForStorage("vcard", { firstName: "길동", email: "hong@example.com", mobile: "010-9999-8888" }).email, "ho****@example.com");
   });
-  it("clips free-text bodies to 40 characters with the original length", () => {
+  it("keeps free-text content whole; only a vCard address is clipped to 40 characters", () => {
     const long = "가".repeat(100);
     assert.equal(clipBody("짧은 메모"), "짧은 메모");
     assert.equal(clipBody(long), `${"가".repeat(40)}… (100자)`);
-    assert.equal(hardenSecretsForStorage("email", { to: "x@y.z", subject: "s", body: long }).body, `${"가".repeat(40)}… (100자)`);
-    assert.equal(hardenSecretsForStorage("text", { text: long }).text, `${"가".repeat(40)}… (100자)`);
+    assert.deepEqual(hardenSecretsForStorage("email", { to: "user@example.com", subject: "s", body: long }), { to: "us****@example.com", subject: "s", body: long });
+    assert.equal(hardenSecretsForStorage("text", { text: long }).text, long);
+    assert.deepEqual(hardenSecretsForStorage("sms", { phone: "01012345678", message: long }), { phone: "010****5678", message: long });
+    assert.equal(hardenSecretsForStorage("vcard", { note: long, address: long }).note, long);
+    assert.equal(hardenSecretsForStorage("vcard", { note: long, address: long }).address, `${"가".repeat(40)}… (100자)`);
   });
   it("rounds coordinates to ~1 km and shortens wallet addresses", () => {
     assert.deepEqual(hardenSecretsForStorage("geo", { lat: "37.566535", lng: "126.9779692" }), { lat: "37.57", lng: "126.98" });

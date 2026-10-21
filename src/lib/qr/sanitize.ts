@@ -66,26 +66,16 @@ const EPC_IBAN_LINE = /(BCD\n[^\n]*\n[^\n]*\nSCT\n[^\n]*\n[^\n]*\n)([^\n]+)/g;
 const PAYMENT_IDENTIFIER_FIELD: Partial<Record<QrType, string>> = { pix: "key", upi: "vpa", epc: "iban" };
 
 /*
- * Personal data policy (2026-10-06, ADR-004 extension): contact details are kept only in part and
- * free-text bodies only up to BODY_KEEP characters, so the admin can still tell what kind of QR was
- * made (domain, platform, type) without the log being a list of phone numbers and messages.
+ * Personal data policy (2026-10-06, ADR-004 extension; bodies kept whole since 2026-10-21): contact
+ * details (phone, e-mail address, account ids) are kept only in part so the log is not a list of
+ * them; free-text content (text, subject, message, note …) is kept whole, and only a vCard postal
+ * address is cut to BODY_KEEP characters.
  */
 const PHONE_FIELDS: Partial<Record<QrType, readonly string[]>> = { whatsapp: ["phone"], sms: ["phone"], phone: ["phone"], vcard: ["phone", "mobile"] };
 const EMAIL_FIELDS: Partial<Record<QrType, readonly string[]>> = { email: ["to"], vcard: ["email"] };
 /** Long opaque identifiers: first and last four characters stay. */
 const LONG_ID_FIELDS: Partial<Record<QrType, readonly string[]>> = { crypto: ["address"], payment: ["handle"] };
-const BODY_FIELDS: Partial<Record<QrType, readonly string[]>> = {
-  text: ["text"],
-  email: ["subject", "body"],
-  sms: ["message"],
-  whatsapp: ["message"],
-  event: ["description"],
-  vcard: ["note", "address"],
-  pix: ["description"],
-  upi: ["note"],
-  epc: ["remittance", "info"],
-  crypto: ["label"],
-};
+const BODY_FIELDS: Partial<Record<QrType, readonly string[]>> = { vcard: ["address"] };
 const BODY_KEEP = 40;
 /** Coordinates rounded to 2 decimals (~1 km): enough to see the region, not the doorstep. */
 const GEO_DECIMALS = 2;
