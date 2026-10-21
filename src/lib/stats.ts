@@ -39,7 +39,9 @@ export async function getStats() {
   const kstDay = sql<string>`to_char(${qrLogs.createdAt} AT TIME ZONE ${DISPLAY_TZ}, 'YYYY-MM-DD')`;
   const kstHour = sql<number>`extract(hour from ${qrLogs.createdAt} AT TIME ZONE ${DISPLAY_TZ})::int`;
 
-  const [byDayRows, byLocale, byPage, byTypeEvent, byHourRows, funnelRows] = await Promise.all([
+  const distinctIps = sql<number>`count(distinct ${qrLogs.ip})::int`;
+
+  const [byDayRows, byLocale, byPage, byTypeEvent, byHourRows, funnelRows, usersRows, usersByType] = await Promise.all([
     db.select({ day: kstDay, c: count() }).from(qrLogs).where(since).groupBy(sql`1`),
     db
       .select({ locale: qrLogs.locale, c: count() })
@@ -65,6 +67,14 @@ export async function getStats() {
       .from(funnelDaily)
       .where(gte(funnelDaily.day, days[0]))
       .groupBy(funnelDaily.qrType, funnelDaily.step),
+    // "Users" = distinct IPs: one person on two networks counts twice, a shared network once.
+    db.select({ c: distinctIps }).from(qrLogs).where(since),
+    db
+      .select({ qrType: qrLogs.qrType, users: distinctIps, saves: count() })
+      .from(qrLogs)
+      .where(since)
+      .groupBy(qrLogs.qrType)
+      .orderBy(desc(distinctIps), desc(count())),
   ]);
 
   // Fill empty days/hours with zero so the charts keep a fixed axis.
@@ -83,7 +93,9 @@ export async function getStats() {
   }
   const funnel = [...funnelMap.values()].sort((a, b) => b.select - a.select || b.save - a.save);
 
-  return { days: STATS_DAYS, total, byDay, byLocale, byPage, byTypeEvent, byHour, funnel };
+  const users = usersRows[0]?.c ?? 0;
+
+  return { days: STATS_DAYS, total, users, usersByType, byDay, byLocale, byPage, byTypeEvent, byHour, funnel };
 }
 
 export type Stats = Awaited<ReturnType<typeof getStats>>;

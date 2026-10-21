@@ -75,7 +75,8 @@ export default async function StatsPage() {
         통계 <span className="ml-1 text-sm font-normal tracking-normal text-muted">최근 {s.days}일 · KST 기준</span>
       </h1>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <StatCard label={`실사용자 (최근 ${s.days}일)`} value={n(s.users)} hint="저장한 IP 수" />
         <StatCard label={`저장 (최근 ${s.days}일)`} value={n(s.total)} />
         <StatCard label="저장이 있었던 언어" value={n(s.byLocale.filter((r) => r.locale).length)} />
         <StatCard label="퍼널: 종류 선택" value={n(funnelTotals.select)} hint="세션·종류별 1회" />
@@ -156,6 +157,35 @@ export default async function StatsPage() {
           )}
         </Section>
       </div>
+
+      <Section title="종류별 실사용자" hint="사용자 = 저장한 IP 수">
+        {s.usersByType.length === 0 ? (
+          <Empty />
+        ) : (
+          <div className="table-scroll [--table-offset:20rem]">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>종류</th>
+                  <th className="text-right">사용자</th>
+                  <th className="text-right">저장</th>
+                  <th className="text-right">1인당 저장</th>
+                </tr>
+              </thead>
+              <tbody>
+                {s.usersByType.map((r) => (
+                  <tr key={r.qrType}>
+                    <td className="whitespace-nowrap">{typeLabel(r.qrType)}</td>
+                    <td className="text-right font-medium tabular-nums">{n(r.users)}</td>
+                    <td className="text-right tabular-nums">{n(r.saves)}</td>
+                    <td className="text-right text-muted tabular-nums">{r.users ? (r.saves / r.users).toFixed(1) : "–"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
 
       <Section title="종류 × 저장 방식">
         {matrixRows.length === 0 ? (
