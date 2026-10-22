@@ -4,6 +4,7 @@ import { alternatesFor, getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: getDict("en").about.metaTitle,
+  description: getDict("en").about.lead,
   alternates: alternatesFor("en", "/about"),
 };
 

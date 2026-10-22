@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { GUIDES } from "@/lib/content/guides";
 import { DEFAULT_LOCALE, LOCALES, allLandingSlugs, localePath } from "@/lib/i18n";
 import { getSettings } from "@/lib/settings";
 
@@ -16,11 +17,26 @@ const PAGES: Page[] = [
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
 ];
 
+/** Pages that exist in English only (no /<locale> edition). */
+const EN_ONLY_PAGES: Page[] = [
+  { path: "/guides", changeFrequency: "weekly", priority: 0.6 },
+  ...GUIDES.map((g): Page => ({ path: `/guides/${g.slug}`, changeFrequency: "monthly", priority: 0.6 })),
+  { path: "/contact", changeFrequency: "yearly", priority: 0.3 },
+  { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
+];
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = (await getSettings()).site_url.replace(/\/$/, "");
   const now = new Date();
   const url = (path: string) => (path === "/" ? `${base}/` : `${base}${path}`);
-  return PAGES.flatMap((p) =>
+  const enOnly: MetadataRoute.Sitemap = EN_ONLY_PAGES.map((p) => ({
+    url: url(p.path),
+    lastModified: now,
+    changeFrequency: p.changeFrequency,
+    priority: p.priority,
+    alternates: { languages: { [DEFAULT_LOCALE]: url(p.path), "x-default": url(p.path) } },
+  }));
+  const localized: MetadataRoute.Sitemap = PAGES.flatMap((p) =>
     LOCALES.map((locale) => ({
       url: url(localePath(locale, p.path)),
       lastModified: now,
@@ -35,4 +51,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
     })),
   );
+  return [...localized, ...enOnly];
 }

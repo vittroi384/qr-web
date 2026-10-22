@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { GUIDES, GUIDE_SHORT_TITLES } from "@/lib/content/guides";
 import { LOCALES, LOCALE_NAMES, USE_CASES, getDict, localePath, typeToSlug, type Locale } from "@/lib/i18n";
 import { QR_TYPES } from "@/lib/qr/types";
 import { BrandMark } from "./BrandMark";
@@ -7,6 +8,8 @@ import { ChevronDownIcon, CoffeeIcon } from "./icons";
 
 /** Required notice for the "QR Code" mark; kept in English like other generators do. */
 const TRADEMARK = "QR Code is a registered trademark of DENSO WAVE INCORPORATED.";
+/** The guides, contact and terms pages exist in English only, so their labels stay English in every edition. */
+const EN_ONLY = { guides: "Guides", allGuides: "All guides", contact: "Contact", terms: "Terms of Service" };
 
 type FooterLink = { href: string; label: string; external?: boolean; icon?: ReactNode };
 
@@ -34,10 +37,16 @@ export function SiteFooter({
       links: USE_CASES.map((u) => ({ href: localePath(locale, `/${u.slug}`), label: t.useCaseLabels[u.id] })),
     },
     {
+      title: EN_ONLY.guides,
+      links: [...GUIDES.map((g) => ({ href: `/guides/${g.slug}`, label: GUIDE_SHORT_TITLES[g.slug] ?? g.title })), { href: "/guides", label: EN_ONLY.allGuides }],
+    },
+    {
       title: t.info,
       links: [
         { href: localePath(locale, "/about"), label: t.about },
+        { href: "/contact", label: EN_ONLY.contact },
         { href: localePath(locale, "/privacy"), label: t.privacy },
+        { href: "/terms", label: EN_ONLY.terms },
         ...(donateUrl ? [{ href: donateUrl, label: t.donate, external: true, icon: <CoffeeIcon className="size-4" /> }] : []),
       ],
     },
@@ -69,7 +78,7 @@ export function SiteFooter({
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto w-full max-w-[1400px] px-4 py-10 sm:px-6">
-        <div className="grid gap-8 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,0.8fr)] md:gap-10">
+        <div className="grid gap-8 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,0.8fr)] md:gap-10">
           {/* Brand */}
           <div className="min-w-0 space-y-3">
             <p className="flex items-center gap-2 text-base font-bold text-foreground">

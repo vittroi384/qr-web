@@ -61,6 +61,11 @@ export function alternatesFor(locale: Locale, path: string): NonNullable<Metadat
   };
 }
 
+/** Canonical + hreflang for a page that exists in English only (/guides, /contact, /terms). */
+export function alternatesEnOnly(path: string): NonNullable<Metadata["alternates"]> {
+  return { canonical: path, languages: { [DEFAULT_LOCALE]: path, "x-default": path } };
+}
+
 /* ---------- Per-type landing pages (/wifi-qr-code, /ko/wifi-qr-code, …) ---------- */
 
 /** Long-form copy for one QR type's landing page. Every type has its own text, not a template. */

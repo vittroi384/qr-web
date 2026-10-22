@@ -9,6 +9,8 @@ import { resolveAffiliate } from "@/components/affiliate";
 import { FaqList } from "@/components/FaqList";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { QrGenerator } from "@/components/qr/QrGenerator";
+import { TypeGuide } from "@/components/TypeGuide";
+import { TYPE_GUIDES } from "@/lib/content/typeGuides";
 import { alternatesFor, getDict, localePath, resolveLanding, type LandingTarget, type Locale } from "@/lib/i18n";
 import type { QrType } from "@/lib/qr/types";
 import { donateUrlFor } from "@/lib/donate";
@@ -213,6 +215,8 @@ export async function LandingPage({ locale, target }: { locale: Locale; target: 
                 </div>
               </section>
 
+              {/* Type guide (English only — no translations yet; other editions hide it rather than mix languages). */}
+              {locale === "en" && target.kind === "type" ? <TypeGuide guide={TYPE_GUIDES[type]} /> : null}
             </div>
 
             {/* 4. 오른쪽 세로 광고 (xl 이상) — starts below the generator card */}
