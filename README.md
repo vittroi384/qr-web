@@ -62,22 +62,7 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
 
 ## 아키텍처 (오라클 클라우드 배포 구성)
 
-```
-방문자 ──HTTPS──▶ Cloudflare (프록시 · TLS · getqrmaker.com) ──HTTP :8080──▶ Caddy (Cloudflare 대역만 허용 · 보안 헤더, 64KB 본문 캡,
-                    │                                                      Cloudflare 대역만 신뢰 → 실제 방문자 IP를 앱에 전달)
-                    ▼                                                      (단독 서버면 Caddy가 80/443에서 자동 TLS)
-                 Next.js 16 standalone (Node, non-root)
-                    │  Drizzle ORM + postgres.js (풀 10)
-                    │  시작 시 scripts/migrate.mjs → drizzle/*.sql 적용
-                    ▼
-                 PostgreSQL 16 (포트 미공개, 볼륨 pgdata, DB qr + umami)
-
-/umami/script.js·/umami/api/send ──▶ Caddy ──▶ Umami (방문 분석, 전용 role·umami DB)
-관리자 PC ──SSH 터널──▶ 127.0.0.1:3001 Umami 대시보드 (외부 미공개)
-
-OCI A1 · Docker Compose (db → app·umami → caddy, db healthcheck 후 기동)
-배포: git pull && docker compose up -d --build (deploy.sh) · 백업: scripts/backup.sh (pg_dump)
-```
+![GetQRMaker 시스템 아키텍처](assets/architecture.png)
 
 - **단일 서버 + PostgreSQL 컨테이너**: 서버 비용 0원(무료 티어), 도메인만 연 1만 원대. DB 포트는 외부에 열지 않고 compose 네트워크 안에서만 접근
 - **스키마는 코드, 변경은 마이그레이션**: `src/lib/db/schema.ts`(Drizzle) → `npm run db:generate`로 SQL 생성·커밋 → 컨테이너 시작 시 자동 적용. 테이블 관계는 [`docs/데이터-구조.md`](docs/데이터-구조.md)
