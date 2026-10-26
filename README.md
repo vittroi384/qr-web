@@ -23,17 +23,14 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
 
 ![메인](assets/main.png)
 
-**타입별 랜딩** — 검색어에 맞춘 제목 + 타입이 미리 선택된 생성기 (`/wifi-qr-code`)
+<table>
+  <tr>
+    <td width="50%"><img src="assets/landing.png"><br><sub><b>타입별 랜딩</b> — 검색어에 맞춘 제목 + 타입이 미리 선택된 생성기 (<code>/wifi-qr-code</code>)</sub></td>
+    <td width="50%"><img src="assets/batch.png"><br><sub><b>일괄 생성</b> — 표 편집기, 엑셀 붙여 넣기, PNG ZIP (의존성 없는 ZIP 작성기)</sub></td>
+  </tr>
+</table>
 
-![타입별 랜딩](assets/landing.png)
-
-**일괄 생성** — 표 편집기, 엑셀 붙여 넣기, PNG ZIP (의존성 없는 ZIP 작성기)
-
-![일괄 생성](assets/batch.png)
-
-<p align="center"><img src="assets/mobile.png" width="320" alt="모바일(한국어) — 390px, 광고 3슬롯"></p>
-
-**모바일(한국어)** — 390px 단일 열, 광고 3슬롯
+<p align="center"><img src="assets/mobile.png" width="240" alt="모바일(한국어) — 390px, 광고 3슬롯"><br><sub><b>모바일(한국어)</b> — 390px 단일 열, 광고 3슬롯</sub></p>
 
 ## 주요 기능
 
