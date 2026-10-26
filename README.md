@@ -30,7 +30,7 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
   </tr>
 </table>
 
-<p align="center"><img src="assets/mobile.png" width="240" alt="모바일(한국어) — 390px, 광고 3슬롯"><br><sub><b>모바일(한국어)</b> — 390px 단일 열, 광고 3슬롯</sub></p>
+<p align="center"><img src="assets/mobile.png" width="180" alt="모바일(한국어) — 390px, 광고 3슬롯"><br><sub><b>모바일(한국어)</b> — 390px 단일 열, 광고 3슬롯</sub></p>
 
 ## 주요 기능
 
