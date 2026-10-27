@@ -11,9 +11,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
       {authed ? (
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+        <div className="mb-8 flex items-center justify-between gap-3 border-b border-border pb-3">
           <AdminNav />
-          <form action="/api/admin/logout" method="post">
+          <form action="/api/admin/logout" method="post" className="shrink-0">
             <button type="submit" className="btn btn-sm">
               <LogoutIcon />
               로그아웃

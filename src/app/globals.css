@@ -231,6 +231,11 @@
     @apply overflow-auto overscroll-contain;
     /* --table-offset: everything above/below the card (nav, title, filters, footer). */
     max-height: max(20rem, calc(100dvh - var(--table-offset, 21rem)));
+    /* Phones: the box would be a few rows tall inside a scrolling page, so let the page scroll instead. */
+    @media (width < 40rem) {
+      max-height: none;
+      overscroll-behavior: auto;
+    }
   }
   .table-scroll thead th {
     @apply sticky top-0 z-10 bg-subtle shadow-[inset_0_-1px_0_var(--border)];

@@ -31,7 +31,8 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       </h1>
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="table-scroll">
-          <table className="table">
+          {/* Min width so narrow screens scroll sideways instead of squeezing the text columns to one letter. */}
+          <table className="table min-w-[52rem]">
             <thead>
               <tr>
                 <th>시간 (KST)</th>

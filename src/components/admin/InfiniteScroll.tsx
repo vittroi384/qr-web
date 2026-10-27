@@ -19,7 +19,9 @@ export function InfiniteScroll({ nextHref, loadedLabel }: { nextHref: string | n
   useEffect(() => {
     const el = ref.current;
     if (!el || !nextHref || loading) return;
-    const root = el.closest<HTMLElement>(".table-scroll");
+    // The box only scrolls when it has a max height (not on phones); otherwise watch the page.
+    const box = el.closest<HTMLElement>(".table-scroll");
+    const root = box && getComputedStyle(box).maxHeight !== "none" ? box : null;
     const io = new IntersectionObserver(
       (entries) => {
         if (!entries.some((e) => e.isIntersecting)) return;
