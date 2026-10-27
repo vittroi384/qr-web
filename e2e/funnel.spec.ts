@@ -39,6 +39,21 @@ test.describe("funnel counters", () => {
     await page.goto("/wifi-qr-code");
     await expect.poll(() => sent).toEqual([{ step: "select", type: "wifi", locale: "en" }]);
   });
+
+  test("only the first save of a type in a session counts as the funnel's save", async ({ page }) => {
+    await captureFunnel(page);
+    const logs: { funnel?: boolean }[] = [];
+    await page.route("**/api/log", async (route) => {
+      logs.push(JSON.parse(route.request().postData() ?? "{}"));
+      await route.fulfill({ status: 204, body: "" });
+    });
+    await page.goto("/");
+    await page.getByPlaceholder("example.com or https://example.com/page").fill("example.com/save");
+    const save = page.getByRole("button", { name: "Save image (PNG)" });
+    await Promise.all([page.waitForEvent("download"), save.click()]);
+    await Promise.all([page.waitForEvent("download"), save.click()]);
+    await expect.poll(() => logs.map((l) => l.funnel)).toEqual([true, false]);
+  });
 });
 
 test.describe("visit source", () => {

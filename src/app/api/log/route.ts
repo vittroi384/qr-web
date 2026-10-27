@@ -99,11 +99,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "storage" }, { status: 500 });
   }
 
-  // Funnel "save" step, counted here so it always matches qr_logs. A failure must not fail the save.
-  try {
-    await incrementFunnel("save", body.type, context.locale);
-  } catch (err) {
-    logEvent("error", "funnel.increment_failed", { type: body.type, ...errorFields(err) });
+  // Funnel "save" step: only the generator's first save of this type in the session asks for it
+  // (`funnel: true`), matching the once-per-session preview count. A failure must not fail the save.
+  if (body.funnel === true) {
+    try {
+      await incrementFunnel("save", body.type, context.locale);
+    } catch (err) {
+      logEvent("error", "funnel.increment_failed", { type: body.type, ...errorFields(err) });
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -54,9 +54,10 @@ export type LogBody = {
 /**
  * Fire-and-forget POST to /api/log. Callers are responsible for masking secrets first.
  * Only ever call this from an explicit user action (download, copy, print, batch export).
+ * `funnel` = also count this as the funnel's "save" step (generator only; batch has no preview step).
  */
-export function sendLog(log: LogBody) {
-  beacon("/api/log", JSON.stringify({ ...log, encoded: log.encoded.slice(0, 200), source: sessionSource() }));
+export function sendLog(log: LogBody, funnel = false) {
+  beacon("/api/log", JSON.stringify({ ...log, encoded: log.encoded.slice(0, 200), source: sessionSource(), funnel }));
 }
 
 /** sessionStorage key holding where this browser session came from (set by VisitBeacon). */
@@ -88,21 +89,27 @@ export function beacon(url: string, body: string) {
  * Sends only the step, the QR type and the UI locale — no content.
  */
 function sendFunnelOnce(step: "select" | "preview", type: QrType, locale: Locale) {
+  if (firstThisSession(step, type)) beacon("/api/funnel", JSON.stringify({ step, type, locale }));
+}
+
+/** True the first time this step × type is seen in this browser session (then remembered). */
+function firstThisSession(step: "select" | "preview" | "save", type: QrType): boolean {
   const key = `qrm.funnel.${step}.${type}`;
   try {
-    if (sessionStorage.getItem(key)) return;
+    if (sessionStorage.getItem(key)) return false;
     sessionStorage.setItem(key, "1");
+    return true;
   } catch {
-    return; // No session storage → we cannot dedupe, so do not count at all.
+    return false; // No session storage → we cannot dedupe, so do not count at all.
   }
-  beacon("/api/funnel", JSON.stringify({ step, type, locale }));
 }
 
 /**
  * Funnel steps for the generator: "select" once the visitor has actually chosen a type (a tile
  * click, typing into the default type, or landing on a type-specific page) — merely loading the
  * home page with its default type does not count. "preview" the first time that type renders a
- * non-empty QR. Saves are counted by /api/log.
+ * non-empty QR. "save" is counted by /api/log, only for the first save of a type per session
+ * (the same unit as the other steps, so preview → save stays a share, not saves per preview).
  */
 export function useFunnel(type: QrType, selected: boolean, hasPreview: boolean, locale: Locale) {
   useEffect(() => {
@@ -124,7 +131,7 @@ function send(event: LogEvent, input: LogInput) {
     payload: safe.payload as LogBody["payload"],
     options: { ...options, logoDataUrl: options.logoDataUrl ? "1" : null, frameTextLength: Array.from(frameText).length },
     encoded: safe.encoded,
-  });
+  }, firstThisSession("save", input.type));
 }
 
 /**
