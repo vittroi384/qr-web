@@ -60,11 +60,29 @@ export function collapseRuns(rows: readonly QrLogRow[]): LogRun[] {
       runs.push([r]);
     }
   }
-  return runs.map((rs) => {
-    const counts = new Map<string, number>();
-    for (const r of rs) counts.set(r.event, (counts.get(r.event) ?? 0) + 1);
-    return { rows: rs, events: [...counts.entries()].map(([event, c]) => ({ event, c })).sort((a, b) => b.c - a.c) };
-  });
+  return runs.map(toRun);
+}
+
+/**
+ * Every save of the same QR content (type + payload) as one line, whoever made it and however far
+ * apart: shows what gets made again and again. Lines are ordered by their newest save.
+ */
+export function groupSame(rows: readonly QrLogRow[]): LogRun[] {
+  const groups = new Map<string, QrLogRow[]>();
+  for (const r of rows) {
+    const key = JSON.stringify([r.qr_type, r.payload_json]);
+    const g = groups.get(key);
+    if (g) g.push(r);
+    else groups.set(key, [r]);
+  }
+  return [...groups.values()].map(toRun);
+}
+
+/** A line of the log list: its rows plus how often each save method was used. */
+function toRun(rs: QrLogRow[]): LogRun {
+  const counts = new Map<string, number>();
+  for (const r of rs) counts.set(r.event, (counts.get(r.event) ?? 0) + 1);
+  return { rows: rs, events: [...counts.entries()].map(([event, c]) => ({ event, c })).sort((a, b) => b.c - a.c) };
 }
 
 /** Short browser name from the User-Agent, enough to tell phones from desktops at a glance. */

@@ -16,6 +16,16 @@ const ACTION_LABELS: Record<string, string> = {
   logs_delete: "기록 삭제",
 };
 
+/** Chip colours by kind of activity: sign-ins, failures, changes, data out/removed. */
+const ACTION_TONE: Record<string, string> = {
+  login: "bg-success-soft text-success",
+  logout: "bg-surface text-muted",
+  login_failed: "bg-danger-soft text-danger",
+  settings_update: "bg-accent-soft text-accent",
+  logs_export: "bg-surface text-foreground",
+  logs_delete: "bg-amber-soft text-warning",
+};
+
 export default async function AuditPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin();
   const n = rowsWanted((await searchParams).n);
@@ -39,7 +49,9 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
             {
               head: "활동",
               className: "whitespace-nowrap",
-              cell: (r) => <span className={r.action === "login_failed" ? "font-medium text-danger" : ""}>{ACTION_LABELS[r.action] ?? r.action}</span>,
+              cell: (r) => (
+                <span className={`inline-block rounded-md px-1.5 py-0.5 text-xs font-semibold ${ACTION_TONE[r.action] ?? "bg-surface text-foreground"}`}>{ACTION_LABELS[r.action] ?? r.action}</span>
+              ),
             },
             { head: "항목", label: "항목", className: "text-xs", cell: (r) => (r.key ? (SETTING_LABELS[r.key as SettingKey] ?? r.key) : "") },
             { head: "이전 값", label: "이전 값", className: "max-w-xs text-xs break-all text-muted", cell: (r) => r.oldValue },

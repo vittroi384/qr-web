@@ -9,14 +9,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const authed = await hasAdminSession();
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
+    <div className="mx-auto w-full max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6">
       {authed ? (
-        <div className="mb-8 flex items-center justify-between gap-3 border-b border-border pb-3">
+        <div className="mb-5 flex items-center justify-between gap-2 rounded-xl border border-border bg-card/85 p-1.5 shadow-xs backdrop-blur sm:mb-6">
           <AdminNav />
           <form action="/api/admin/logout" method="post" className="shrink-0">
-            <button type="submit" className="btn btn-sm">
+            <button type="submit" className="btn btn-sm btn-ghost">
               <LogoutIcon />
-              로그아웃
+              <span className="max-sm:sr-only">로그아웃</span>
             </button>
           </form>
         </div>

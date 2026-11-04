@@ -1,28 +1,22 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { visitorLanguage } from "@/lib/qr/summarize";
+import { TypeIcon } from "@/components/icons";
 import { QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
+import { isQrType } from "@/lib/qr/sanitize";
 import { formatKst, timeAgo } from "@/lib/time";
 import { browserOf } from "@/lib/visitors";
 
-/** `primary` makes the number the page leads with (people) stand out from the supporting ones. */
-export function StatCard({ label, value, hint, primary }: { label: string; value: ReactNode; hint?: string; primary?: boolean }) {
+/** Card with a titled header; `hint` says in one line what the section answers, `aside` sits at the header's right. */
+export function Section({ title, hint, aside, children }: { title: string; hint?: string; aside?: ReactNode; children: ReactNode }) {
   return (
-    <div className={`rounded-xl border px-5 py-4 ${primary ? "border-accent/30 bg-accent-soft" : "border-border bg-card"}`}>
-      <p className={`text-[13px] ${primary ? "font-semibold text-accent" : "text-muted"}`}>{label}</p>
-      <p className={`mt-1.5 font-semibold tracking-tight tabular-nums ${primary ? "text-3xl" : "text-2xl"}`}>{value}</p>
-      {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
-    </div>
-  );
-}
-
-/** Card with a titled header; `hint` says in one line what the section answers. */
-export function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
-  return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="px-5 py-4">
-        <h2 className="text-[15px] font-semibold">{title}</h2>
-        {hint ? <p className="mt-0.5 text-xs text-muted">{hint}</p> : null}
+    <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5">
+        <div className="min-w-0">
+          <h2 className="text-[15px] font-semibold">{title}</h2>
+          {hint ? <p className="mt-0.5 text-xs leading-relaxed text-muted">{hint}</p> : null}
+        </div>
+        {aside ? <div className="shrink-0 text-xs text-muted">{aside}</div> : null}
       </div>
       <div className="border-t border-border">{children}</div>
     </section>
@@ -31,23 +25,6 @@ export function Section({ title, hint, children }: { title: string; hint?: strin
 
 export function Empty() {
   return <p className="px-5 py-10 text-center text-sm text-muted">아직 데이터가 없습니다.</p>;
-}
-
-/** Vertical CSS bars (no chart library); each bar carries a hover title. */
-export function Bars({ items, height }: { items: { key: string; c: number; title: string }[]; height: "h-40" | "h-24" }) {
-  const max = Math.max(1, ...items.map((i) => i.c));
-  return (
-    <div className={`flex items-end gap-0.5 sm:gap-1 ${height}`}>
-      {items.map((i) => (
-        <div key={i.key} className="flex h-full flex-1 items-end" title={i.title}>
-          <div
-            className={`w-full rounded-t-sm transition-colors ${i.c ? "bg-accent/80 hover:bg-accent" : "bg-surface"}`}
-            style={{ height: i.c ? `${Math.max(3, (i.c / max) * 100)}%` : "2px" }}
-          />
-        </div>
-      ))}
-    </div>
-  );
 }
 
 /** Page heading with an optional muted note after it. */
@@ -121,7 +98,12 @@ export function VisitorInfo({ acceptLanguage, page, userAgent }: { acceptLanguag
 export const typeLabel = (type: string) => (QR_TYPE_LABELS as Record<string, string>)[type as QrType] ?? type;
 
 export function TypeBadge({ type }: { type: string }) {
-  return <span className="inline-block rounded-md bg-surface px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-foreground">{typeLabel(type)}</span>;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md bg-surface px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-foreground">
+      {isQrType(type) ? <TypeIcon type={type} className="size-3.5 shrink-0 text-accent" /> : null}
+      {typeLabel(type)}
+    </span>
+  );
 }
 
 export const EVENT_LABELS: Record<string, string> = {

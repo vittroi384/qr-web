@@ -56,12 +56,25 @@ test.describe("admin area", () => {
     await expect(table).toContainText("****");
     await expect(table).not.toContainText(plain);
     expect(await page.content()).not.toContain(plain);
+    // "같은 내용 묶기" view lists the same row.
+    await page.getByRole("link", { name: "같은 내용 묶기" }).click();
+    await expect(page).toHaveURL(/view=same/);
+    await expect(table).toContainText(marker);
 
-    // Stats page: heading and all seven sections render.
+    // Stats page: heading, then every section on its tab (switched through the tab links).
     expect((await page.goto("/admin/stats"))?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1, name: /통계/ })).toBeVisible();
-    for (const name of ["일별 사용자", "유입 출처", "종류별 사용자", "언어별 사용자", "페이지별 사용자", "종류 × 저장 방식", "시간대 분포", "퍼널", "크롤러 방문"]) {
-      await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^${name}`) })).toBeVisible();
+    const tabs = page.getByRole("navigation", { name: "통계 보기" });
+    const sections: [string, string[]][] = [
+      ["개요", ["일별 사용자", "시간대 분포"]],
+      ["유입", ["유입 출처", "크롤러 방문"]],
+      ["사용", ["종류별 사용자", "언어별 사용자", "페이지별 사용자", "종류 × 저장 방식"]],
+      ["퍼널", ["퍼널"]],
+    ];
+    for (const [tab, names] of sections) {
+      await tabs.getByRole("link", { name: tab }).click();
+      await expect(tabs.getByRole("link", { name: tab })).toHaveAttribute("aria-current", "page");
+      for (const name of names) await expect(page.getByRole("heading", { level: 2, name: new RegExp(`^${name}`) })).toBeVisible();
     }
 
     // CSV export (cookies are shared with page.request).

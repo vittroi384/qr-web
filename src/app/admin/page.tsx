@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { Meter } from "@/components/admin/DataTable";
+import { BarList, ColumnChart, KpiStrip } from "@/components/admin/charts";
 import { num as n } from "@/components/admin/format";
-import { ExcludedNote, PageTitle, StatCard, TimeAgo, TypeBadge, VisitorInfo, typeLabel } from "@/components/admin/ui";
+import { ExcludedNote, PageTitle, Section, TimeAgo, TypeBadge, typeLabel } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/adminSession";
 import { getDashboardStats, getStatsExclusion } from "@/lib/logs";
-import { summarizeLog } from "@/lib/qr/summarize";
+import { summarizeLog, visitorLanguage } from "@/lib/qr/summarize";
 import { getSettings } from "@/lib/settings";
 import { lastKstDays } from "@/lib/stats";
 import { kstDayStart, kstToday } from "@/lib/time";
-import { groupVisitors } from "@/lib/visitors";
+import { browserOf, groupVisitors } from "@/lib/visitors";
 
-/** Visitor cards shown in the "최근 사용자" feed. */
+/** Visitor rows shown in the "최근 사용자" feed. */
 const FEED_SIZE = 12;
 
 export default async function AdminDashboard() {
@@ -18,7 +18,6 @@ export default async function AdminDashboard() {
   const settings = await getSettings();
   const exclusion = await getStatsExclusion();
   const stats = await getDashboardStats(Number.parseInt(settings.log_retention_days, 10) || 0, exclusion.where);
-  const maxTypeUsers = Math.max(1, ...stats.byType.map((t) => t.users));
 
   const visitors = groupVisitors(stats.recent);
   const todayStart = kstDayStart(kstToday());
@@ -27,7 +26,6 @@ export default async function AdminDashboard() {
   // Every one of the last 14 days, so quiet days show as gaps instead of disappearing.
   const dayRows = new Map(stats.byDay.map((d) => [d.day, d]));
   const byDay = lastKstDays(14).map((day) => ({ day, users: dayRows.get(day)?.users ?? 0, c: dayRows.get(day)?.c ?? 0 }));
-  const maxDay = Math.max(1, ...byDay.map((d) => d.users));
 
   // One-line reminders for settings that look unfinished on a live site.
   const warnings: string[] = [];
@@ -39,14 +37,14 @@ export default async function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <PageTitle title="대시보드" note={lastSave ? <>마지막 저장 <TimeAgo value={lastSave} /></> : "아직 저장 없음"} />
         <ExcludedNote count={exclusion.count} />
       </div>
 
       {warnings.map((w) => (
-        <p key={w} role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p key={w} role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
           {w}{" "}
           <Link href="/admin/settings" className="link">
             설정으로
@@ -55,117 +53,109 @@ export default async function AdminDashboard() {
       ))}
 
       {/* People first; saves are the supporting number. */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard primary label="오늘 사용자" value={n(stats.today.users)} hint={`처음 온 사람 ${n(newToday)} · 저장 ${n(stats.today.saves)}건`} />
-        <StatCard primary label="최근 7일 사용자" value={n(stats.last7.users)} hint={`저장 ${n(stats.last7.saves)}건`} />
-        <StatCard primary label="최근 30일 사용자" value={n(stats.last30.users)} hint={`저장 ${n(stats.last30.saves)}건`} />
-        <StatCard label="전체 기간" value={`${n(stats.all.users)}명`} hint={`저장 ${n(stats.all.saves)}건`} />
+      <KpiStrip
+        items={[
+          { primary: true, label: "오늘 사용자", value: n(stats.today.users), hint: `처음 온 사람 ${n(newToday)} · 저장 ${n(stats.today.saves)}건` },
+          { primary: true, label: "최근 7일 사용자", value: n(stats.last7.users), hint: `저장 ${n(stats.last7.saves)}건` },
+          { primary: true, label: "최근 30일 사용자", value: n(stats.last30.users), hint: `저장 ${n(stats.last30.saves)}건` },
+          { label: "전체 기간", value: `${n(stats.all.users)}명`, hint: `저장 ${n(stats.all.saves)}건` },
+        ]}
+      />
+
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <Section title="최근 14일 사용자" aside="막대에 올리면 저장 수">
+          <div className="px-4 pt-4 pb-3 sm:px-5">
+            <ColumnChart
+              unit="일별 사용자"
+              height="h-40 lg:h-60"
+              items={byDay.map((d, i) => ({
+                key: d.day,
+                value: d.users,
+                // Every other date keeps 14 labels legible on a phone; today is always labelled.
+                label: i % 2 === 1 ? d.day.slice(5) : undefined,
+                highlight: i === byDay.length - 1,
+                tip: `${d.day.slice(5)} · 사용자 ${n(d.users)}명 · 저장 ${n(d.c)}건`,
+              }))}
+            />
+          </div>
+        </Section>
+
+        <Section title="많이 쓰는 기능" aside="최근 30일 · 사용자 수 순">
+          <div className="px-4 pt-3 pb-4 sm:px-5">
+            {stats.byType.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted">아직 데이터가 없습니다.</p>
+            ) : (
+              <BarList
+                items={stats.byType.slice(0, 8).map((t) => ({
+                  key: t.qr_type,
+                  label: typeLabel(t.qr_type),
+                  value: t.users,
+                  valueLabel: `${n(t.users)}명`,
+                  sub: `${n(t.c)}건`,
+                  href: `/admin/logs?type=${encodeURIComponent(t.qr_type)}`,
+                }))}
+              />
+            )}
+          </div>
+        </Section>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="card">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-[15px] font-semibold">최근 14일 사용자</h2>
-            <span className="text-xs text-muted">막대 위에 올리면 저장 수</span>
-          </div>
-          <div className="mt-5 flex h-44 items-end gap-1">
-            {byDay.map((d, i) => (
-              <div key={d.day} className="flex flex-1 flex-col items-center gap-1" title={`${d.day}: 사용자 ${d.users}명 · 저장 ${d.c}건`}>
-                <span className={`text-[10px] font-medium tabular-nums ${d.users ? "text-foreground" : "text-transparent"}`}>{d.users}</span>
-                {/* Pixel height: a % here would resolve against the auto-height column and collapse. */}
-                <div
-                  className={`w-full rounded-t-sm transition-colors ${d.users ? "bg-accent/80 hover:bg-accent" : "bg-surface"}`}
-                  style={{ height: d.users ? `${Math.max(4, Math.round((d.users / maxDay) * 120))}px` : "2px" }}
-                />
-                {/* Every other label keeps 14 dates legible on a phone. */}
-                <span className={`text-[10px] text-muted tabular-nums ${i % 2 === 1 ? "max-sm:invisible" : ""}`}>{d.day.slice(5)}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="card">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-[15px] font-semibold">많이 쓰는 기능</h2>
-            <span className="text-xs text-muted">최근 30일 · 사용자 수 순</span>
-          </div>
-          <ul className="mt-5 space-y-3 text-sm">
-            {stats.byType.length === 0 ? <li className="text-muted">데이터 없음</li> : null}
-            {stats.byType.slice(0, 8).map((t) => (
-              <li key={t.qr_type}>
-                <Link href={`/admin/logs?type=${encodeURIComponent(t.qr_type)}`} className="-mx-2 flex items-center gap-3 rounded-md px-2 py-0.5 transition-colors hover:bg-subtle">
-                  <span className="w-32 shrink-0 truncate">{typeLabel(t.qr_type)}</span>
-                  <Meter value={t.users} max={maxTypeUsers} className="h-2 flex-1" />
-                  <span className="w-24 shrink-0 text-right text-xs tabular-nums">
-                    <span className="font-semibold text-foreground">{n(t.users)}명</span>
-                    <span className="text-muted"> · {n(t.c)}건</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      <section aria-labelledby="feed-heading">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
-          <h2 id="feed-heading" className="text-[15px] font-semibold">
-            최근 사용자 <span className="ml-1 text-xs font-normal text-muted">최근 30일 · 같은 IP는 한 사람으로 묶음</span>
-          </h2>
+      <Section
+        title="최근 사용자"
+        hint="최근 30일 · 같은 IP는 한 사람으로 묶음"
+        aside={
           <Link href="/admin/logs" className="link text-sm">
             전체 기록 보기
           </Link>
-        </div>
+        }
+      >
         {visitors.length === 0 ? (
-          <p className="card text-center text-sm text-muted">아직 기록이 없습니다. 메인 페이지에서 QR을 만들어 보세요.</p>
+          <p className="px-5 py-10 text-center text-sm text-muted">아직 기록이 없습니다. 메인 페이지에서 QR을 만들어 보세요.</p>
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          // Hairline grid: one compact row per visitor, two columns on wide screens.
+          <ul className="grid gap-px bg-border xl:grid-cols-2">
             {visitors.slice(0, FEED_SIZE).map((v) => {
               const s = summarizeLog(v.latest.qr_type, v.latest.payload_json);
               const isNew = v.firstAt >= todayStart;
+              const device = browserOf(v.latest.user_agent);
               return (
-                <li key={v.ip || "none"} className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-4">
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <span className="flex items-center gap-1.5">
-                      {isNew ? <span className="rounded bg-amber-soft px-1.5 py-0.5 font-semibold text-amber">오늘 처음</span> : null}
-                      <span className="font-semibold text-foreground tabular-nums">저장 {v.saves}회</span>
-                    </span>
-                    <span className="text-muted">
+                <li key={v.ip || "none"} className="relative flex min-w-0 flex-col gap-1 bg-card px-4 py-3 sm:flex-row sm:gap-3 sm:px-5">
+                  {/* Phones: when · saves on one line above; wider screens: a narrow column on the left. */}
+                  <div className="flex shrink-0 items-center gap-2 pr-10 text-xs sm:block sm:w-16 sm:pr-0">
+                    <p className="font-medium text-foreground">
                       <TimeAgo value={v.lastAt} />
-                    </span>
+                    </p>
+                    <p className="text-muted tabular-nums sm:mt-0.5">저장 {v.saves}회</p>
+                    {isNew ? <p className="inline-block rounded bg-amber-soft px-1 py-px text-[11px] font-semibold text-amber sm:mt-1">오늘 처음</p> : null}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1 sm:pr-8">
                     <p className="truncate text-sm font-medium" title={s.primary}>
                       {s.primary || "(내용 없음)"}
+                      {s.secondary ? <span className="ml-1.5 text-xs font-normal text-muted">{s.secondary}</span> : null}
                     </p>
-                    {s.secondary ? (
-                      <p className="mt-0.5 truncate text-xs text-muted" title={s.secondary}>
-                        {s.secondary}
-                      </p>
-                    ) : null}
+                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                      {v.types.map((t) => (
+                        <span key={t.type} className="inline-flex items-center gap-0.5">
+                          <TypeBadge type={t.type} />
+                          {t.c > 1 ? <span className="text-[11px] text-muted tabular-nums">×{t.c}</span> : null}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted" title={v.latest.user_agent ?? ""}>
+                      {[visitorLanguage(v.latest.accept_language), device, v.latest.page].filter(Boolean).join(" · ")}
+                    </p>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {v.types.map((t) => (
-                      <span key={t.type} className="inline-flex items-center gap-1">
-                        <TypeBadge type={t.type} />
-                        {t.c > 1 ? <span className="text-[11px] text-muted tabular-nums">×{t.c}</span> : null}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-3">
-                    <VisitorInfo acceptLanguage={v.latest.accept_language} page={v.latest.page} userAgent={v.latest.user_agent} />
-                    {v.ip ? (
-                      <Link href={`/admin/logs?q=${encodeURIComponent(v.ip)}`} className="link shrink-0 text-xs whitespace-nowrap">
-                        기록 보기
-                      </Link>
-                    ) : null}
-                  </div>
+                  {v.ip ? (
+                    <Link href={`/admin/logs?q=${encodeURIComponent(v.ip)}`} className="link absolute top-3 right-4 text-xs whitespace-nowrap sm:right-5">
+                      기록
+                    </Link>
+                  ) : null}
                 </li>
               );
             })}
           </ul>
         )}
-      </section>
+      </Section>
     </div>
   );
 }

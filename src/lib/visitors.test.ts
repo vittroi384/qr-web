@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { QrLogRow } from "./logs";
-import { browserOf, collapseRuns, formatIpList, groupVisitors, parseIpList } from "./visitors";
+import { browserOf, collapseRuns, formatIpList, groupSame, groupVisitors, parseIpList } from "./visitors";
 
 let nextId = 1;
 function row(p: Partial<QrLogRow> & { at: string }): QrLogRow {
@@ -76,6 +76,27 @@ describe("collapseRuns", () => {
       row({ at: "2026-10-19T09:58:00Z", ip: "9.9.9.9", payload_json: '{"url":"https://other.example"}' }),
     ]);
     assert.equal(runs.length, 3);
+  });
+});
+
+describe("groupSame", () => {
+  it("groups the same type + payload across IPs and gaps, newest group first", () => {
+    const other = '{"url":"https://other.example"}';
+    const groups = groupSame([
+      row({ at: "2026-10-19T10:00:00Z", ip: "1.1.1.1" }),
+      row({ at: "2026-10-19T09:00:00Z", payload_json: other }),
+      row({ at: "2026-10-19T08:00:00Z", ip: "9.9.9.9", event: "copy" }),
+      row({ at: "2026-10-19T07:00:00Z", qr_type: "text" }),
+    ]);
+    assert.deepEqual(
+      groups.map((g) => g.rows.length),
+      [2, 1, 1],
+    );
+    assert.deepEqual(groups[0].events, [
+      { event: "download_png", c: 1 },
+      { event: "copy", c: 1 },
+    ]);
+    assert.equal(groups[1].rows[0].payload_json, other);
   });
 });
 

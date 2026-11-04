@@ -11,7 +11,7 @@ import { requireAdmin } from "@/lib/adminSession";
 import { getStatsExclusion, listLogs, type LogFilter } from "@/lib/logs";
 import { summarizeLog, topFacets, visitorLanguage } from "@/lib/qr/summarize";
 import { isQrType } from "@/lib/qr/sanitize";
-import { collapseRuns, groupVisitors, type LogRun } from "@/lib/visitors";
+import { collapseRuns, groupSame, groupVisitors, type LogRun } from "@/lib/visitors";
 import { deleteLogsAction } from "./actions";
 
 /** The classification panel looks at this many newest matching rows. */
@@ -31,6 +31,14 @@ function prettyJson(json: string | null): string {
     return json;
   }
 }
+
+/** How the list is grouped: each save, consecutive repeats by one visitor (default), or the same content anywhere. */
+const VIEWS = [
+  { key: "raw", label: "하나씩" },
+  { key: "runs", label: "연속 저장 묶기" },
+  { key: "same", label: "같은 내용 묶기" },
+] as const;
+type ViewKey = (typeof VIEWS)[number]["key"];
 
 /** "5분 동안" for a run that spans time; nothing when it all happened within a minute. */
 function spanLabel(newest: Date, oldest: Date): string {
@@ -53,7 +61,8 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
     to: first(sp.to) || undefined,
   };
   // View switches (not part of the filter, so the CSV export ignores them).
-  const raw = first(sp.raw) === "1";
+  const viewParam = first(sp.view);
+  const mode: ViewKey = VIEWS.find((v) => v.key === viewParam)?.key ?? "runs";
   const showExcluded = first(sp.all) === "1";
   const n = rowsWanted(first(sp.n));
 
@@ -63,14 +72,15 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
   // One query serves both the visible rows (first n) and the classification sample (n ≤ FACET_SAMPLE).
   const { rows: sample, total } = await listLogs(filter, 1, FACET_SAMPLE, hiding ? exclusion.where : undefined);
   const rows = sample.slice(0, n);
-  const runs: LogRun[] = raw ? rows.map((r) => ({ rows: [r], events: [{ event: r.event, c: 1 }] })) : collapseRuns(rows);
+  const runs: LogRun[] =
+    mode === "raw" ? rows.map((r) => ({ rows: [r], events: [{ event: r.event, c: 1 }] })) : mode === "same" ? groupSame(rows) : collapseRuns(rows);
   const people = groupVisitors(sample).length;
 
   const query = new URLSearchParams();
   for (const [k, v] of Object.entries(filter)) if (v) query.set(k, v);
   const hasFilter = query.size > 0;
   const view = new URLSearchParams(query);
-  if (raw) view.set("raw", "1");
+  if (mode !== "runs") view.set("view", mode);
   if (showExcluded) view.set("all", "1");
   const href = (patch: Record<string, string | null>) => {
     const p = new URLSearchParams(view);
@@ -118,7 +128,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
 
       {/* Filter toolbar: one row on desktop, wraps on phones. Changing the type or a preset submits at once. */}
       <form method="get" className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3">
-        {raw ? <input type="hidden" name="raw" value="1" /> : null}
+        {mode !== "runs" ? <input type="hidden" name="view" value={mode} /> : null}
         {showExcluded ? <input type="hidden" name="all" value="1" /> : null}
         <TypeFilter value={isQrType(typeParam) ? typeParam : ""} />
         <DatePresets from={filter.from ?? ""} to={filter.to ?? ""} />
@@ -151,7 +161,20 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
       </form>
 
       <div className="flex flex-wrap items-center gap-2">
-        {toggle(!raw, "같은 저장 묶어 보기", href({ raw: raw ? null : "1", n: null }))}
+        <div role="group" aria-label="묶어 보기" className="inline-flex h-8 items-center rounded-full border border-border-strong bg-card p-0.5 text-xs">
+          {VIEWS.map((v) => (
+            <Link
+              key={v.key}
+              href={href({ view: v.key === "runs" ? null : v.key, n: null })}
+              aria-pressed={mode === v.key}
+              className={`flex h-full items-center rounded-full px-3 whitespace-nowrap transition-colors ${
+                mode === v.key ? "bg-accent font-semibold text-white" : "text-muted hover:bg-subtle hover:text-foreground"
+              }`}
+            >
+              {v.label}
+            </Link>
+          ))}
+        </div>
         {exclusion.count > 0
           ? toggle(showExcluded, `제외 IP 포함 (${exclusion.count}개)`, href({ all: showExcluded ? null : "1", n: null }))
           : (
@@ -180,16 +203,21 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
             {
               head: "누가",
               className: "stack-inline sm:min-w-48",
-              cell: ({ rows: [r] }) => (
-                <>
-                  <VisitorInfo acceptLanguage={r.accept_language} page={r.page} userAgent={r.user_agent} />
-                  {r.ip ? (
-                    <Link href={withQ(r.ip)} className="mt-1 block font-mono text-[11px] text-muted hover:text-accent" title="이 IP의 기록만 보기">
-                      {r.ip}
-                    </Link>
-                  ) : null}
-                </>
-              ),
+              cell: ({ rows: rs }) => {
+                const r = rs[0];
+                const people = new Set(rs.map((x) => x.ip ?? "")).size;
+                return (
+                  <>
+                    {people > 1 ? <p className="mb-1 text-xs font-semibold text-foreground">{num(people)}명이 저장</p> : null}
+                    <VisitorInfo acceptLanguage={r.accept_language} page={r.page} userAgent={r.user_agent} />
+                    {r.ip ? (
+                      <Link href={withQ(r.ip)} className="mt-1 block font-mono text-[11px] text-muted hover:text-accent" title="이 IP의 기록만 보기">
+                        {r.ip}
+                      </Link>
+                    ) : null}
+                  </>
+                );
+              },
             },
           ]}
         >
@@ -234,7 +262,14 @@ function RunWhen({ run: { rows: rs } }: { run: LogRun }) {
         <TimeAgo value={r.created_at} />
       </div>
       <div className="mt-0.5 text-[11px] text-muted tabular-nums">{formatDate(r.created_at).replace(" KST", "")}</div>
-      <div className="mt-0.5 font-mono text-[11px] text-muted">#{rs.length > 1 ? `${oldest.id}–${r.id}` : r.id}</div>
+      {rs.length > 1 ? (
+        <div className="mt-0.5 text-[11px] text-muted">
+          처음 <TimeAgo value={oldest.created_at} />
+        </div>
+      ) : null}
+      <div className="mt-0.5 font-mono text-[11px] text-muted">
+        #{rs.length === 1 ? r.id : r.id - oldest.id === rs.length - 1 ? `${oldest.id}–${r.id}` : `${r.id} 외 ${rs.length - 1}건`}
+      </div>
     </>
   );
 }
@@ -249,7 +284,7 @@ function RunWhat({ run: { rows: rs } }: { run: LogRun }) {
       <div className="mb-1.5 flex items-center gap-1.5">
         <TypeBadge type={r.qr_type} />
         {rs.length > 1 ? (
-          <span className="rounded-md bg-amber-soft px-1.5 py-0.5 text-xs font-semibold text-amber tabular-nums" title="같은 사람이 같은 QR을 연달아 저장한 횟수">
+          <span className="rounded-md bg-amber-soft px-1.5 py-0.5 text-xs font-semibold text-amber tabular-nums" title="이 줄로 묶인 저장 횟수">
             ×{rs.length}
           </span>
         ) : null}

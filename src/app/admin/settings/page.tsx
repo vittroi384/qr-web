@@ -7,14 +7,16 @@ import { saveSettingsAction } from "./actions";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-const GROUPS: { id?: string; title: string; description?: string; keys: SettingKey[] }[] = [
+const GROUPS: { id: string; title: string; description?: string; keys: SettingKey[] }[] = [
   {
+    id: "site",
     title: "사이트",
     description:
       "메타 태그, sitemap, OG 정보에 사용됩니다. 도메인을 바꾸면 여기서 URL만 수정하면 됩니다. 개인정보 문의 연락처는 개인정보처리방침 '문의' 절에 \"개인정보 관련 문의: …\" 형태로 표시되며(이메일이면 링크), 비워 두면 그 문장이 생략됩니다.",
     keys: ["site_name", "site_url", "site_description", "footer_notice", "privacy_contact"],
   },
   {
+    id: "ads",
     title: "광고 (Google AdSense)",
     description:
       "게시자 ID를 넣고 '광고 표시'를 켜면 슬롯 ID가 있는 자리에만 광고가 나옵니다. /ads.txt 도 자동으로 생성됩니다. 슬롯 ID는 AdSense에서 '디스플레이 광고' 단위를 만들면 data-ad-slot 값으로 표시됩니다. '글 사이'는 '인아티클 광고' 단위를 만들어 넣으면 본문 글 사이(메인은 FAQ 바로 아래, 랜딩은 설명 글 사이)에 자연스럽게 섞여 나옵니다. '자리 켜기'를 끈 자리는 광고도 점선도 아예 안 나옵니다(상단 가로는 생성기 바로 위라 기본으로 꺼 둠).",
@@ -37,17 +39,20 @@ const GROUPS: { id?: string; title: string; description?: string; keys: SettingK
     ],
   },
   {
+    id: "monetize",
     title: "수익화",
     description:
       "인쇄 제휴 링크는 인쇄용 안내판 창과 랜딩 페이지 팁 아래에 '제휴' 표시와 함께 작은 카드로 나옵니다. 후원 링크는 푸터와, 방문자가 QR을 저장·복사·인쇄한 직후 미리보기 아래 한 줄('이 QR은 계속 작동해요. 도움이 됐다면 커피 한 잔')에 표시됩니다. 한국어 페이지 전용 링크(토스 등)를 넣으면 한국어판에서는 그 링크가 우선합니다. URL을 비우면 해당 항목은 아무것도 표시되지 않습니다. 문구가 기본값이면 한국어 페이지에서는 한국어 기본 문구로 바뀌어 보입니다.",
     keys: ["affiliate_print_url", "donate_url", "donate_url_ko", "affiliate_print_label", "affiliate_print_note"],
   },
   {
+    id: "logging",
     title: "방문자 입력 기록",
     description: "방문자가 QR로 만든 내용과 접속 정보를 서버 DB에 저장할지 결정합니다. Wi-Fi 비밀번호는 설정과 무관하게 항상 마스킹(****)되어 저장됩니다. 보관 일수가 지난 기록은 자동 삭제됩니다.",
     keys: ["logging_enabled", "log_retention_days"],
   },
   {
+    id: "analytics",
     title: "방문 분석 (Umami)",
     description:
       "직접 운영하는 Umami로 페이지뷰·국가·기기 같은 방문 통계를 모읍니다. 쿠키를 쓰지 않고 개인을 식별하지 않으므로 동의 배너가 필요 없습니다. Umami 대시보드(서버 루프백 전용, SSH 터널로 접속 — README 참고)에서 웹사이트를 추가한 뒤 웹사이트 ID를 넣고, 스크립트 URL은 https://도메인/umami/script.js 로 넣으세요(추적 요청은 같은 도메인의 /umami/api/send 로 갑니다). 두 칸 중 하나라도 비우면 아무것도 삽입되지 않으며, 관리자 페이지에는 항상 넣지 않습니다.",
@@ -82,10 +87,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const myIp = getRequestMetaFromHeaders(await headers()).ip;
 
   return (
-    <form action={saveSettingsAction} className="mx-auto max-w-4xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <PageTitle title="설정" />
-        <button type="submit" className="btn btn-primary">
+    <form action={saveSettingsAction} className="mx-auto max-w-6xl space-y-4 sm:space-y-5">
+      {/* Title and save button stay in view while the long form scrolls. */}
+      <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/90 py-2 pr-2 pl-4 shadow-xs backdrop-blur">
+        <PageTitle title="설정" note="바꾼 항목은 감사 로그에 남습니다" />
+        <button type="submit" className="btn btn-primary btn-sm px-5">
           저장
         </button>
       </div>
@@ -106,63 +112,79 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         </p>
       ) : null}
 
-      {GROUPS.map((g) => (
-        <section key={g.title} id={g.id} className="scroll-mt-6 overflow-hidden rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-5 py-4 sm:px-6">
-            <h2 className="text-[15px] font-semibold">{g.title}</h2>
-            {g.description ? <p className="mt-1 text-[13px] leading-relaxed text-muted">{g.description}</p> : null}
-          </div>
-          <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6">
-            {g.keys.map((key) =>
-              BOOLEAN_SETTINGS.includes(key) ? (
-                <label
-                  key={key}
-                  className="flex min-h-11 cursor-pointer items-center gap-2.5 self-end rounded-lg border border-border-strong bg-card px-3 text-sm shadow-xs transition-colors hover:border-zinc-400 hover:bg-subtle"
-                >
-                  <input type="checkbox" name={key} defaultChecked={s[key] === "1"} />
-                  {SETTING_LABELS[key]}
-                </label>
-              ) : (
-                <label
-                  key={key}
-                  className={`block ${key === "site_description" || key === "footer_notice" || key === "affiliate_print_note" || key === "stats_exclude_ips" ? "sm:col-span-2" : ""}`}
-                >
-                  <span className="label">{SETTING_LABELS[key]}</span>
-                  {key === "stats_exclude_ips" ? (
-                    <>
-                      <textarea name={key} className="input min-h-24 font-mono" defaultValue={s[key]} spellCheck={false} placeholder="116.125.175.155" />
-                      <span className="hint">
-                        지금 접속한 내 IP: <code className="rounded bg-surface px-1 py-0.5 font-mono text-foreground select-all">{myIp ?? "(알 수 없음)"}</code>
-                      </span>
-                    </>
-                  ) : key === "site_description" || key === "footer_notice" ? (
-                    <textarea name={key} className="input min-h-16" defaultValue={s[key]} />
+      <div className="lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+        {/* Section index (desktop): jump links instead of scrolling past the long ad section. */}
+        <nav aria-label="설정 항목" className="sticky top-20 hidden lg:block">
+          <ul className="space-y-0.5 text-sm">
+            {[...GROUPS.map((g) => ({ id: g.id, title: g.title })), { id: "env", title: "서버 환경변수" }].map((g) => (
+              <li key={g.id}>
+                <a href={`#${g.id}`} className="block rounded-md px-3 py-1.5 text-muted transition-colors hover:bg-card hover:text-foreground">
+                  {g.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="space-y-4 sm:space-y-5">
+          {GROUPS.map((g) => (
+            <section key={g.title} id={g.id} className="scroll-mt-20 overflow-hidden rounded-xl border border-border bg-card">
+              <div className="border-b border-border px-5 py-4 sm:px-6">
+                <h2 className="text-[15px] font-semibold">{g.title}</h2>
+                {g.description ? <p className="mt-1 text-[13px] leading-relaxed text-muted">{g.description}</p> : null}
+              </div>
+              <div className={`grid gap-5 p-5 sm:grid-cols-2 sm:p-6 ${g.keys.length > 6 ? "xl:grid-cols-3" : ""}`}>
+                {g.keys.map((key) =>
+                  BOOLEAN_SETTINGS.includes(key) ? (
+                    <label
+                      key={key}
+                      className="flex min-h-11 cursor-pointer items-center gap-2.5 self-end rounded-lg border border-border-strong bg-card px-3 text-sm shadow-xs transition-colors hover:border-zinc-400 hover:bg-subtle"
+                    >
+                      <input type="checkbox" name={key} defaultChecked={s[key] === "1"} />
+                      {SETTING_LABELS[key]}
+                    </label>
                   ) : (
-                    <input
-                      name={key}
-                      className="input"
-                      defaultValue={s[key]}
-                      type={key === "log_retention_days" ? "number" : key.endsWith("_url") && key !== "site_url" ? "url" : "text"}
-                      placeholder={key.endsWith("_url") && key !== "site_url" ? "https://" : undefined}
-                      min={key === "log_retention_days" ? 0 : undefined}
-                      maxLength={key === "privacy_contact" ? PRIVACY_CONTACT_MAX : undefined}
-                      autoComplete="off"
-                    />
-                  )}
-                </label>
-              ),
-            )}
-          </div>
-        </section>
-      ))}
+                    <label
+                      key={key}
+                      className={`block ${key === "site_description" || key === "footer_notice" || key === "affiliate_print_note" || key === "stats_exclude_ips" ? "sm:col-span-2" : ""}`}
+                    >
+                      <span className="label">{SETTING_LABELS[key]}</span>
+                      {key === "stats_exclude_ips" ? (
+                        <>
+                          <textarea name={key} className="input min-h-24 font-mono" defaultValue={s[key]} spellCheck={false} placeholder="116.125.175.155" />
+                          <span className="hint">
+                            지금 접속한 내 IP: <code className="rounded bg-surface px-1 py-0.5 font-mono text-foreground select-all">{myIp ?? "(알 수 없음)"}</code>
+                          </span>
+                        </>
+                      ) : key === "site_description" || key === "footer_notice" ? (
+                        <textarea name={key} className="input min-h-16" defaultValue={s[key]} />
+                      ) : (
+                        <input
+                          name={key}
+                          className="input"
+                          defaultValue={s[key]}
+                          type={key === "log_retention_days" ? "number" : key.endsWith("_url") && key !== "site_url" ? "url" : "text"}
+                          placeholder={key.endsWith("_url") && key !== "site_url" ? "https://" : undefined}
+                          min={key === "log_retention_days" ? 0 : undefined}
+                          maxLength={key === "privacy_contact" ? PRIVACY_CONTACT_MAX : undefined}
+                          autoComplete="off"
+                        />
+                      )}
+                    </label>
+                  ),
+                )}
+              </div>
+            </section>
+          ))}
 
-      <section className="rounded-xl border border-border bg-subtle px-5 py-4 text-sm sm:px-6">
-        <h2 className="text-[15px] font-semibold">서버 환경변수 (파일에서만 변경)</h2>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-muted [&_code]:rounded [&_code]:bg-surface [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs [&_code]:text-foreground">
-          비밀번호와 세션 키는 보안상 <code>.env</code> 파일로만 관리합니다: <code>ADMIN_PASSWORD</code>, <code>SESSION_SECRET</code>,{" "}
-          <code>DOMAIN</code>, <code>POSTGRES_PASSWORD</code>(<code>DATABASE_URL</code>). 변경 후 <code>docker compose up -d</code> 로 재시작하세요.
-        </p>
-      </section>
+          <section id="env" className="scroll-mt-20 rounded-xl border border-border bg-subtle px-5 py-4 text-sm sm:px-6">
+            <h2 className="text-[15px] font-semibold">서버 환경변수 (파일에서만 변경)</h2>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-muted [&_code]:rounded [&_code]:bg-surface [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs [&_code]:text-foreground">
+              비밀번호와 세션 키는 보안상 <code>.env</code> 파일로만 관리합니다: <code>ADMIN_PASSWORD</code>, <code>SESSION_SECRET</code>,{" "}
+              <code>DOMAIN</code>, <code>POSTGRES_PASSWORD</code>(<code>DATABASE_URL</code>). 변경 후 <code>docker compose up -d</code> 로 재시작하세요.
+            </p>
+          </section>
+        </div>
+      </div>
     </form>
   );
 }
