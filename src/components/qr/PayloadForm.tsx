@@ -6,7 +6,7 @@ import type { QrPayloadMap, QrType } from "@/lib/qr/types";
 import { TEXT_MAX, type ValidationIssue } from "@/lib/qr/validate";
 import { CheckIcon, LocateIcon, WarningIcon } from "../icons";
 import { PlatformPicker, detectPlatform, withScheme } from "./PlatformPicker";
-import { useI18n } from "../i18n/I18nProvider";
+import { useI18n } from "../i18n/I18nContext";
 import type { Locale } from "@/lib/i18n";
 
 type FormProps<T extends QrType> = {

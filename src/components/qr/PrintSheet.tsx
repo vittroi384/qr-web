@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import type { QrStyleOptions } from "@/lib/qr/types";
 import { CloseIcon, PrinterIcon } from "../icons";
 import { AffiliateCard, type AffiliateInfo } from "../AffiliateCard";
-import { useI18n } from "../i18n/I18nProvider";
+import { useI18n } from "../i18n/I18nContext";
 import { drawQrToCanvas } from "./render";
 
 /** The sheet's QR is rendered on its own canvas at this resolution (≈ 200 dpi at print size). */

@@ -5,7 +5,7 @@ import { maskWifiPasswords } from "@/lib/qr/sanitize";
 import { DEFAULT_STYLE, type QrStyleOptions } from "@/lib/qr/types";
 import { StepGuide } from "../StepGuide";
 import { ArchiveIcon, CheckIcon, ChevronDownIcon, ClipboardIcon, DownloadIcon, EyeIcon, PlusIcon, QrMarkIcon, TrashIcon, WarningIcon } from "../icons";
-import { useI18n } from "../i18n/I18nProvider";
+import { useI18n } from "../i18n/I18nContext";
 import { ColorRow } from "../qr/ColorSwatches";
 import { CODE_COLORS, OUTPUT_SIZES, TRANSPARENT } from "../qr/presets";
 import { drawQrToCanvas, triggerDownload } from "../qr/render";

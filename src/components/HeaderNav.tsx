@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { localePath, stripLocale, type Locale } from "@/lib/i18n";
+import { localePath, stripLocale, type Locale } from "@/lib/i18n/locales";
 
 type Item = { path: string; label: string; /** Hidden on phones — the footer links these. */ secondary?: boolean };
 

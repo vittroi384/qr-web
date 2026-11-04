@@ -21,6 +21,26 @@ export function isLocale(value: unknown): value is Locale {
   return typeof value === "string" && (LOCALE_CODES as readonly string[]).includes(value);
 }
 
+/** English is the primary language and lives at the root; every other locale is served under "/<code>". */
+export const LOCALES: readonly Locale[] = LOCALE_CODES;
+
+/** "/about" → "/about" (en) or "/ko/about" (ko). "/" → "/" or "/ko". */
+export function localePath(locale: Locale, path: string): string {
+  const clean = path.startsWith("/") ? path : `/${path}`;
+  if (locale === DEFAULT_LOCALE) return clean;
+  return clean === "/" ? `/${locale}` : `/${locale}${clean}`;
+}
+
+/** "/ko/about" → "/about", "/ko" → "/", "/about" → "/about". */
+export function stripLocale(pathname: string): string {
+  for (const l of LOCALES) {
+    if (l === DEFAULT_LOCALE) continue;
+    if (pathname === `/${l}`) return "/";
+    if (pathname.startsWith(`/${l}/`)) return pathname.slice(l.length + 1);
+  }
+  return pathname || "/";
+}
+
 /** "/es/about" → "es", "/about" → "en". */
 export function localeFromPath(pathname: string): Locale {
   const seg = pathname.split("/")[1];

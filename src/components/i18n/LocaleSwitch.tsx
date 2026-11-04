@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { LOCALES, LOCALE_NAMES, localePath, stripLocale, type Locale } from "@/lib/i18n";
+import { LOCALES, LOCALE_NAMES, localePath, stripLocale, type Locale } from "@/lib/i18n/locales";
 
 /**
  * Language menu: a pill showing the current language that opens a popover listing every locale

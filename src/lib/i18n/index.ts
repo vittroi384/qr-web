@@ -19,35 +19,15 @@ import { landingJa, useCasesJa } from "./landing.ja";
 import { landingHi, useCasesHi } from "./landing.hi";
 import { landingId, useCasesId } from "./landing.id";
 import { landingZh, useCasesZh } from "./landing.zh";
-import { DEFAULT_LOCALE, LOCALE_CODES, LOCALE_NAMES, isLocale, localeFromPath, type Locale } from "./locales";
+import { DEFAULT_LOCALE, LOCALES, LOCALE_NAMES, isLocale, localeFromPath, localePath, stripLocale, type Locale } from "./locales";
 import type { QrPayloadMap, QrType } from "@/lib/qr/types";
 
 export type { Dict, Locale };
-export { DEFAULT_LOCALE, LOCALE_NAMES, isLocale, localeFromPath };
-/** English is the primary language and lives at the root; every other locale is served under "/<code>". */
-export const LOCALES: readonly Locale[] = LOCALE_CODES;
-
+export { DEFAULT_LOCALE, LOCALES, LOCALE_NAMES, isLocale, localeFromPath, localePath, stripLocale };
 const DICTS: Record<Locale, Dict> = { en, ko, es, pt, de, fr, ja, hi, id, zh };
 
 export function getDict(locale: Locale): Dict {
   return DICTS[locale];
-}
-
-/** "/about" → "/about" (en) or "/ko/about" (ko). "/" → "/" or "/ko". */
-export function localePath(locale: Locale, path: string): string {
-  const clean = path.startsWith("/") ? path : `/${path}`;
-  if (locale === DEFAULT_LOCALE) return clean;
-  return clean === "/" ? `/${locale}` : `/${locale}${clean}`;
-}
-
-/** "/ko/about" → "/about", "/ko" → "/", "/about" → "/about". */
-export function stripLocale(pathname: string): string {
-  for (const l of LOCALES) {
-    if (l === DEFAULT_LOCALE) continue;
-    if (pathname === `/${l}`) return "/";
-    if (pathname.startsWith(`/${l}/`)) return pathname.slice(l.length + 1);
-  }
-  return pathname || "/";
 }
 
 /** Canonical + hreflang links for a public page. `path` is the unprefixed (English) path. */

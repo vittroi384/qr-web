@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { QR_TYPES, type QrType } from "@/lib/qr/types";
 import { ChevronDownIcon, TypeIcon } from "../icons";
-import { useI18n } from "../i18n/I18nProvider";
+import { useI18n } from "../i18n/I18nContext";
 
 /** Tiles shown before "More types" is pressed, on every width. The order is QR_TYPES (most-used first). */
 const VISIBLE = 8;

@@ -5,7 +5,7 @@ import { FRAME_TEXT_MAX } from "@/lib/qr/frame";
 import { FRAME_SHAPES, type QrStyleOptions } from "@/lib/qr/types";
 import type { Dict } from "@/lib/i18n";
 import { ChevronDownIcon, ImageIcon, WarningIcon } from "../icons";
-import { useI18n } from "../i18n/I18nProvider";
+import { useI18n } from "../i18n/I18nContext";
 import { ColorRow } from "./ColorSwatches";
 import { BACKGROUNDS, TRANSPARENT } from "./presets";
 import { Segmented } from "./Segmented";

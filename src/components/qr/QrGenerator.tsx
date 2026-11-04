@@ -8,7 +8,7 @@ import { DEFAULT_PAYLOADS, DEFAULT_STYLE, type QrPayloadMap, type QrStyleOptions
 import { StepGuide } from "../StepGuide";
 import { DownloadIcon, GridIcon, PencilIcon, ResetIcon } from "../icons";
 import type { AffiliateInfo } from "../AffiliateCard";
-import { useI18n } from "../i18n/I18nProvider";
+import { useI18n } from "../i18n/I18nContext";
 import { PayloadForm } from "./PayloadForm";
 import { SectionHeading } from "./SectionHeading";
 import type { SheetText } from "./PrintSheet";

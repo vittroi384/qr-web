@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { frameLayout } from "@/lib/qr/frame";
 import type { QrStyleOptions } from "@/lib/qr/types";
 import { CoffeeIcon, CheckIcon, ChevronDownIcon, CodeIcon, CopyIcon, DownloadIcon, PrinterIcon, QrMarkIcon, WarningIcon } from "../icons";
-import { useI18n } from "../i18n/I18nProvider";
+import { useI18n } from "../i18n/I18nContext";
 import type { AffiliateInfo } from "../AffiliateCard";
 import { PrintSheetDialog, type SheetText } from "./PrintSheet";
 import { buildSvg, drawQrToCanvas, exactWidth, isCapacityError, triggerDownload } from "./render";

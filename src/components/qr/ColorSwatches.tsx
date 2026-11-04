@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckIcon } from "../icons";
-import { useI18n } from "../i18n/I18nProvider";
+import { useI18n } from "../i18n/I18nContext";
 import { CODE_COLORS, FRAME_COLORS } from "./presets";
 
 const swatchClass =
