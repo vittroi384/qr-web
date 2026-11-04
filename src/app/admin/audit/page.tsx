@@ -31,8 +31,8 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
       </h1>
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="table-scroll">
-          {/* Min width so narrow screens scroll sideways instead of squeezing the text columns to one letter. */}
-          <table className="table min-w-[52rem]">
+          {/* Tablets: min width so the text columns are not squeezed to one letter. Phones: one labelled card per row. */}
+          <table className="table table-stack sm:min-w-[52rem]">
             <thead>
               <tr>
                 <th>시간 (KST)</th>
@@ -50,10 +50,10 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 <td className="whitespace-nowrap">
                   <span className={r.action === "login_failed" ? "font-medium text-danger" : ""}>{ACTION_LABELS[r.action] ?? r.action}</span>
                 </td>
-                <td className="text-xs">{r.key ? SETTING_LABELS[r.key as SettingKey] ?? r.key : ""}</td>
-                <td className="max-w-xs text-xs break-all text-muted">{r.oldValue}</td>
-                <td className="max-w-xs text-xs break-all">{r.newValue}</td>
-                <td className="font-mono text-xs">{r.ip}</td>
+                <td className="text-xs" data-label="항목">{r.key ? SETTING_LABELS[r.key as SettingKey] ?? r.key : ""}</td>
+                <td className="max-w-xs text-xs break-all text-muted" data-label="이전 값">{r.oldValue}</td>
+                <td className="max-w-xs text-xs break-all" data-label="새 값">{r.newValue}</td>
+                <td className="font-mono text-xs" data-label="IP">{r.ip}</td>
               </tr>
             ))}
             {rows.length === 0 ? (

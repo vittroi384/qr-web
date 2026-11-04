@@ -62,7 +62,7 @@ export function TimeAgo({ value }: { value: Date | string }) {
 export function VisitorInfo({ acceptLanguage, page, userAgent }: { acceptLanguage: string | null; page: string | null; userAgent: string | null }) {
   const device = browserOf(userAgent);
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-xs">
+    <dl className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-0.5 text-xs">
       <dt className="text-muted">언어</dt>
       <dd className="truncate text-foreground">{visitorLanguage(acceptLanguage)}</dd>
       {page ? (

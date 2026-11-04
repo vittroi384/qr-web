@@ -219,7 +219,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
 
       <form action={deleteLogsAction} className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="table-scroll [--table-offset:26rem]">
-          <table className="table">
+          <table className="table table-stack">
             <thead>
               <tr>
                 <th className="w-10">
@@ -238,7 +238,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                 const s = summarizeLog(r.qr_type, r.payload_json);
                 const span = spanLabel(new Date(r.created_at), new Date(oldest.created_at));
                 return (
-                  <tr key={r.id} className="align-top">
+                  <tr key={r.id} className="has-check align-top">
                     <td>
                       <input
                         type="checkbox"
@@ -248,7 +248,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                         className="mt-0.5"
                       />
                     </td>
-                    <td className="whitespace-nowrap">
+                    <td className="stack-inline whitespace-nowrap">
                       <div className="text-sm font-medium text-foreground">
                         <TimeAgo value={r.created_at} />
                       </div>
@@ -281,7 +281,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                       </details>
                     </td>
                     <td>
-                      <ul className="space-y-1">
+                      <ul className="flex flex-wrap gap-x-3 gap-y-1 sm:block sm:space-y-1">
                         {events.map((e) => (
                           <li key={e.event} className="flex items-center gap-1.5">
                             <EventBadge event={e.event} />
@@ -290,7 +290,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
                         ))}
                       </ul>
                     </td>
-                    <td className="min-w-48">
+                    <td className="stack-inline sm:min-w-48">
                       <VisitorInfo acceptLanguage={r.accept_language} page={r.page} userAgent={r.user_agent} />
                       {r.ip ? (
                         <Link href={withQ(r.ip)} className="mt-1 block font-mono text-[11px] text-muted hover:text-accent" title="이 IP의 기록만 보기">

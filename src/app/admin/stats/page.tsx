@@ -38,7 +38,7 @@ function Empty() {
 /** Inline bar behind a number, relative to the column's largest value. */
 function Meter({ value, max }: { value: number; max: number }) {
   return (
-    <span className="ml-auto block h-1.5 w-16 overflow-hidden rounded-full bg-surface" aria-hidden="true">
+    <span className="ml-auto hidden h-1.5 w-16 overflow-hidden rounded-full bg-surface sm:block" aria-hidden="true">
       <span className="block h-full rounded-full bg-accent/70" style={{ width: `${Math.max(4, (value / Math.max(1, max)) * 100)}%` }} />
     </span>
   );
@@ -72,13 +72,13 @@ function UsersTable({ head, rows }: { head: string; rows: { key: string; label: 
             <th>{head}</th>
             <th className="text-right">사용자</th>
             <th className="text-right">저장</th>
-            <th className="text-right">1인당</th>
+            <th className="m-hide text-right">1인당</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.key}>
-              <td className={`max-w-xs truncate ${r.muted ? "text-muted" : ""} ${r.mono ? "font-mono text-xs" : "whitespace-nowrap"}`}>{r.label}</td>
+              <td className={`max-w-[9rem] truncate sm:max-w-xs ${r.muted ? "text-muted" : ""} ${r.mono ? "font-mono text-xs" : "whitespace-nowrap"}`}>{r.label}</td>
               <td className="text-right tabular-nums">
                 <span className="flex items-center justify-end gap-2">
                   <Meter value={r.users} max={max} />
@@ -86,7 +86,7 @@ function UsersTable({ head, rows }: { head: string; rows: { key: string; label: 
                 </span>
               </td>
               <td className="text-right tabular-nums">{n(r.saves)}</td>
-              <td className="text-right text-muted tabular-nums">{perUser(r.saves, r.users)}</td>
+              <td className="m-hide text-right text-muted tabular-nums">{perUser(r.saves, r.users)}</td>
             </tr>
           ))}
         </tbody>
@@ -175,18 +175,18 @@ export default async function StatsPage() {
                 <thead>
                   <tr>
                     <th>출처</th>
-                    <th>분류</th>
+                    <th className="m-hide">분류</th>
                     <th className="text-right">방문</th>
                     <th className="text-right">저장한 사람</th>
-                    <th className="text-right">저장</th>
+                    <th className="m-hide text-right">저장</th>
                     <th className="text-right">저장한 사람/방문</th>
                   </tr>
                 </thead>
                 <tbody>
                   {s.sources.map((r) => (
                     <tr key={r.source}>
-                      <td className="max-w-xs truncate whitespace-nowrap">{sourceLabel(r.source)}</td>
-                      <td className="whitespace-nowrap text-muted">{SOURCE_GROUP_LABELS[sourceGroup(r.source)]}</td>
+                      <td className="max-w-[9rem] truncate whitespace-nowrap sm:max-w-xs">{sourceLabel(r.source)}</td>
+                      <td className="m-hide whitespace-nowrap text-muted">{SOURCE_GROUP_LABELS[sourceGroup(r.source)]}</td>
                       <td className="text-right tabular-nums">
                         <span className="flex items-center justify-end gap-2">
                           <Meter value={r.visits} max={maxVisits} />
@@ -194,7 +194,7 @@ export default async function StatsPage() {
                         </span>
                       </td>
                       <td className="text-right tabular-nums">{n(r.users)}</td>
-                      <td className="text-right tabular-nums">{n(r.saves)}</td>
+                      <td className="m-hide text-right tabular-nums">{n(r.saves)}</td>
                       <td className="text-right text-muted tabular-nums">{pct(r.users, r.visits)}</td>
                     </tr>
                   ))}
@@ -282,7 +282,7 @@ export default async function StatsPage() {
               <tbody>
                 {matrixRows.map((r) => (
                   <tr key={r.qrType}>
-                    <td className="whitespace-nowrap">{typeLabel(r.qrType)}</td>
+                    <td className="max-w-[7rem] sm:max-w-none sm:whitespace-nowrap">{typeLabel(r.qrType)}</td>
                     {SAVE_EVENTS.map((e) => (
                       <td key={e} className={`text-right tabular-nums ${r.cells[e] ? "" : "text-muted"}`}>
                         {r.cells[e] ? n(r.cells[e]) : "–"}
@@ -325,7 +325,7 @@ export default async function StatsPage() {
                   <th>종류</th>
                   <th className="text-right">선택</th>
                   <th className="text-right">미리보기</th>
-                  <th className="text-right">미리보기/선택</th>
+                  <th className="m-hide text-right">미리보기/선택</th>
                   <th className="text-right">저장</th>
                   <th className="text-right">저장/미리보기</th>
                 </tr>
@@ -336,7 +336,7 @@ export default async function StatsPage() {
                     <td className="whitespace-nowrap">{typeLabel(r.qrType)}</td>
                     <td className="text-right tabular-nums">{n(r.select)}</td>
                     <td className="text-right tabular-nums">{n(r.preview)}</td>
-                    <td className="text-right text-muted tabular-nums">{pct(r.preview, r.select)}</td>
+                    <td className="m-hide text-right text-muted tabular-nums">{pct(r.preview, r.select)}</td>
                     <td className="text-right tabular-nums">{n(r.save)}</td>
                     <td className="text-right text-muted tabular-nums">{pct(r.save, r.preview)}</td>
                   </tr>

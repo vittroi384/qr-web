@@ -122,12 +122,12 @@ export default async function AdminDashboard() {
         {visitors.length === 0 ? (
           <p className="card text-center text-sm text-muted">아직 기록이 없습니다. 메인 페이지에서 QR을 만들어 보세요.</p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {visitors.slice(0, FEED_SIZE).map((v) => {
               const s = summarizeLog(v.latest.qr_type, v.latest.payload_json);
               const isNew = v.firstAt >= todayStart;
               return (
-                <li key={v.ip || "none"} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+                <li key={v.ip || "none"} className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between gap-2 text-xs">
                     <span className="flex items-center gap-1.5">
                       {isNew ? <span className="rounded bg-amber-soft px-1.5 py-0.5 font-semibold text-amber">오늘 처음</span> : null}

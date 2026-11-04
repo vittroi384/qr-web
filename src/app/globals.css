@@ -240,6 +240,59 @@
   .table-scroll thead th {
     @apply sticky top-0 z-10 bg-subtle shadow-[inset_0_-1px_0_var(--border)];
   }
+  /* Phones: tables were wider than the card, so the numbers on the right needed sideways swiping.
+     Tighter cells, headers may wrap, and secondary columns (.m-hide) drop out. */
+  @media (width < 40rem) {
+    .table th,
+    .table td {
+      @apply px-2.5;
+    }
+    .table {
+      @apply text-[13px];
+    }
+    .table th {
+      @apply whitespace-normal;
+    }
+    .m-hide {
+      display: none;
+    }
+    /* Log-style tables (many text columns): one card per row, each value labelled. */
+    .table-stack thead {
+      display: none;
+    }
+    .table-stack,
+    .table-stack tbody {
+      display: block;
+    }
+    .table-stack tbody tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.35rem;
+      padding: 0.75rem 0;
+    }
+    .table-stack tbody tr.has-check {
+      position: relative;
+      padding-left: 2rem;
+    }
+    .table-stack tbody tr.has-check > td:first-child {
+      position: absolute;
+      left: 0;
+      top: 0.75rem;
+    }
+    .table-stack td {
+      display: block;
+      padding-block: 0;
+      min-width: 0;
+      max-width: none;
+    }
+    .table-stack td[data-label]::before {
+      content: attr(data-label);
+      display: block;
+      margin-bottom: 0.1rem;
+      font-size: 11px;
+      color: var(--muted);
+    }
+  }
 }
 
 /* Phone save bar (QrPreview): slides up from the bottom edge when it appears. */
@@ -353,5 +406,28 @@
     aspect-ratio: auto;
     height: 270mm;
     break-inside: avoid;
+  }
+}
+
+/* Admin log cards on phones (see .table-stack). Outside any @layer on purpose: inside
+   `components`, Tailwind utilities on the same elements (`grid`, `block`) won by layer order. */
+@media (width < 40rem) {
+  /* Cards stay short: time·date·id on one line, visitor details on one line (a card was 326px tall). */
+  .table-stack td.stack-inline > *,
+  .table-stack td.stack-inline dl > * {
+    display: inline;
+    margin: 0 0.5rem 0 0;
+  }
+  .table-stack td.stack-inline dl dt {
+    margin-right: 0.25rem;
+  }
+  /* Empty cells (no setting key, no old value…) only showed a lonely label. */
+  .table-stack td:empty {
+    display: none;
+  }
+  /* Label beside its value, not above it. */
+  .table-stack td[data-label]::before {
+    display: inline;
+    margin-right: 0.4rem;
   }
 }
