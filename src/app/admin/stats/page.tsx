@@ -1,99 +1,44 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { EVENT_LABELS, ExcludedNote, PageTitle, StatCard } from "@/components/admin/ui";
+import { DataTable, MeterNum } from "@/components/admin/DataTable";
+import { num as n, pct, perUser } from "@/components/admin/format";
+import { Bars, EVENT_LABELS, Empty, ExcludedNote, PageTitle, Section, StatCard, typeLabel } from "@/components/admin/ui";
 import { LOCALE_NAMES, isLocale } from "@/lib/i18n/locales";
-import { QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
 import { requireAdmin } from "@/lib/adminSession";
 import { getStatsExclusion } from "@/lib/logs";
-import { getStats } from "@/lib/stats";
+import { getStats, type FunnelRow, type SourceRow } from "@/lib/stats";
 import { SOURCE_GROUP_LABELS, crawlerLabel, isAiCrawler, sourceGroup, sourceLabel, type SourceGroup } from "@/lib/traffic";
 
 /** Save methods shown as matrix columns ("generate" is never logged). */
 const SAVE_EVENTS = ["download_png", "download_svg", "copy", "print", "batch"] as const;
 const UNKNOWN = "(알 수 없음)";
 
-const typeLabel = (t: string) => (QR_TYPE_LABELS as Record<string, string>)[t as QrType] ?? t;
 const localeLabel = (l: string | null) => (l && isLocale(l) ? `${l} · ${LOCALE_NAMES[l].full}` : (l ?? UNKNOWN));
-const n = (v: number) => v.toLocaleString();
-const pct = (part: number, whole: number) => (whole > 0 ? `${((part / whole) * 100).toFixed(1)}%` : "–");
-const perUser = (saves: number, users: number) => (users > 0 ? (saves / users).toFixed(1) : "–");
 
-/** `hint` says in one line what the section answers, so the page reads without a manual. */
-function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
-  return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="px-5 py-4">
-        <h2 className="text-[15px] font-semibold">{title}</h2>
-        {hint ? <p className="mt-0.5 text-xs text-muted">{hint}</p> : null}
-      </div>
-      <div className="border-t border-border">{children}</div>
-    </section>
-  );
-}
-
-function Empty() {
-  return <p className="px-5 py-10 text-center text-sm text-muted">아직 데이터가 없습니다.</p>;
-}
-
-/** Inline bar behind a number, relative to the column's largest value. */
-function Meter({ value, max }: { value: number; max: number }) {
-  return (
-    <span className="ml-auto hidden h-1.5 w-16 overflow-hidden rounded-full bg-surface sm:block" aria-hidden="true">
-      <span className="block h-full rounded-full bg-accent/70" style={{ width: `${Math.max(4, (value / Math.max(1, max)) * 100)}%` }} />
-    </span>
-  );
-}
-
-/** Vertical CSS bars (no chart library); each bar carries a hover title. */
-function Bars({ items, height }: { items: { key: string; c: number; title: string }[]; height: string }) {
-  const max = Math.max(1, ...items.map((i) => i.c));
-  return (
-    <div className={`flex items-end gap-0.5 sm:gap-1 ${height}`}>
-      {items.map((i) => (
-        <div key={i.key} className="flex h-full flex-1 items-end" title={i.title}>
-          <div
-            className={`w-full rounded-t-sm transition-colors ${i.c ? "bg-accent/80 hover:bg-accent" : "bg-surface"}`}
-            style={{ height: i.c ? `${Math.max(3, (i.c / max) * 100)}%` : "2px" }}
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
+type UsersRow = { key: string; label: ReactNode; users: number; saves: number; muted?: boolean; mono?: boolean };
 
 /** Users · saves table shared by the type, language and page sections. */
-function UsersTable({ head, rows }: { head: string; rows: { key: string; label: ReactNode; users: number; saves: number; muted?: boolean; mono?: boolean }[] }) {
+function UsersTable({ head, rows }: { head: string; rows: UsersRow[] }) {
   const max = Math.max(1, ...rows.map((r) => r.users));
   return (
-    <div className="table-scroll [--table-offset:20rem]">
-      <table className="table">
-        <thead>
-          <tr>
-            <th>{head}</th>
-            <th className="text-right">사용자</th>
-            <th className="text-right">저장</th>
-            <th className="m-hide text-right">1인당</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.key}>
-              <td className={`max-w-[9rem] truncate sm:max-w-xs ${r.muted ? "text-muted" : ""} ${r.mono ? "font-mono text-xs" : "whitespace-nowrap"}`}>{r.label}</td>
-              <td className="text-right tabular-nums">
-                <span className="flex items-center justify-end gap-2">
-                  <Meter value={r.users} max={max} />
-                  <span className="w-8 font-semibold">{n(r.users)}</span>
-                </span>
-              </td>
-              <td className="text-right tabular-nums">{n(r.saves)}</td>
-              <td className="m-hide text-right text-muted tabular-nums">{perUser(r.saves, r.users)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      rows={rows}
+      rowKey={(r) => r.key}
+      columns={[
+        {
+          head,
+          cell: (r) => r.label,
+          className: (r) => `max-w-[9rem] truncate sm:max-w-xs ${r.muted ? "text-muted" : ""} ${r.mono ? "font-mono text-xs" : "whitespace-nowrap"}`,
+        },
+        { head: "사용자", num: true, cell: (r) => <MeterNum value={r.users} max={max} /> },
+        { head: "저장", num: true, cell: (r) => n(r.saves) },
+        { head: "1인당", num: true, mHide: true, className: "text-muted", cell: (r) => perUser(r.saves, r.users) },
+      ]}
+    />
   );
 }
+
+type MatrixRow = { qrType: string; cells: Record<string, number>; total: number };
 
 export default async function StatsPage() {
   await requireAdmin();
@@ -109,7 +54,7 @@ export default async function StatsPage() {
     row[r.event] = (row[r.event] ?? 0) + r.c;
     matrix.set(r.qrType, row);
   }
-  const matrixRows = [...matrix.entries()]
+  const matrixRows: MatrixRow[] = [...matrix.entries()]
     .map(([qrType, cells]) => ({ qrType, cells, total: Object.values(cells).reduce((a, b) => a + b, 0) }))
     .sort((a, b) => b.total - a.total);
 
@@ -170,37 +115,19 @@ export default async function StatsPage() {
                 </span>
               ))}
             </div>
-            <div className="table-scroll border-t border-border [--table-offset:20rem]">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>출처</th>
-                    <th className="m-hide">분류</th>
-                    <th className="text-right">방문</th>
-                    <th className="text-right">저장한 사람</th>
-                    <th className="m-hide text-right">저장</th>
-                    <th className="text-right">저장한 사람/방문</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {s.sources.map((r) => (
-                    <tr key={r.source}>
-                      <td className="max-w-[9rem] truncate whitespace-nowrap sm:max-w-xs">{sourceLabel(r.source)}</td>
-                      <td className="m-hide whitespace-nowrap text-muted">{SOURCE_GROUP_LABELS[sourceGroup(r.source)]}</td>
-                      <td className="text-right tabular-nums">
-                        <span className="flex items-center justify-end gap-2">
-                          <Meter value={r.visits} max={maxVisits} />
-                          <span className="w-10 font-semibold">{n(r.visits)}</span>
-                        </span>
-                      </td>
-                      <td className="text-right tabular-nums">{n(r.users)}</td>
-                      <td className="m-hide text-right tabular-nums">{n(r.saves)}</td>
-                      <td className="text-right text-muted tabular-nums">{pct(r.users, r.visits)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable<SourceRow>
+              box="border-t border-border [--table-offset:20rem]"
+              rows={s.sources}
+              rowKey={(r) => r.source}
+              columns={[
+                { head: "출처", className: "max-w-[9rem] truncate whitespace-nowrap sm:max-w-xs", cell: (r) => sourceLabel(r.source) },
+                { head: "분류", mHide: true, className: "whitespace-nowrap text-muted", cell: (r) => SOURCE_GROUP_LABELS[sourceGroup(r.source)] },
+                { head: "방문", num: true, cell: (r) => <MeterNum value={r.visits} max={maxVisits} width="w-10" /> },
+                { head: "저장한 사람", num: true, cell: (r) => n(r.users) },
+                { head: "저장", num: true, mHide: true, cell: (r) => n(r.saves) },
+                { head: "저장한 사람/방문", num: true, className: "text-muted", cell: (r) => pct(r.users, r.visits) },
+              ]}
+            />
           </>
         )}
         <p className="border-t border-border px-5 py-3 text-xs text-muted">
@@ -266,34 +193,20 @@ export default async function StatsPage() {
         {matrixRows.length === 0 ? (
           <Empty />
         ) : (
-          <div className="table-scroll [--table-offset:20rem]">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>종류</th>
-                  {SAVE_EVENTS.map((e) => (
-                    <th key={e} className="text-right">
-                      {EVENT_LABELS[e] ?? e}
-                    </th>
-                  ))}
-                  <th className="text-right">합계</th>
-                </tr>
-              </thead>
-              <tbody>
-                {matrixRows.map((r) => (
-                  <tr key={r.qrType}>
-                    <td className="max-w-[7rem] sm:max-w-none sm:whitespace-nowrap">{typeLabel(r.qrType)}</td>
-                    {SAVE_EVENTS.map((e) => (
-                      <td key={e} className={`text-right tabular-nums ${r.cells[e] ? "" : "text-muted"}`}>
-                        {r.cells[e] ? n(r.cells[e]) : "–"}
-                      </td>
-                    ))}
-                    <td className="text-right font-medium tabular-nums">{n(r.total)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable<MatrixRow>
+            rows={matrixRows}
+            rowKey={(r) => r.qrType}
+            columns={[
+              { head: "종류", className: "max-w-[7rem] sm:max-w-none sm:whitespace-nowrap", cell: (r) => typeLabel(r.qrType) },
+              ...SAVE_EVENTS.map((e) => ({
+                head: EVENT_LABELS[e] ?? e,
+                num: true,
+                className: (r: MatrixRow) => (r.cells[e] ? "" : "text-muted"),
+                cell: (r: MatrixRow) => (r.cells[e] ? n(r.cells[e]) : "–"),
+              })),
+              { head: "합계", num: true, className: "font-medium", cell: (r) => n(r.total) },
+            ]}
+          />
         )}
       </Section>
 
@@ -318,32 +231,18 @@ export default async function StatsPage() {
         {s.funnel.length === 0 ? (
           <Empty />
         ) : (
-          <div className="table-scroll [--table-offset:20rem]">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>종류</th>
-                  <th className="text-right">선택</th>
-                  <th className="text-right">미리보기</th>
-                  <th className="m-hide text-right">미리보기/선택</th>
-                  <th className="text-right">저장</th>
-                  <th className="text-right">저장/미리보기</th>
-                </tr>
-              </thead>
-              <tbody>
-                {s.funnel.map((r) => (
-                  <tr key={r.qrType}>
-                    <td className="whitespace-nowrap">{typeLabel(r.qrType)}</td>
-                    <td className="text-right tabular-nums">{n(r.select)}</td>
-                    <td className="text-right tabular-nums">{n(r.preview)}</td>
-                    <td className="m-hide text-right text-muted tabular-nums">{pct(r.preview, r.select)}</td>
-                    <td className="text-right tabular-nums">{n(r.save)}</td>
-                    <td className="text-right text-muted tabular-nums">{pct(r.save, r.preview)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable<FunnelRow>
+            rows={s.funnel}
+            rowKey={(r) => r.qrType}
+            columns={[
+              { head: "종류", className: "whitespace-nowrap", cell: (r) => typeLabel(r.qrType) },
+              { head: "선택", num: true, cell: (r) => n(r.select) },
+              { head: "미리보기", num: true, cell: (r) => n(r.preview) },
+              { head: "미리보기/선택", num: true, mHide: true, className: "text-muted", cell: (r) => pct(r.preview, r.select) },
+              { head: "저장", num: true, cell: (r) => n(r.save) },
+              { head: "저장/미리보기", num: true, className: "text-muted", cell: (r) => pct(r.save, r.preview) },
+            ]}
+          />
         )}
         <p className="border-t border-border px-5 py-3 text-xs text-muted">
           선택은 방문자가 실제로 종류를 고른 때(타일 클릭·입력 시작·종류별 랜딩 진입)만, 미리보기는 QR이 처음 그려진 때만 세며 둘 다 브라우저 세션당 종류별 1회입니다. 저장은 모든 저장 건수(일괄 생성 포함)라 100%를 넘을 수 있습니다. 퍼널 집계는
@@ -355,26 +254,15 @@ export default async function StatsPage() {
         {s.crawlers.length === 0 ? (
           <Empty />
         ) : (
-          <div className="table-scroll [--table-offset:20rem]">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>크롤러</th>
-                  <th>분류</th>
-                  <th className="text-right">페이지 요청</th>
-                </tr>
-              </thead>
-              <tbody>
-                {s.crawlers.map((r) => (
-                  <tr key={r.crawler}>
-                    <td className="whitespace-nowrap">{crawlerLabel(r.crawler)}</td>
-                    <td className={`whitespace-nowrap ${isAiCrawler(r.crawler) ? "text-accent" : "text-muted"}`}>{isAiCrawler(r.crawler) ? "AI" : "검색"}</td>
-                    <td className="text-right font-medium tabular-nums">{n(r.c)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            rows={s.crawlers}
+            rowKey={(r) => r.crawler}
+            columns={[
+              { head: "크롤러", className: "whitespace-nowrap", cell: (r) => crawlerLabel(r.crawler) },
+              { head: "분류", className: (r) => `whitespace-nowrap ${isAiCrawler(r.crawler) ? "text-accent" : "text-muted"}`, cell: (r) => (isAiCrawler(r.crawler) ? "AI" : "검색") },
+              { head: "페이지 요청", num: true, className: "font-medium", cell: (r) => n(r.c) },
+            ]}
+          />
         )}
       </Section>
     </div>

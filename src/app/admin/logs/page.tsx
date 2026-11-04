@@ -1,18 +1,19 @@
 import Link from "next/link";
+import { DataTable } from "@/components/admin/DataTable";
+import { FacetPanel, type Facet } from "@/components/admin/FacetPanel";
 import { InfiniteScroll } from "@/components/admin/InfiniteScroll";
 import { DatePresets, TypeFilter } from "@/components/admin/LogFilters";
+import { num } from "@/components/admin/format";
+import { MAX_ROWS, nextRows, rowsWanted, shownLabel } from "@/components/admin/paging";
 import { EVENT_LABELS, EventBadge, PageTitle, TimeAgo, TypeBadge, VisitorInfo, formatDate } from "@/components/admin/ui";
 import { DownloadIcon } from "@/components/icons";
 import { requireAdmin } from "@/lib/adminSession";
 import { getStatsExclusion, listLogs, type LogFilter } from "@/lib/logs";
 import { summarizeLog, topFacets, visitorLanguage } from "@/lib/qr/summarize";
 import { isQrType } from "@/lib/qr/sanitize";
-import { collapseRuns, groupVisitors } from "@/lib/visitors";
+import { collapseRuns, groupVisitors, type LogRun } from "@/lib/visitors";
 import { deleteLogsAction } from "./actions";
 
-/** Rows are appended ("더 불러오기") instead of paged; the table scrolls inside its card. */
-const PAGE_STEP = 100;
-const MAX_ROWS = 2000;
 /** The classification panel looks at this many newest matching rows. */
 const FACET_SAMPLE = 2000;
 
@@ -54,8 +55,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
   // View switches (not part of the filter, so the CSV export ignores them).
   const raw = first(sp.raw) === "1";
   const showExcluded = first(sp.all) === "1";
-  const wanted = Number.parseInt(first(sp.n) || "", 10);
-  const n = Math.min(MAX_ROWS, Math.max(PAGE_STEP, Number.isFinite(wanted) ? wanted : PAGE_STEP));
+  const n = rowsWanted(first(sp.n));
 
   const exclusion = await getStatsExclusion();
   const hiding = !showExcluded && exclusion.count > 0;
@@ -63,7 +63,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
   // One query serves both the visible rows (first n) and the classification sample (n ≤ FACET_SAMPLE).
   const { rows: sample, total } = await listLogs(filter, 1, FACET_SAMPLE, hiding ? exclusion.where : undefined);
   const rows = sample.slice(0, n);
-  const runs = raw ? rows.map((r) => ({ rows: [r], events: [{ event: r.event, c: 1 }] })) : collapseRuns(rows);
+  const runs: LogRun[] = raw ? rows.map((r) => ({ rows: [r], events: [{ event: r.event, c: 1 }] })) : collapseRuns(rows);
   const people = groupVisitors(sample).length;
 
   const query = new URLSearchParams();
@@ -80,18 +80,18 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
     }
     return `/admin/logs${p.size ? `?${p}` : ""}`;
   };
-  const moreHref = href({ n: String(Math.min(MAX_ROWS, n + PAGE_STEP)) });
+  const next = nextRows(n, rows.length, total);
   const withQ = (q: string) => href({ q });
 
   // Auto-classification over the (filtered) sample: what people encode, from where, how they save.
   const summaries = sample.map((r) => ({ row: r, s: summarizeLog(r.qr_type, r.payload_json) }));
-  const facets = [
+  const facets: Facet[] = [
     { title: "도메인", hint: "URL · 파일 · 이메일", items: topFacets(summaries, (x) => x.s.domain), link: withQ },
     { title: "플랫폼 · 방식", hint: "SNS · 결제 · 코인 · Wi-Fi 암호화", items: topFacets(summaries, (x) => x.s.platform) },
     { title: "방문자 언어", hint: "브라우저 설정", items: topFacets(summaries, (x) => visitorLanguage(x.row.accept_language)) },
     { title: "저장 방식", hint: "", items: topFacets(summaries, (x) => EVENT_LABELS[x.row.event] ?? x.row.event) },
   ];
-  const sampleNote = sample.length >= FACET_SAMPLE ? `최근 ${FACET_SAMPLE.toLocaleString()}건 기준` : `${sample.length.toLocaleString()}건 기준`;
+  const sampleNote = sample.length >= FACET_SAMPLE ? `최근 ${num(FACET_SAMPLE)}건 기준` : `${num(sample.length)}건 기준`;
 
   const toggle = (on: boolean, label: string, to: string) => (
     <Link
@@ -109,7 +109,7 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <PageTitle title="입력 기록" note={<span className="tabular-nums">저장 {total.toLocaleString()}건 · 사용자 {people.toLocaleString()}명{sample.length < total ? ` (최근 ${sample.length.toLocaleString()}건 기준)` : ""}</span>} />
+        <PageTitle title="입력 기록" note={<span className="tabular-nums">저장 {num(total)}건 · 사용자 {num(people)}명{sample.length < total ? ` (최근 ${num(sample.length)}건 기준)` : ""}</span>} />
         <a href={`/api/admin/logs/export?${query}`} className="btn btn-sm" download>
           <DownloadIcon />
           CSV 내보내기 (현재 필터)
@@ -162,172 +162,126 @@ export default async function LogsPage({ searchParams }: { searchParams: Promise
       </div>
 
       {/* Auto-classification of what matched the filter. */}
-      {sample.length > 0 ? (
-        <details className="group rounded-xl border border-border bg-card" open={hasFilter}>
-          <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-2 px-4 py-3 sm:px-5">
-            <span className="text-[15px] font-semibold">
-              자동 분류 <span className="ml-1 text-xs font-normal text-muted">{sampleNote} · 도메인을 누르면 그 조건으로 검색</span>
-            </span>
-            <span className="text-xs text-accent group-open:hidden">펼치기</span>
-            <span className="hidden text-xs text-muted group-open:inline">접기</span>
-          </summary>
-          <div className="grid gap-5 border-t border-border p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
-            {facets.map((f) => {
-              const max = f.items[0]?.count ?? 1;
-              return (
-                <div key={f.title}>
-                  <h3 className="text-[13px] font-medium text-foreground">
-                    {f.title}
-                    {f.hint ? <span className="ml-1.5 text-[11px] font-normal text-muted">{f.hint}</span> : null}
-                  </h3>
-                  {f.items.length === 0 ? (
-                    <p className="mt-2 text-xs text-muted">해당 없음</p>
-                  ) : (
-                    <ul className="mt-2 space-y-1.5">
-                      {f.items.map((it) => {
-                        const bar = (
-                          <>
-                            <span className="flex items-center justify-between gap-2 text-[13px]">
-                              <span className="truncate">{it.key}</span>
-                              <span className="shrink-0 text-xs text-muted tabular-nums">{it.count.toLocaleString()}</span>
-                            </span>
-                            <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-surface">
-                              <span className="block h-full rounded-full bg-accent/70" style={{ width: `${Math.max(4, Math.round((it.count / max) * 100))}%` }} />
-                            </span>
-                          </>
-                        );
-                        return (
-                          <li key={it.key}>
-                            {f.link ? (
-                              <Link href={f.link(it.key)} className="block rounded-md px-1 py-0.5 -mx-1 transition-colors hover:bg-subtle">
-                                {bar}
-                              </Link>
-                            ) : (
-                              <div className="px-1 py-0.5 -mx-1">{bar}</div>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </details>
-      ) : null}
+      {sample.length > 0 ? <FacetPanel facets={facets} note={sampleNote} open={hasFilter} /> : null}
 
       <form action={deleteLogsAction} className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="table-scroll [--table-offset:26rem]">
-          <table className="table table-stack">
-            <thead>
-              <tr>
-                <th className="w-10">
-                  <span className="sr-only">선택</span>
-                </th>
-                <th>언제</th>
-                <th>무엇을</th>
-                <th>어떻게 저장</th>
-                <th>누가</th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map(({ rows: rs, events }) => {
-                const r = rs[0];
-                const oldest = rs[rs.length - 1];
-                const s = summarizeLog(r.qr_type, r.payload_json);
-                const span = spanLabel(new Date(r.created_at), new Date(oldest.created_at));
-                return (
-                  <tr key={r.id} className="has-check align-top">
-                    <td>
-                      <input
-                        type="checkbox"
-                        name="ids"
-                        value={rs.map((x) => x.id).join(",")}
-                        aria-label={rs.length > 1 ? `기록 ${rs.length}건 선택` : `기록 ${r.id} 선택`}
-                        className="mt-0.5"
-                      />
-                    </td>
-                    <td className="stack-inline whitespace-nowrap">
-                      <div className="text-sm font-medium text-foreground">
-                        <TimeAgo value={r.created_at} />
-                      </div>
-                      <div className="mt-0.5 text-[11px] text-muted tabular-nums">{formatDate(r.created_at).replace(" KST", "")}</div>
-                      <div className="mt-0.5 font-mono text-[11px] text-muted">#{rs.length > 1 ? `${oldest.id}–${r.id}` : r.id}</div>
-                    </td>
-                    <td className="max-w-md">
-                      <div className="mb-1.5 flex items-center gap-1.5">
-                        <TypeBadge type={r.qr_type} />
-                        {rs.length > 1 ? (
-                          <span className="rounded-md bg-amber-soft px-1.5 py-0.5 text-xs font-semibold text-amber tabular-nums" title="같은 사람이 같은 QR을 연달아 저장한 횟수">
-                            ×{rs.length}
-                          </span>
-                        ) : null}
-                        {span ? <span className="text-[11px] text-muted">{span}</span> : null}
-                      </div>
-                      <details className="group">
-                        <summary className="cursor-pointer list-none rounded hover:text-accent">
-                          <span className="block truncate font-medium text-foreground">{s.primary}</span>
-                          {s.secondary ? <span className="mt-0.5 block truncate text-xs text-muted">{s.secondary}</span> : null}
-                          <span className="mt-0.5 block text-[11px] text-accent group-open:hidden">자세히</span>
-                        </summary>
-                        <pre className="mt-2 max-h-64 overflow-auto rounded-md border border-border bg-subtle p-3 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap">
-                          {prettyJson(r.payload_json)}
-                          {r.options_json ? `\n\n옵션: ${r.options_json}` : ""}
-                          {r.referer ? `\nreferer: ${r.referer}` : ""}
-                          {r.accept_language ? `\nlanguage: ${r.accept_language}` : ""}
-                          {r.user_agent ? `\nUA: ${r.user_agent}` : ""}
-                        </pre>
-                      </details>
-                    </td>
-                    <td>
-                      <ul className="flex flex-wrap gap-x-3 gap-y-1 sm:block sm:space-y-1">
-                        {events.map((e) => (
-                          <li key={e.event} className="flex items-center gap-1.5">
-                            <EventBadge event={e.event} />
-                            {e.c > 1 || rs.length > 1 ? <span className="text-[11px] text-muted tabular-nums">{e.c}</span> : null}
-                          </li>
-                        ))}
-                      </ul>
-                    </td>
-                    <td className="stack-inline sm:min-w-48">
-                      <VisitorInfo acceptLanguage={r.accept_language} page={r.page} userAgent={r.user_agent} />
-                      {r.ip ? (
-                        <Link href={withQ(r.ip)} className="mt-1 block font-mono text-[11px] text-muted hover:text-accent" title="이 IP의 기록만 보기">
-                          {r.ip}
-                        </Link>
-                      ) : null}
-                    </td>
-                  </tr>
-                );
-              })}
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-muted">
-                    조건에 맞는 기록이 없습니다.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
+        <DataTable<LogRun>
+          box="[--table-offset:26rem]"
+          tableClassName="table-stack"
+          rows={runs}
+          rowKey={(run) => run.rows[0].id}
+          rowClassName="has-check align-top"
+          empty="조건에 맞는 기록이 없습니다."
+          columns={[
+            { head: <span className="sr-only">선택</span>, headClassName: "w-10", cell: (run) => <RunCheckbox run={run} /> },
+            { head: "언제", className: "stack-inline whitespace-nowrap", cell: (run) => <RunWhen run={run} /> },
+            { head: "무엇을", className: "max-w-md", cell: (run) => <RunWhat run={run} /> },
+            { head: "어떻게 저장", cell: (run) => <RunEvents run={run} /> },
+            {
+              head: "누가",
+              className: "stack-inline sm:min-w-48",
+              cell: ({ rows: [r] }) => (
+                <>
+                  <VisitorInfo acceptLanguage={r.accept_language} page={r.page} userAgent={r.user_agent} />
+                  {r.ip ? (
+                    <Link href={withQ(r.ip)} className="mt-1 block font-mono text-[11px] text-muted hover:text-accent" title="이 IP의 기록만 보기">
+                      {r.ip}
+                    </Link>
+                  ) : null}
+                </>
+              ),
+            },
+          ]}
+        >
           {rows.length > 0 ? (
             <InfiniteScroll
               key={view.toString()}
-              nextHref={rows.length < total && n < MAX_ROWS ? moreHref : null}
-              loadedLabel={rows.length < total ? `최대 ${MAX_ROWS.toLocaleString()}건까지 표시 — 필터나 CSV 내보내기를 이용하세요` : "모두 불러왔습니다"}
+              nextHref={next ? href({ n: String(next) }) : null}
+              loadedLabel={rows.length < total ? `최대 ${num(MAX_ROWS)}건까지 표시 — 필터나 CSV 내보내기를 이용하세요` : "모두 불러왔습니다"}
             />
           ) : null}
-        </div>
+        </DataTable>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-subtle px-4 py-3 text-sm">
           <button type="submit" className="btn btn-sm btn-danger" disabled={rows.length === 0}>
             선택 삭제
           </button>
-          <span className="text-muted tabular-nums">
-            {total.toLocaleString()}건 중 {Math.min(rows.length, total).toLocaleString()}건 표시
-            {runs.length < rows.length ? ` (${runs.length.toLocaleString()}줄로 묶음)` : ""} · 아래로 내리면 자동으로 더 불러옵니다
-          </span>
+          <span className="text-muted tabular-nums">{shownLabel(total, rows.length, runs.length < rows.length ? ` (${num(runs.length)}줄로 묶음)` : "")}</span>
         </div>
       </form>
     </div>
+  );
+}
+
+/** One checkbox per line; a collapsed run selects (and deletes) all of its rows. */
+function RunCheckbox({ run: { rows: rs } }: { run: LogRun }) {
+  return (
+    <input
+      type="checkbox"
+      name="ids"
+      value={rs.map((x) => x.id).join(",")}
+      aria-label={rs.length > 1 ? `기록 ${rs.length}건 선택` : `기록 ${rs[0].id} 선택`}
+      className="mt-0.5"
+    />
+  );
+}
+
+function RunWhen({ run: { rows: rs } }: { run: LogRun }) {
+  const r = rs[0];
+  const oldest = rs[rs.length - 1];
+  return (
+    <>
+      <div className="text-sm font-medium text-foreground">
+        <TimeAgo value={r.created_at} />
+      </div>
+      <div className="mt-0.5 text-[11px] text-muted tabular-nums">{formatDate(r.created_at).replace(" KST", "")}</div>
+      <div className="mt-0.5 font-mono text-[11px] text-muted">#{rs.length > 1 ? `${oldest.id}–${r.id}` : r.id}</div>
+    </>
+  );
+}
+
+/** Type, repeat count and the summary line; "자세히" opens the stored payload and request details. */
+function RunWhat({ run: { rows: rs } }: { run: LogRun }) {
+  const r = rs[0];
+  const s = summarizeLog(r.qr_type, r.payload_json);
+  const span = spanLabel(new Date(r.created_at), new Date(rs[rs.length - 1].created_at));
+  return (
+    <>
+      <div className="mb-1.5 flex items-center gap-1.5">
+        <TypeBadge type={r.qr_type} />
+        {rs.length > 1 ? (
+          <span className="rounded-md bg-amber-soft px-1.5 py-0.5 text-xs font-semibold text-amber tabular-nums" title="같은 사람이 같은 QR을 연달아 저장한 횟수">
+            ×{rs.length}
+          </span>
+        ) : null}
+        {span ? <span className="text-[11px] text-muted">{span}</span> : null}
+      </div>
+      <details className="group">
+        <summary className="cursor-pointer list-none rounded hover:text-accent">
+          <span className="block truncate font-medium text-foreground">{s.primary}</span>
+          {s.secondary ? <span className="mt-0.5 block truncate text-xs text-muted">{s.secondary}</span> : null}
+          <span className="mt-0.5 block text-[11px] text-accent group-open:hidden">자세히</span>
+        </summary>
+        <pre className="mt-2 max-h-64 overflow-auto rounded-md border border-border bg-subtle p-3 font-mono text-xs leading-relaxed break-all whitespace-pre-wrap">
+          {prettyJson(r.payload_json)}
+          {r.options_json ? `\n\n옵션: ${r.options_json}` : ""}
+          {r.referer ? `\nreferer: ${r.referer}` : ""}
+          {r.accept_language ? `\nlanguage: ${r.accept_language}` : ""}
+          {r.user_agent ? `\nUA: ${r.user_agent}` : ""}
+        </pre>
+      </details>
+    </>
+  );
+}
+
+function RunEvents({ run: { rows: rs, events } }: { run: LogRun }) {
+  return (
+    <ul className="flex flex-wrap gap-x-3 gap-y-1 sm:block sm:space-y-1">
+      {events.map((e) => (
+        <li key={e.event} className="flex items-center gap-1.5">
+          <EventBadge event={e.event} />
+          {e.c > 1 || rs.length > 1 ? <span className="text-[11px] text-muted tabular-nums">{e.c}</span> : null}
+        </li>
+      ))}
+    </ul>
   );
 }

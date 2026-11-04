@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ExcludedNote, PageTitle, StatCard, TimeAgo, TypeBadge, VisitorInfo } from "@/components/admin/ui";
+import { Meter } from "@/components/admin/DataTable";
+import { num as n } from "@/components/admin/format";
+import { ExcludedNote, PageTitle, StatCard, TimeAgo, TypeBadge, VisitorInfo, typeLabel } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/adminSession";
 import { getDashboardStats, getStatsExclusion } from "@/lib/logs";
 import { summarizeLog } from "@/lib/qr/summarize";
-import { QR_TYPE_LABELS, type QrType } from "@/lib/qr/types";
 import { getSettings } from "@/lib/settings";
 import { lastKstDays } from "@/lib/stats";
 import { kstDayStart, kstToday } from "@/lib/time";
@@ -11,8 +12,6 @@ import { groupVisitors } from "@/lib/visitors";
 
 /** Visitor cards shown in the "최근 사용자" feed. */
 const FEED_SIZE = 12;
-
-const n = (v: number) => v.toLocaleString();
 
 export default async function AdminDashboard() {
   await requireAdmin();
@@ -95,10 +94,8 @@ export default async function AdminDashboard() {
             {stats.byType.slice(0, 8).map((t) => (
               <li key={t.qr_type}>
                 <Link href={`/admin/logs?type=${encodeURIComponent(t.qr_type)}`} className="-mx-2 flex items-center gap-3 rounded-md px-2 py-0.5 transition-colors hover:bg-subtle">
-                  <span className="w-32 shrink-0 truncate">{(QR_TYPE_LABELS as Record<string, string>)[t.qr_type as QrType] ?? t.qr_type}</span>
-                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface">
-                    <span className="block h-full rounded-full bg-accent/80" style={{ width: `${Math.max(4, (t.users / maxTypeUsers) * 100)}%` }} />
-                  </span>
+                  <span className="w-32 shrink-0 truncate">{typeLabel(t.qr_type)}</span>
+                  <Meter value={t.users} max={maxTypeUsers} className="h-2 flex-1" />
                   <span className="w-24 shrink-0 text-right text-xs tabular-nums">
                     <span className="font-semibold text-foreground">{n(t.users)}명</span>
                     <span className="text-muted"> · {n(t.c)}건</span>

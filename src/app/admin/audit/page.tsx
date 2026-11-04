@@ -1,12 +1,11 @@
+import { DataTable } from "@/components/admin/DataTable";
 import { InfiniteScroll } from "@/components/admin/InfiniteScroll";
-import { formatDate } from "@/components/admin/ui";
+import { num } from "@/components/admin/format";
+import { MAX_ROWS, nextRows, rowsWanted, shownLabel } from "@/components/admin/paging";
+import { PageTitle, formatDate } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/adminSession";
-import { listAudit } from "@/lib/audit";
+import { listAudit, type AuditRow } from "@/lib/audit";
 import { SETTING_LABELS, type SettingKey } from "@/lib/settings";
-
-/** Rows are appended ("더 불러오기") instead of paged; the table scrolls inside its card. */
-const PAGE_STEP = 100;
-const MAX_ROWS = 2000;
 
 const ACTION_LABELS: Record<string, string> = {
   login: "로그인",
@@ -19,63 +18,41 @@ const ACTION_LABELS: Record<string, string> = {
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin();
-  const sp = await searchParams;
-  const wanted = Number.parseInt(typeof sp.n === "string" ? sp.n : "", 10);
-  const n = Math.min(MAX_ROWS, Math.max(PAGE_STEP, Number.isFinite(wanted) ? wanted : PAGE_STEP));
+  const n = rowsWanted((await searchParams).n);
   const { rows, total } = await listAudit(1, n);
+  const next = nextRows(n, rows.length, total);
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        감사 로그 <span className="ml-1 text-sm font-normal tracking-normal text-muted tabular-nums">관리자 활동 {total.toLocaleString()}건</span>
-      </h1>
+      <PageTitle title="감사 로그" note={<span className="tabular-nums">관리자 활동 {num(total)}건</span>} />
       <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="table-scroll">
-          {/* Tablets: min width so the text columns are not squeezed to one letter. Phones: one labelled card per row. */}
-          <table className="table table-stack sm:min-w-[52rem]">
-            <thead>
-              <tr>
-                <th>시간 (KST)</th>
-                <th>활동</th>
-                <th>항목</th>
-                <th>이전 값</th>
-                <th>새 값</th>
-                <th>IP</th>
-              </tr>
-            </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="align-top">
-                <td className="whitespace-nowrap text-muted tabular-nums">{formatDate(r.createdAt)}</td>
-                <td className="whitespace-nowrap">
-                  <span className={r.action === "login_failed" ? "font-medium text-danger" : ""}>{ACTION_LABELS[r.action] ?? r.action}</span>
-                </td>
-                <td className="text-xs" data-label="항목">{r.key ? SETTING_LABELS[r.key as SettingKey] ?? r.key : ""}</td>
-                <td className="max-w-xs text-xs break-all text-muted" data-label="이전 값">{r.oldValue}</td>
-                <td className="max-w-xs text-xs break-all" data-label="새 값">{r.newValue}</td>
-                <td className="font-mono text-xs" data-label="IP">{r.ip}</td>
-              </tr>
-            ))}
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-12 text-center text-muted">
-                  기록이 없습니다.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-          </table>
+        {/* Tablets: min width so the text columns are not squeezed to one letter. Phones: one labelled card per row. */}
+        <DataTable<AuditRow>
+          box=""
+          tableClassName="table-stack sm:min-w-[52rem]"
+          rows={rows}
+          rowKey={(r) => r.id}
+          rowClassName="align-top"
+          empty="기록이 없습니다."
+          columns={[
+            { head: "시간 (KST)", className: "whitespace-nowrap text-muted tabular-nums", cell: (r) => formatDate(r.createdAt) },
+            {
+              head: "활동",
+              className: "whitespace-nowrap",
+              cell: (r) => <span className={r.action === "login_failed" ? "font-medium text-danger" : ""}>{ACTION_LABELS[r.action] ?? r.action}</span>,
+            },
+            { head: "항목", label: "항목", className: "text-xs", cell: (r) => (r.key ? (SETTING_LABELS[r.key as SettingKey] ?? r.key) : "") },
+            { head: "이전 값", label: "이전 값", className: "max-w-xs text-xs break-all text-muted", cell: (r) => r.oldValue },
+            { head: "새 값", label: "새 값", className: "max-w-xs text-xs break-all", cell: (r) => r.newValue },
+            { head: "IP", label: "IP", className: "font-mono text-xs", cell: (r) => r.ip },
+          ]}
+        >
           {rows.length > 0 ? (
-            <InfiniteScroll
-              nextHref={rows.length < total && n < MAX_ROWS ? `/admin/audit?n=${Math.min(MAX_ROWS, n + PAGE_STEP)}` : null}
-              loadedLabel={rows.length < total ? `최대 ${MAX_ROWS.toLocaleString()}건까지 표시` : "모두 불러왔습니다"}
-            />
+            <InfiniteScroll nextHref={next ? `/admin/audit?n=${next}` : null} loadedLabel={rows.length < total ? `최대 ${num(MAX_ROWS)}건까지 표시` : "모두 불러왔습니다"} />
           ) : null}
-        </div>
+        </DataTable>
         <div className="flex items-center justify-end gap-3 border-t border-border bg-subtle px-4 py-3 text-sm text-muted">
-          <span className="tabular-nums">
-            {total.toLocaleString()}건 중 {Math.min(rows.length, total).toLocaleString()}건 표시 · 아래로 내리면 자동으로 더 불러옵니다
-          </span>
+          <span className="tabular-nums">{shownLabel(total, rows.length)}</span>
         </div>
       </div>
     </div>

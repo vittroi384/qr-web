@@ -16,6 +16,40 @@ export function StatCard({ label, value, hint, primary }: { label: string; value
   );
 }
 
+/** Card with a titled header; `hint` says in one line what the section answers. */
+export function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="px-5 py-4">
+        <h2 className="text-[15px] font-semibold">{title}</h2>
+        {hint ? <p className="mt-0.5 text-xs text-muted">{hint}</p> : null}
+      </div>
+      <div className="border-t border-border">{children}</div>
+    </section>
+  );
+}
+
+export function Empty() {
+  return <p className="px-5 py-10 text-center text-sm text-muted">아직 데이터가 없습니다.</p>;
+}
+
+/** Vertical CSS bars (no chart library); each bar carries a hover title. */
+export function Bars({ items, height }: { items: { key: string; c: number; title: string }[]; height: "h-40" | "h-24" }) {
+  const max = Math.max(1, ...items.map((i) => i.c));
+  return (
+    <div className={`flex items-end gap-0.5 sm:gap-1 ${height}`}>
+      {items.map((i) => (
+        <div key={i.key} className="flex h-full flex-1 items-end" title={i.title}>
+          <div
+            className={`w-full rounded-t-sm transition-colors ${i.c ? "bg-accent/80 hover:bg-accent" : "bg-surface"}`}
+            style={{ height: i.c ? `${Math.max(3, (i.c / max) * 100)}%` : "2px" }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Page heading with an optional muted note after it. */
 export function PageTitle({ title, note }: { title: string; note?: ReactNode }) {
   return (
@@ -83,9 +117,11 @@ export function VisitorInfo({ acceptLanguage, page, userAgent }: { acceptLanguag
   );
 }
 
+/** Korean label of a QR type; unknown values (old rows) show as stored. */
+export const typeLabel = (type: string) => (QR_TYPE_LABELS as Record<string, string>)[type as QrType] ?? type;
+
 export function TypeBadge({ type }: { type: string }) {
-  const label = (QR_TYPE_LABELS as Record<string, string>)[type as QrType] ?? type;
-  return <span className="inline-block rounded-md bg-surface px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-foreground">{label}</span>;
+  return <span className="inline-block rounded-md bg-surface px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-foreground">{typeLabel(type)}</span>;
 }
 
 export const EVENT_LABELS: Record<string, string> = {

@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { PageTitle } from "@/components/admin/ui";
 import { getRequestMetaFromHeaders } from "@/lib/ip";
 import { BOOLEAN_SETTINGS, PRIVACY_CONTACT_MAX, SETTING_LABELS, type SettingKey, getSettings } from "@/lib/settings";
 import { IP_LIST_MAX } from "@/lib/visitors";
@@ -83,7 +84,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   return (
     <form action={saveSettingsAction} className="mx-auto max-w-4xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">설정</h1>
+        <PageTitle title="설정" />
         <button type="submit" className="btn btn-primary">
           저장
         </button>

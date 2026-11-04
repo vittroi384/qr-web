@@ -1,6 +1,7 @@
-import { and, count, countDistinct, desc, gte, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
+import { and, count, desc, gte, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 import type { FunnelStep } from "./analytics";
 import { db } from "./db";
+import { distinctIps } from "./logs";
 import { crawlerDaily, funnelDaily, qrLogs, sourceDaily } from "./db/schema";
 import { DISPLAY_TZ, kstDayStart, kstToday } from "./time";
 import { classifySource } from "./traffic";
@@ -66,7 +67,7 @@ export async function getStats(exclude?: SQL) {
   const kstDay = sql<string>`to_char(${qrLogs.createdAt} AT TIME ZONE ${DISPLAY_TZ}, 'YYYY-MM-DD')`;
   const kstHour = sql<number>`extract(hour from ${qrLogs.createdAt} AT TIME ZONE ${DISPLAY_TZ})::int`;
   // "Users" = distinct IPs: one person on two networks counts twice, a shared network once.
-  const users = countDistinct(qrLogs.ip);
+  const users = distinctIps();
 
   // Saves made before the source column existed: the page URL may still carry ?utm_source=… (ChatGPT adds one).
   const legacyUtm = sql<string>`lower(substring(${qrLogs.referer} from 'utm_source=([^&#]+)'))`;
