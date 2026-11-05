@@ -13,13 +13,13 @@
 
 URL·SNS·WhatsApp·Wi-Fi·연락처·결제 링크 등 **17종 정보를 QR 코드로** 만드는 공개 웹서비스입니다.
 QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 서버에 종속되지 않습니다(경쟁 서비스의 "동적 QR + 구독" 모델을 의도적으로 배제).
-해외 사용자가 주 타깃이라 **영어가 기본**(`/`)이고 한국어·스페인어·포르투갈어·독일어·프랑스어·일본어·힌디어·인도네시아어·중국어(간체)는 `/ko` `/es` `/pt` `/de` `/fr` `/ja` `/hi` `/id` `/zh` 아래에 **10개 언어**로 제공합니다. 첫 방문 시 `/`는 브라우저 언어에 맞는 판으로 안내하고(검색엔진 제외, 언어 메뉴로 고른 판은 쿠키로 기억), 이후 링크는 그대로입니다. 수익은 AdSense 광고 6슬롯, 유입은 언어별 SEO 랜딩 페이지 260개(26종 × 10개 언어). 방문자가 저장한 QR 내용은 운영자 전용 관리자에서 확인합니다.
+해외 사용자가 주 타깃이라 **영어가 기본**(`/`)이고 한국어·스페인어·포르투갈어·독일어·프랑스어·일본어·힌디어·인도네시아어·중국어(간체)는 `/ko` `/es` `/pt` `/de` `/fr` `/ja` `/hi` `/id` `/zh` 아래에 **10개 언어**로 제공합니다. 첫 방문 시 `/`는 브라우저 언어에 맞는 판으로 안내하고(검색엔진 제외, 언어 메뉴로 고른 판은 쿠키로 기억), 이후 링크는 그대로입니다. AdSense 승인을 받지 못해 지금은 광고 없이 무료로 운영합니다(광고 자리 6곳의 코드는 유지, 관리자 설정에서 켜고 끔). 유입은 언어별 SEO 랜딩 페이지 260개(26종 × 10개 언어)와 영어 가이드 글 8편. 방문자가 저장한 QR 내용은 운영자 전용 관리자에서 확인합니다.
 
 ## 스크린샷
 
-> 광고 자리는 개발 모드의 점선 placeholder입니다.
+> 실사이트(<https://getqrmaker.com>) 화면, 2026-11 기준. 광고가 꺼져 있어 광고 자리는 표시되지 않습니다.
 
-**메인** — 17종 타입 선택, 실시간 미리보기, 크기·여백·꾸미기, 광고 레이아웃(최대 6슬롯)
+**메인** — 17종 타입 선택(처음 8칸 + 더 보기), 실시간 미리보기, 크기·여백, 프레임·꾸미기
 
 ![메인](assets/main.png)
 
@@ -30,7 +30,7 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
   </tr>
 </table>
 
-<p align="center"><img src="assets/mobile.png" width="180" alt="모바일(한국어) — 390px, 광고 3슬롯"><br><sub><b>모바일(한국어)</b> — 390px 단일 열, 광고 3슬롯</sub></p>
+<p align="center"><img src="assets/mobile.png" width="180" alt="모바일(한국어) — 390px 단일 열"><br><sub><b>모바일(한국어)</b> — 390px 단일 열</sub></p>
 
 ## 주요 기능
 
@@ -39,10 +39,13 @@ QR은 브라우저에서 생성되는 **정적 코드**라 만료되지 않고 �
 - **출력**: PNG(256~2048px, 모듈 단위 정수 스케일 보정으로 픽셀 정확) · SVG · 클립보드 복사 · **인쇄용 A4 안내판**(제목/부제 편집 → 브라우저 인쇄/PDF)
 - **꾸미기**: 색 프리셋 9종 + 직접 선택, 배경(흰색/연회색/아이보리/투명), 복원력, 중앙 로고(자동 ECC H), 대비 경고
 - **일괄 생성**: 표 편집기 + 엑셀 2열 붙여 넣기, 줄별 링크/텍스트 자동 판별, 최대 200개 → `001-이름.png` ZIP + `index.csv`
-- **i18n/SEO**: 경로 기반 10개 언어(hreflang, sitemap 300 URL), 타입별 랜딩 17종 + 사용 사례 9종 × 10개 언어(언어별로 새로 쓴 본문 400~600단어, `FAQPage`·`SoftwareApplication` JSON-LD)
-- **광고**: AdSense 슬롯 6곳(상단·좌·우·하단·본문 중간·글 사이 인아티클; 일괄·소개 페이지도 포함), 팝업/오버레이 없음, 다운로드 버튼과 거리 확보, `/ads.txt` 자동
-- **방문자 기록**: PNG/SVG/복사/인쇄/일괄 저장 시에만 종류·내용·IP·브라우저 기록(입력 중 전송 없음). Wi-Fi 비밀번호는 저장 전 항상 `****`, 전화·이메일·지갑 주소는 앞뒤만, 메시지 본문은 40자까지, 좌표는 소수 2자리. URL·SNS 아이디·이름·SSID와 IP·브라우저는 평문. 종류별 필드만 저장(행당 3,000자 상한), 이 사이트 페이지의 JSON 요청만 수락, IP당 분당 30회 + 전체 분당 300회 제한, 보관 90일 자동 정리
-- **관리자**: 대시보드(KST 집계), 통계(언어·페이지·종류별 저장, 시간대, 선택→미리보기→저장 퍼널 — 개인 정보 없는 카운터), 기록 검색·삭제·CSV(BOM, 수식 주입 차단), 설정(사이트 URL·AdSense ID·슬롯 ID·광고 자리별 표시 on/off — 재배포 없이 변경), 감사 로그(변경 전/후 값)
+- **i18n/SEO**: 경로 기반 10개 언어(hreflang, sitemap 311 URL = 10개 언어 300 + 영어 전용 11), 타입별 랜딩 17종 + 사용 사례 9종 × 10개 언어(언어별로 새로 쓴 본문 400~600단어, `FAQPage`·`SoftwareApplication` JSON-LD). 페이지는 자기 언어 사전 청크 하나만 받음(언어별 provider를 `next/dynamic`으로 로드)
+- **가이드·안내 (영어 전용)**: `/guides` 글 8편(`Article`·`BreadcrumbList` JSON-LD), 타입별 랜딩 17종의 FAQ 아래 접힌 안내 절, `/contact`(`CONTACT_EMAIL`)·`/terms`
+- **AI 검색 대응**: `/llms.txt`, 메인 `WebApplication`·`FAQPage` JSON-LD, IndexNow 키 파일과 제출 스크립트(`node scripts/indexnow.mjs https://<도메인>`)
+- **광고**: AdSense 슬롯 6곳(상단·좌·우·하단·본문 중간·글 사이 인아티클; 일괄·소개 페이지도 포함), 팝업/오버레이 없음, 다운로드 버튼과 거리 확보, `/ads.txt` 자동. 승인을 받지 못해 현재는 광고 표시를 꺼 둠(코드·설정은 유지)
+- **방문자 기록**: PNG/SVG/복사/인쇄/일괄 저장 시에만 종류·내용·IP·브라우저 기록(입력 중 전송 없음). Wi-Fi 비밀번호는 저장 전 항상 `****`, 전화·이메일·지갑 주소·Pix/UPI/IBAN 식별자는 앞뒤만, vCard 주소는 앞 40자, 좌표는 소수 2자리. 텍스트·메시지·메모 등 본문과 URL·SNS 아이디·이름·SSID, IP·브라우저는 평문. 종류별 필드만 저장(행당 3,000자 상한), 이 사이트 페이지의 JSON 요청만 수락, IP당 분당 30회 + 전체 분당 300회 제한, 보관 90일 자동 정리
+- **유입 집계**: 브라우저 세션의 첫 페이지에서 `utm_source`/Referer로 출처를 분류(AI·검색·SNS·직접·기타)해 날짜·언어·출처별 숫자만 저장(`source_daily`), 저장 기록에도 출처 칸. AI·검색 크롤러의 페이지 요청은 프록시가 User-Agent로 판별해 날짜·크롤러별로 셈(`crawler_daily`)
+- **관리자**: 대시보드(KST 집계, 오늘·7일·30일 사용자 수, 14일 그래프, 최근 사용자), 통계(개요·유입·사용·퍼널 탭 — 언어·페이지·종류별 사용자와 저장, 유입 출처·크롤러, 선택→미리보기→저장 퍼널, 퍼널은 세션×종류당 1회씩 세는 개인 정보 없는 카운터), 기록 검색·삭제·CSV(BOM, 수식 주입 차단, 하나씩·연속 저장 묶기·같은 내용 묶기 보기), 설정(사이트 URL·AdSense ID·슬롯 ID·광고 자리별 표시 on/off·통계에서 뺄 IP — 재배포 없이 변경), 감사 로그(변경 전/후 값). 폰 폭에서는 표를 덜 중요한 칸을 숨기거나 카드로 바꿔 가로 넘침 없음
 
 ## 관리자 3중 잠금
 
@@ -103,12 +106,15 @@ flowchart TD
 ## 구조
 
 ```
-src/app/                 라우트: / /ko /batch /[slug] /ko/[slug] /admin/* /api/*
+src/app/                 라우트: / /ko /batch /[slug] /ko/[slug] /guides/* /contact /terms /admin/* /api/*
 src/components/qr/       생성기 UI(타입 타일·폼·미리보기·꾸미기·플랫폼 피커·인쇄 안내판·렌더 헬퍼)
 src/components/batch/    일괄 생성(표 편집기, 붙여 넣기 파서, STORE ZIP 작성기)
-src/components/pages/    Home/Landing/Batch/About/Privacy 본문(언어 공유)
+src/components/pages/    Home/Landing/Batch/About/Privacy/Guides/Contact/Terms 본문(언어 공유)
+src/components/admin/    관리자 공용 표(DataTable)·차트·자동 분류 패널·숫자 형식
 src/lib/qr/              타입·인코더·저장용 마스킹 (+ 테스트)
-src/lib/i18n/            10개 언어 사전(`<code>.ts`), 랜딩 콘텐츠(`landing.<code>.ts`), slug 매핑
+src/lib/i18n/            10개 언어 사전(`<code>.ts`), 랜딩 콘텐츠(`landing.<code>.ts`), slug 매핑, 사전 없는 경로 헬퍼(`locales.ts`)
+src/lib/content/         영어 가이드 글·타입별 안내 절·이용약관 본문
+src/lib/traffic.ts       유입 출처·크롤러 판별(순수 함수)
 src/lib/db/              Drizzle 스키마·클라이언트 (마이그레이션 SQL은 drizzle/)
 src/lib/{logs,settings,audit}.ts    기록·설정(30초 캐시)·감사 로그 데이터 접근
 src/lib/{auth,adminAccess,totp}.ts  세션·게이트·IP 허용목록·TOTP
@@ -159,7 +165,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 
 | 순서 | 할 일 | 비용 |
 | --- | --- | --- |
-| 1 | Google Search Console에 도메인 등록 → `https://도메인/sitemap.xml` 제출 (300 URL, 10개 언어 hreflang) | 무료 |
+| 1 | Google Search Console에 도메인 등록 → `https://도메인/sitemap.xml` 제출 (311 URL, 10개 언어 hreflang) | 무료 |
 | 2 | Bing Webmaster Tools — Search Console에서 가져오기 한 번 | 무료 |
 | 3 | 업타임 모니터(UptimeRobot) — `https://도메인/api/health` 5분 간격, 알림 메일/텔레그램 | 무료 |
 | 4 | Umami 방문 분석 — SSH 터널(`ssh -L 3001:127.0.0.1:3001 ubuntu@서버IP`)로 `http://localhost:3001` 접속 → 비밀번호 변경 → 사이트 추가 → 관리자 설정에 `https://도메인/umami/script.js`·웹사이트 ID 입력 (쿠키 없음, 동의 배너 불필요) | 무료(자체 호스팅) |
@@ -181,8 +187,8 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 ## 품질 · 운영
 
 **테스트 (CI에서 모두 실행)**
-- 단위 177건 — QR 인코더(Wi-Fi 이스케이프, vCard, VEVENT, wa.me, BIP-21), Pix/UPI/EPC 규격 벡터, 프레임 13종 레이아웃, 입력 검증, 비밀번호 마스킹, 로그인 잠금·IPv6 키, TOTP(RFC 6238 벡터), Accept-Language 파서, KST 시간 헬퍼 (`npm test`)
-- E2E 40건 — Playwright: 입력→PNG 저장→`/api/log` 기록·마스킹 검증, 단계 게이지·종류 해제·더보기, 퍼널 집계 조건, 언어 자동 감지(브라우저 언어·쿠키·크롤러 제외), 일괄 ZIP 구조 파싱, 관리자 게이트/OTP/CSV, 광고 자리 표시, SEO(hreflang·JSON-LD·sitemap·robots), 모바일 가로 넘침 0, axe 접근성 (`npm run test:e2e`)
+- 단위 194건 — QR 인코더(Wi-Fi 이스케이프, vCard, VEVENT, wa.me, BIP-21), Pix/UPI/EPC 규격 벡터, 프레임 13종 레이아웃, 입력 검증, 비밀번호 마스킹, 로그인 잠금·IPv6 키, TOTP(RFC 6238 벡터), Accept-Language 파서, KST 시간 헬퍼, 유입 출처·크롤러 판별, 방문자 묶기 (`npm test`)
+- E2E 44건 — Playwright: 입력→PNG 저장→`/api/log` 기록·마스킹 검증, 단계 게이지·종류 해제·더보기, 퍼널 집계 조건(저장은 세션×종류당 1회), 언어 자동 감지(브라우저 언어·쿠키·크롤러 제외), 일괄 ZIP 구조 파싱, 관리자 게이트/OTP/CSV, 관리자 390px 넘침(표 상자 안쪽 포함), 광고 자리 표시, SEO(hreflang·JSON-LD·sitemap·robots), 모바일 가로 넘침 0, axe 접근성 (`npm run test:e2e`)
 - CI: lint → 타입 → 단위 → DB 없는 빌드 → E2E(Postgres 서비스) → Docker 이미지 빌드
 - 건수는 `src/**/*.test.ts`의 it/test 정의 수, `e2e/*.spec.ts`의 test 정의 수(루프 전개 포함)
 
@@ -195,7 +201,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 - 백업 실패/성공 알림 — `.env`에 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`를 넣으면 `scripts/backup.sh`가 텔레그램으로 보고
 
 **수익화 (관리자 → 설정 → 수익화)**
-- AdSense 게시자 ID·슬롯 6개
+- AdSense 게시자 ID·슬롯 6개 (승인을 받지 못해 현재 광고 표시 꺼짐)
 - 인쇄 제휴 링크 — 인쇄 안내판 다이얼로그와 Wi-Fi·명함·메뉴판 등 인쇄 수요가 있는 랜딩 페이지에 "Sponsored" 카드로 노출(`rel="sponsored"`), 비우면 미표시
 - 후원 링크(Buy Me a Coffee 등) — 푸터에 작은 링크, 비우면 미표시
 - 사용 사례 랜딩 — `/restaurant-menu-qr-code`, `/wedding-qr-code`, `/business-card-qr-code`, `/google-review-qr-code`, `/wifi-qr-code-for-cafe` (+ `/ko/…`)
@@ -208,6 +214,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 | `ADMIN_PATH` | 관리자 비밀 입구 경로 (`/gate-…`, 영숫자 8~64자). 없으면 게이트 비활성(개발용) |
 | `ADMIN_PASSWORD` | 관리자 비밀번호 |
 | `ADMIN_TOTP_SECRET` | OTP 비밀키. 운영 모드에서는 필수(없으면 로그인 API가 503으로 거부), 개발 모드에서만 생략 가능 |
+| `CONTACT_EMAIL` | `/contact`에 보이는 메일 주소(선택). 비우면 `contact@example.com` |
 | `SITE_URL` | `DOMAIN`이 없을 때의 기본 사이트 URL(선택). 관리자 설정에 저장된 값이 항상 우선 |
 | `ADMIN_ALLOWED_IPS` | 관리자 접근 허용 목록 (선택). IPv4 CIDR 또는 IP, IPv6는 단일 주소. SSH 터널 접속과 병용 불가 |
 | `SESSION_SECRET` | 세션·게이트 쿠키 서명 키 (`openssl rand -hex 32`) |
@@ -232,7 +239,7 @@ npm run build            # DB 없이도 빌드됨 (모든 페이지가 요청 �
 - **엣지→원본 구간 평문(Cloudflare Flexible)**: 이 서버의 80/443을 다른 서비스가 써서 8080 + Cloudflare 프록시로 시작한 과도기 구성. 8080은 Cloudflare 대역에만 열려 있음. Origin CA 인증서로 Full(strict) 전환 예정([`docs/배포-절차.md`](docs/배포-절차.md) 2-C)
 - **세션 무효화 부재**: 세션은 HS256 서명 JWT(stateless)라 서버 쪽 세션 목록이 없음. 로그아웃은 쿠키 삭제이며, 발급된 세션을 전부 폐기하려면 `SESSION_SECRET`을 교체
 - **잠금·OTP 재사용 차단·레이트리밋은 프로세스 메모리**: 로그인 실패 카운터(`src/lib/auth.ts`), 사용한 OTP 스텝(`src/lib/totp.ts`), 토큰 버킷(`src/lib/rateLimit.ts`)이 Map에 있어 재시작 시 초기화되고 단일 인스턴스를 전제
-- **기록에 평문으로 남는 항목**: URL·SNS 아이디·이름·SSID와 IP·User-Agent는 마스킹 없이 90일 보관(`qr_logs`, `src/lib/db/schema.ts`)
+- **기록에 평문으로 남는 항목**: 텍스트·메시지·메모 등 본문, URL·SNS 아이디·이름·SSID와 IP·User-Agent는 마스킹 없이 90일 보관(`qr_logs`, `src/lib/db/schema.ts`)
 - **관리자 비밀번호는 env 평문 비교**: 해시 없이 `ADMIN_PASSWORD`와 상수 시간 비교. 운영자 1명, `.env`는 서버 접근자만 읽는 전제
 
 ## 만든 방식
